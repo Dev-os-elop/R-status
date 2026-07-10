@@ -3,16 +3,12 @@ import Foundation
 struct RResourceSnapshot {
     let cpuPercent: Double
     let processCount: Int
-    let activeTaskCount: Int
     let workerCount: Int
-    let threadCount: Int
 
     static let empty = RResourceSnapshot(
         cpuPercent: 0,
         processCount: 0,
-        activeTaskCount: 0,
-        workerCount: 0,
-        threadCount: 0
+        workerCount: 0
     )
 }
 
@@ -45,12 +41,13 @@ enum RResourceMonitor {
             return false
         }.count
 
+        let perCoreCPUPercent = rProcesses.reduce(0) { $0 + $1.cpuPercent }
+        let availableCPUs = max(1, ProcessInfo.processInfo.activeProcessorCount)
+
         return RResourceSnapshot(
-            cpuPercent: rProcesses.reduce(0) { $0 + $1.cpuPercent },
+            cpuPercent: min(100, perCoreCPUPercent / Double(availableCPUs)),
             processCount: rProcesses.count,
-            activeTaskCount: rProcesses.filter { $0.cpuPercent >= 0.5 }.count,
-            workerCount: workerCount,
-            threadCount: rProcesses.reduce(0) { $0 + threadCount(for: $1.pid) }
+            workerCount: workerCount
         )
     }
 
@@ -78,11 +75,6 @@ enum RResourceMonitor {
         guard let executable = command.split(whereSeparator: \.isWhitespace).first else { return false }
         let name = URL(fileURLWithPath: String(executable)).lastPathComponent.lowercased()
         return name == "r" || name == "rscript" || name.hasPrefix("rsession")
-    }
-
-    private static func threadCount(for pid: Int) -> Int {
-        guard let output = run("/bin/ps", arguments: ["-M", "\(pid)"]) else { return 0 }
-        return max(0, output.split(whereSeparator: \.isNewline).count - 1)
     }
 
     private static func run(_ executable: String, arguments: [String]) -> String? {

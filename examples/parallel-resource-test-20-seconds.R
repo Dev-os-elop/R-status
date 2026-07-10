@@ -5,9 +5,8 @@
 #
 # Expected menu values while running (approximately):
 # - R processes: 4 (one main R session + three workers)
-# - Active: 3
 # - Parallel workers: 3
-# - CPU: may approach 300% because each core contributes up to 100%
+# - CPU: about 30% on a 10-core Mac when three workers each saturate one core
 
 local({
 worker_count <- 3L

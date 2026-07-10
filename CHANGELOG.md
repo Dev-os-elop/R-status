@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.4 - 2026-07-09
+
+- CPU를 로컬 논리 CPU 전체 용량 기준 0–100%로 정규화
+- Active와 OS threads 항목 제거
+- Parallel workers와 R processes만 별도 표시
+
 ## 0.3.3 - 2026-07-09
 
 - 메뉴와 샘플러에서 RAM 사용량 제거

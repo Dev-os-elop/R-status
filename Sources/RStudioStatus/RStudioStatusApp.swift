@@ -170,7 +170,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
     private let cpuItem = NSMenuItem(title: "CPU: —", action: nil, keyEquivalent: "")
-    private let tasksItem = NSMenuItem(title: "Active: —", action: nil, keyEquivalent: "")
+    private let workersItem = NSMenuItem(title: "Parallel workers: —", action: nil, keyEquivalent: "")
     private let processesItem = NSMenuItem(title: "R processes: —", action: nil, keyEquivalent: "")
     private var updateItem: NSMenuItem?
     private var addinInstallItem: NSMenuItem?
@@ -233,7 +233,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(elapsedItem)
         menu.addItem(.separator())
 
-        for item in [resourceHeaderItem, cpuItem, tasksItem, processesItem] {
+        for item in [resourceHeaderItem, cpuItem, workersItem, processesItem] {
             item.isEnabled = false
             menu.addItem(item)
         }
@@ -307,8 +307,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func updateResourceItems(_ snapshot: RResourceSnapshot) {
         cpuItem.title = String(format: "CPU: %.1f%%", snapshot.cpuPercent)
-        tasksItem.title = "Active: \(snapshot.activeTaskCount) · Parallel workers: \(snapshot.workerCount)"
-        processesItem.title = "R processes: \(snapshot.processCount) · OS threads: \(snapshot.threadCount)"
+        workersItem.title = "Parallel workers: \(snapshot.workerCount)"
+        processesItem.title = "R processes: \(snapshot.processCount)"
     }
 
     private func loadMenuBarIcon() -> NSImage? {
