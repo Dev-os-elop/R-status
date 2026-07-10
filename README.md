@@ -23,7 +23,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 - 로그인 시 자동 실행, 상태 초기화, 알림 테스트 메뉴
 - 현재 버전 표시 및 GitHub `main` 버전 업데이트 확인
 - 앱 안에서 RStudio Addin 원클릭 설치·업데이트
-- GitHub ZIP 또는 git clone을 이용한 로컬 빌드 설치
+- GitHub Release의 사전 빌드 앱을 이용한 Xcode 없는 설치
 
 ## 필수 조건
 
@@ -31,7 +31,6 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 - Apple Silicon Mac
 - [RStudio Desktop](https://posit.co/download/rstudio-desktop/)
 - R 4.1 이상
-- Xcode Command Line Tools
 
 현재 앱은 Apple Silicon용으로 테스트했습니다. Intel Mac은 아직 검증하지 않았습니다.
 
@@ -46,7 +45,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 5. 설치가 완료되면 RStudio를 완전히 종료했다가 다시 실행합니다.
 6. RStudio에서 **Addins → Run Selection with Status**를 사용합니다.
 
-Command Line Tools가 없다면 설치 파일이 macOS 설치 창을 엽니다. 설치가 끝난 뒤 `.command` 파일을 다시 실행하세요. 설치기는 SDK가 손상되었거나 현재 macOS와 맞지 않는 경우도 빌드 전에 확인합니다. 정상적인 전체 Xcode가 설치되어 있으면 해당 도구를 자동으로 사용합니다.
+설치 파일은 GitHub Release에서 사전 빌드된 Apple Silicon 실행 파일을 내려받고 SHA-256을 검증합니다. 일반 사용자는 Xcode나 Command Line Tools를 설치할 필요가 없습니다. RStudio 로고는 상표 파일을 재배포하지 않고 사용자의 RStudio 설치에서 가져옵니다.
 
 처음 실행하면 macOS가 알림 권한을 요청합니다. 완료·실패 알림을 받으려면 **허용**을 선택하세요.
 
@@ -231,22 +230,7 @@ remove.packages("rstudiostatus")
 
 ### `unable to lookup item 'PlatformPath'` 설치 오류
 
-이 오류는 Xcode Command Line Tools가 설치된 것으로 표시되지만, 포함된 macOS SDK가 손상되었거나 현재 macOS 버전과 맞지 않을 때 발생합니다. 먼저 **시스템 설정 → 일반 → 소프트웨어 업데이트**에서 사용 가능한 업데이트를 설치하세요.
-
-계속 실패하면 터미널에서 Command Line Tools를 제거한 뒤 다시 설치합니다.
-
-```sh
-sudo rm -rf /Library/Developer/CommandLineTools
-xcode-select --install
-```
-
-설치 창에서 완료한 후 **Install RStudio Status.command**를 다시 실행하세요. 전체 Xcode가 이미 설치되어 있다면 다음과 같이 Xcode 도구를 선택할 수도 있습니다.
-
-```sh
-sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-```
-
-Apple의 [Command Line Tools 설치 안내](https://developer.apple.com/documentation/xcode/installing-the-command-line-tools)와 [도구 경로 설정 안내](https://developer.apple.com/documentation/xcode/configuring-command-line-tools-settings)를 참고할 수 있습니다.
+이 오류는 소스를 로컬에서 빌드하던 0.3.5 이하 설치기에서 발생합니다. 최신 ZIP을 다시 내려받아 설치하세요. 0.3.6부터 일반 설치는 사전 빌드된 앱을 사용하므로 Xcode Command Line Tools가 필요하지 않습니다.
 
 ### Addins 메뉴에 항목이 보이지 않음
 
