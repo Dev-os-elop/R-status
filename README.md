@@ -51,16 +51,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 
 ### 터미널에서 설치하기
 
-git을 사용한다면 다음 명령을 실행합니다.
-
-```sh
-git clone https://github.com/Dev-os-elop/R-status.git
-cd R-status
-chmod +x install.sh uninstall.sh Resources/*.sh scripts/*.sh
-./install.sh
-```
-
-이미 ZIP을 받았다면 압축을 푼 폴더에서 실행할 수도 있습니다.
+Xcode가 없는 Mac에서는 `git clone`을 사용하지 마세요. 위에서 ZIP을 받은 뒤 압축을 푼 폴더의 터미널에서 실행합니다.
 
 ```sh
 chmod +x install.sh uninstall.sh Resources/*.sh scripts/*.sh
@@ -227,6 +218,14 @@ remove.packages("rstudiostatus")
 ```
 
 이 명령은 `/Applications` 또는 `~/Applications`의 앱과 사용자 R 라이브러리의 `rstudiostatus` 패키지를 제거합니다.
+
+### `'git' 명령에는 명령어 라인 개발자 도구가 필요합니다` 팝업
+
+RStudio Status의 ZIP 설치와 자동 업데이트는 `git`을 사용하지 않으며 Xcode Command Line Tools가 필요하지 않습니다. 이 팝업은 보통 `git clone`을 실행했거나, RStudio가 `.git` 폴더가 있는 프로젝트의 Git 상태를 확인할 때 macOS의 `/usr/bin/git`이 표시합니다.
+
+- 설치할 때는 `git clone` 대신 위의 **Code → Download ZIP**을 사용하세요.
+- RStudio에서 Git을 사용하지 않는다면 **Tools → Global Options → Git/SVN**에서 **Enable version control interface for RStudio projects**를 끄고 RStudio를 재시작하세요.
+- 압축을 푼 설치 폴더에는 `.git` 디렉터리가 없어야 합니다.
 
 ### Addins 메뉴에 항목이 보이지 않음
 
