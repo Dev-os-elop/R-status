@@ -79,31 +79,9 @@ defaults write io.github.ljwook92.rstatus installedAddinVersion -string "$VERSIO
 defaults write io.github.ljwook92.rstatus addinPromptedVersion -string "$VERSION"
 
 echo "[4/4] 앱 재실행 예약"
-(
-    # Let this installer exit successfully before terminating its parent app.
-    sleep 0.5
-    for running_pid in "${RUNNING_PIDS[@]}"; do
-        kill -TERM "$running_pid" 2>/dev/null || true
-    done
-    for _ in {1..20}; do
-        remaining=0
-        for running_pid in "${RUNNING_PIDS[@]}"; do
-            if kill -0 "$running_pid" 2>/dev/null; then
-                remaining=1
-            fi
-        done
-        if (( remaining == 0 )); then
-            break
-        fi
-        sleep 0.1
-    done
-    for running_pid in "${RUNNING_PIDS[@]}"; do
-        if kill -0 "$running_pid" 2>/dev/null; then
-            kill -KILL "$running_pid" 2>/dev/null || true
-        fi
-    done
-    open "$APP_PATH"
-) </dev/null >/dev/null 2>&1 &!
+RESTART_LABEL="io.github.ljwook92.rstatus.restart.$$.$RANDOM"
+/bin/launchctl submit -l "$RESTART_LABEL" -- \
+    /bin/zsh "$ROOT/scripts/restart-app.sh" "$APP_PATH" "${RUNNING_PIDS[@]}"
 
 echo
 echo "설치가 완료되었습니다."
