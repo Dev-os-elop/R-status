@@ -44,6 +44,14 @@ private struct GitHubSourceVersion {
     let repositoryURL: URL
 }
 
+private struct GitHubLatestRelease: Decodable {
+    let tagName: String
+
+    private enum CodingKeys: String, CodingKey {
+        case tagName = "tag_name"
+    }
+}
+
 private enum UpdateInstallError: LocalizedError {
     case invalidVersion
     case invalidDownloadURL
@@ -777,14 +785,17 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     @objc private func checkForUpdates() {
         let repository = Bundle.main.object(forInfoDictionaryKey: "GitHubRepository") as? String
             ?? "Dev-os-elop/R-status"
-        guard let url = URL(string: "https://raw.githubusercontent.com/\(repository)/main/Resources/Info.plist"),
+        guard let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest"),
               let repositoryURL = URL(string: "https://github.com/\(repository)") else { return }
         let installedVersion = currentVersion
         updateItem?.title = "Checking for Updates…"
         updateItem?.isEnabled = false
 
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.setValue("RStudioStatus/\(installedVersion)", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             let result: UpdateCheckResult
@@ -794,9 +805,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                       !(200...299).contains(httpResponse.statusCode) {
                 result = .failed("GitHub returned HTTP \(httpResponse.statusCode).")
             } else if let data,
-                      let plist = try? PropertyListSerialization.propertyList(from: data, format: nil),
-                      let dictionary = plist as? [String: Any],
-                      let remoteVersion = dictionary["CFBundleShortVersionString"] as? String {
+                      let release = try? JSONDecoder().decode(GitHubLatestRelease.self, from: data) {
+                let remoteVersion = release.tagName.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
                 let sourceVersion = GitHubSourceVersion(
                     version: remoteVersion,
                     repository: repository,
@@ -806,7 +816,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                     ? .updateAvailable(sourceVersion)
                     : .latest
             } else {
-                result = .failed("The GitHub version file could not be read.")
+                result = .failed("The latest GitHub release could not be read.")
             }
 
             DispatchQueue.main.async { [weak self] in
