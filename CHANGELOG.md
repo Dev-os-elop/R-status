@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3 - 2026-07-09
+
+- 메뉴와 샘플러에서 RAM 사용량 제거
+- 지표 이름을 Active, Parallel workers, R processes, OS threads로 명확화
+
 ## 0.3.2 - 2026-07-09
 
 - 메뉴와 샘플러에서 시스템 GPU 사용률 제거

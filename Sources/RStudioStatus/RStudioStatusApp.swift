@@ -170,9 +170,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
     private let cpuItem = NSMenuItem(title: "CPU: —", action: nil, keyEquivalent: "")
-    private let memoryItem = NSMenuItem(title: "RAM: —", action: nil, keyEquivalent: "")
-    private let tasksItem = NSMenuItem(title: "Tasks: —", action: nil, keyEquivalent: "")
-    private let processesItem = NSMenuItem(title: "Processes: —", action: nil, keyEquivalent: "")
+    private let tasksItem = NSMenuItem(title: "Active: —", action: nil, keyEquivalent: "")
+    private let processesItem = NSMenuItem(title: "R processes: —", action: nil, keyEquivalent: "")
     private var updateItem: NSMenuItem?
     private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
@@ -234,7 +233,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(elapsedItem)
         menu.addItem(.separator())
 
-        for item in [resourceHeaderItem, cpuItem, memoryItem, tasksItem, processesItem] {
+        for item in [resourceHeaderItem, cpuItem, tasksItem, processesItem] {
             item.isEnabled = false
             menu.addItem(item)
         }
@@ -308,17 +307,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func updateResourceItems(_ snapshot: RResourceSnapshot) {
         cpuItem.title = String(format: "CPU: %.1f%%", snapshot.cpuPercent)
-        memoryItem.title = "RAM: \(formatMemory(snapshot.residentMemoryBytes))"
-        tasksItem.title = "Tasks: \(snapshot.activeTaskCount) active · \(snapshot.workerCount) workers"
-        processesItem.title = "Processes: \(snapshot.processCount) · Threads: \(snapshot.threadCount)"
-    }
-
-    private func formatMemory(_ bytes: UInt64) -> String {
-        let megabytes = Double(bytes) / 1_048_576
-        if megabytes >= 1_024 {
-            return String(format: "%.2f GB", megabytes / 1_024)
-        }
-        return String(format: "%.0f MB", megabytes)
+        tasksItem.title = "Active: \(snapshot.activeTaskCount) · Parallel workers: \(snapshot.workerCount)"
+        processesItem.title = "R processes: \(snapshot.processCount) · OS threads: \(snapshot.threadCount)"
     }
 
     private func loadMenuBarIcon() -> NSImage? {

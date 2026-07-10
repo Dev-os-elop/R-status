@@ -2,7 +2,7 @@
 
 RStudio Status는 RStudio 코드 실행 상태를 macOS 메뉴바와 알림으로 보여줍니다.
 
-실행 중인 R 작업의 CPU, RAM, process, parallel worker, thread 수도 메뉴에서 확인할 수 있습니다.
+실행 중인 R 작업의 CPU, process, parallel worker, thread 수도 메뉴에서 확인할 수 있습니다.
 
 ## 설치
 

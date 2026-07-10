@@ -4,9 +4,9 @@
 # Addins -> Run Selection with Status
 #
 # Expected menu values while running (approximately):
-# - Processes: 4 (one main R session + three workers)
-# - Tasks: 3 active
-# - Workers: 3
+# - R processes: 4 (one main R session + three workers)
+# - Active: 3
+# - Parallel workers: 3
 # - CPU: may approach 300% because each core contributes up to 100%
 
 local({

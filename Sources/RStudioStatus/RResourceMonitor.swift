@@ -2,7 +2,6 @@ import Foundation
 
 struct RResourceSnapshot {
     let cpuPercent: Double
-    let residentMemoryBytes: UInt64
     let processCount: Int
     let activeTaskCount: Int
     let workerCount: Int
@@ -10,7 +9,6 @@ struct RResourceSnapshot {
 
     static let empty = RResourceSnapshot(
         cpuPercent: 0,
-        residentMemoryBytes: 0,
         processCount: 0,
         activeTaskCount: 0,
         workerCount: 0,
@@ -22,7 +20,6 @@ private struct ProcessSample {
     let pid: Int
     let parentPID: Int
     let cpuPercent: Double
-    let residentMemoryKB: UInt64
     let command: String
 }
 
@@ -50,7 +47,6 @@ enum RResourceMonitor {
 
         return RResourceSnapshot(
             cpuPercent: rProcesses.reduce(0) { $0 + $1.cpuPercent },
-            residentMemoryBytes: rProcesses.reduce(0) { $0 + $1.residentMemoryKB * 1_024 },
             processCount: rProcesses.count,
             activeTaskCount: rProcesses.filter { $0.cpuPercent >= 0.5 }.count,
             workerCount: workerCount,
@@ -59,23 +55,21 @@ enum RResourceMonitor {
     }
 
     private static func processList() -> [ProcessSample] {
-        guard let output = run("/bin/ps", arguments: ["-axo", "pid=,ppid=,pcpu=,rss=,command="]) else {
+        guard let output = run("/bin/ps", arguments: ["-axo", "pid=,ppid=,pcpu=,command="]) else {
             return []
         }
 
         return output.split(whereSeparator: \.isNewline).compactMap { line in
-            let fields = line.split(maxSplits: 4, whereSeparator: \.isWhitespace)
-            guard fields.count == 5,
+            let fields = line.split(maxSplits: 3, whereSeparator: \.isWhitespace)
+            guard fields.count == 4,
                   let pid = Int(fields[0]),
                   let parentPID = Int(fields[1]),
-                  let cpuPercent = Double(fields[2]),
-                  let residentMemoryKB = UInt64(fields[3]) else { return nil }
+                  let cpuPercent = Double(fields[2]) else { return nil }
             return ProcessSample(
                 pid: pid,
                 parentPID: parentPID,
                 cpuPercent: cpuPercent,
-                residentMemoryKB: residentMemoryKB,
-                command: String(fields[4])
+                command: String(fields[3])
             )
         }
     }
