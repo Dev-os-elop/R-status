@@ -1,4 +1,5 @@
 import AppKit
+import Darwin
 import Foundation
 import Network
 import ServiceManagement
@@ -26,6 +27,7 @@ private struct StatusUpdate: Decodable {
     let status: RunState
     let name: String?
     let message: String?
+    let pid: Int32?
 }
 
 private struct GitHubSourceVersion {
@@ -181,8 +183,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var startedAt: Date?
     private var timer: Timer?
     private var resourceTimer: Timer?
+    private var processWatchTimer: Timer?
     private var isSamplingResources = false
     private var resourceRefreshPending = false
+    private var taskPID: Int32?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -216,6 +220,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     func applicationWillTerminate(_ notification: Notification) {
         timer?.invalidate()
         resourceTimer?.invalidate()
+        processWatchTimer?.invalidate()
         server.stop()
     }
 
@@ -320,6 +325,32 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         processesItem.title = "R processes: \(snapshot.processCount)"
     }
 
+    private func startProcessWatchdog() {
+        processWatchTimer?.invalidate()
+        guard let taskPID, taskPID > 0 else { return }
+        let watchTimer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.checkTaskProcess() }
+        }
+        processWatchTimer = watchTimer
+        RunLoop.main.add(watchTimer, forMode: .common)
+    }
+
+    private func checkTaskProcess() {
+        guard state == .running, let taskPID else { return }
+        if Darwin.kill(taskPID, 0) == 0 || errno == EPERM { return }
+
+        processWatchTimer?.invalidate()
+        processWatchTimer = nil
+        self.taskPID = nil
+        timer?.invalidate()
+        timer = nil
+        state = .interrupted
+        detailMessage = "RStudio session ended"
+        refreshResourceUsage(forceAfterCurrent: true)
+        updateDisplay()
+        sendNotification()
+    }
+
     private func loadMenuBarIcon() -> NSImage? {
         guard let url = Bundle.main.url(forResource: "RStudio", withExtension: "icns"),
               let sourceImage = NSImage(contentsOf: url) else { return nil }
@@ -344,6 +375,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         state = update.status
         if let name = update.name, !name.isEmpty { taskName = name }
         detailMessage = update.message ?? ""
+        if let pid = update.pid, pid > 0 { taskPID = pid }
 
         if state == .running {
             startedAt = Date()
@@ -353,9 +385,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             }
             timer = refreshTimer
             RunLoop.main.add(refreshTimer, forMode: .common)
+            startProcessWatchdog()
         } else {
             timer?.invalidate()
             timer = nil
+            processWatchTimer?.invalidate()
+            processWatchTimer = nil
+            taskPID = nil
             if state == .complete || state == .fail || state == .interrupted {
                 refreshResourceUsage(forceAfterCurrent: true)
                 sendNotification()

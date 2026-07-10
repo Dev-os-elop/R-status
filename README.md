@@ -87,6 +87,8 @@ chmod +x install.sh uninstall.sh Resources/*.sh scripts/*.sh
 
 선택 영역이 비어 있으면 Addin이 실행할 코드가 없다는 오류를 표시합니다. 파일 전체를 실행하려면 코드를 선택하지 않고 **Run Current Document with Status**를 사용할 수도 있습니다.
 
+실행 중 RStudio 앱을 완전히 종료하면 상태 앱이 실행 중인 R 세션 PID를 감시해 약 0.5초 안에 카운트를 멈추고 `Interrupted ⛔️`로 전환합니다. macOS에서 창의 빨간 닫기 버튼은 앱 종료가 아니므로 RStudio를 끝내려면 `Cmd + Q`를 사용하세요.
+
 ### 20초 확인용 예제
 
 저장소의 [`examples/status-test-20-seconds.R`](examples/status-test-20-seconds.R)을 RStudio에서 엽니다. 파일 전체를 선택한 뒤 **Addins → Run Selection with Status**를 실행하세요.
