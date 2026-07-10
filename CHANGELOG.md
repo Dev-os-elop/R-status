@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.4 - 2026-07-09
+
+- CPU를 로컬 논리 CPU 전체 용량 기준 0–100%로 정규화
+- Active와 OS threads 항목 제거
+- Parallel workers와 R processes만 별도 표시
+
+## 0.3.3 - 2026-07-09
+
+- 메뉴와 샘플러에서 RAM 사용량 제거
+- 지표 이름을 Active, Parallel workers, R processes, OS threads로 명확화
+
+## 0.3.2 - 2026-07-09
+
+- 메뉴와 샘플러에서 시스템 GPU 사용률 제거
+- CPU, RAM, task, worker, process, thread 정보만 유지
+
+## 0.3.1 - 2026-07-09
+
+- 기본 배포 방식을 GitHub ZIP 또는 git clone 후 로컬 설치로 변경
+- 더블클릭 가능한 설치·제거 `.command` 파일 추가
+- 업데이트 확인을 GitHub `main` 브랜치 버전과 비교하도록 변경
+
+## 0.3.0 - 2026-07-09
+
+- 메뉴에 R 관련 CPU와 RAM 사용량 표시
+- R 프로세스, active task, 병렬 worker, thread 수 표시
+- 권한 없이 조회 가능한 시스템 전체 GPU 이용률 표시
+- 메뉴가 열린 상태에서도 2초마다 리소스 정보 갱신
+
 ## 0.2.0 - 2026-07-09
 
 - 앱 번들에 RStudio Addin 포함

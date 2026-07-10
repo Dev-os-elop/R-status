@@ -14,14 +14,14 @@
     <string>6.0</string>
     <key>CFBundleName</key>
     <string>RStudio Status</string>
-    <key>GitHubReleaseRepository</key>
-    <string>Ljwook92/R-status-releases</string>
+    <key>GitHubRepository</key>
+    <string>Dev-os-elop/R-status</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.2.0</string>
+    <string>0.3.4</string>
     <key>CFBundleVersion</key>
-    <string>7</string>
+    <string>12</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>

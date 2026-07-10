@@ -16,13 +16,14 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 
 - RStudio 공식 로고를 사용하는 macOS 메뉴바 앱
 - 실행 경과 시간 표시
-- 완료·실패 시 macOS 알림
+- 전체 CPU 용량 기준 R 사용률, R 프로세스, 병렬 worker 실시간 표시
+- 완료·실패·사용자 중단 시 macOS 알림
 - 선택 영역 또는 현재 문서 전체를 실행하는 RStudio Addin
 - 일반 R 코드에서 사용할 수 있는 `rstatus_run()` 함수
 - 로그인 시 자동 실행, 상태 초기화, 알림 테스트 메뉴
-- 현재 버전 표시 및 GitHub Release 업데이트 확인
+- 현재 버전 표시 및 GitHub `main` 버전 업데이트 확인
 - 앱 안에서 RStudio Addin 원클릭 설치·업데이트
-- DMG 다운로드 방식의 간단한 설치
+- GitHub ZIP 또는 git clone을 이용한 로컬 빌드 설치
 
 ## 필수 조건
 
@@ -30,23 +31,28 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 - Apple Silicon Mac
 - [RStudio Desktop](https://posit.co/download/rstudio-desktop/)
 - R 4.1 이상
+- Xcode Command Line Tools
 
 현재 앱은 Apple Silicon용으로 테스트했습니다. Intel Mac은 아직 검증하지 않았습니다.
 
 ## 설치
 
-1. 공개 배포 저장소의 [최신 Release](https://github.com/Ljwook92/R-status-releases/releases/latest)에서 `RStudio-Status-*.dmg`를 다운로드합니다.
-2. DMG를 열고 **RStudio Status.app**을 **Applications** 폴더로 드래그합니다.
-3. Applications에서 RStudio Status를 실행합니다.
-4. 첫 실행 팝업에서 **Install Addin**을 누릅니다.
-5. 설치 완료 메시지가 나오면 RStudio를 완전히 종료했다가 다시 실행합니다.
-6. RStudio의 **Addins** 메뉴에서 **Run Selection with Status**를 사용합니다.
+### 가장 쉬운 방법: ZIP 다운로드
+
+1. [Dev-os-elop/R-status](https://github.com/Dev-os-elop/R-status)에서 **Code → Download ZIP**을 선택합니다.
+2. 다운로드한 ZIP의 압축을 풉니다.
+3. 폴더 안의 **Install RStudio Status.command**를 더블클릭합니다.
+4. macOS가 실행을 막으면 파일을 우클릭하고 **Open**을 선택합니다.
+5. 설치가 완료되면 RStudio를 완전히 종료했다가 다시 실행합니다.
+6. RStudio에서 **Addins → Run Selection with Status**를 사용합니다.
+
+Command Line Tools가 없다면 설치 파일이 macOS 설치 창을 엽니다. 설치가 끝난 뒤 `.command` 파일을 다시 실행하세요.
 
 처음 실행하면 macOS가 알림 권한을 요청합니다. 완료·실패 알림을 받으려면 **허용**을 선택하세요.
 
-### 소스에서 설치하기
+### 터미널에서 설치하기
 
-소스 저장소 접근 권한이 있는 개발자는 Xcode Command Line Tools를 설치한 후 다음 명령을 사용할 수 있습니다.
+git을 사용한다면 다음 명령을 실행합니다.
 
 ```sh
 git clone https://github.com/Dev-os-elop/R-status.git
@@ -55,10 +61,11 @@ chmod +x install.sh uninstall.sh Resources/*.sh scripts/*.sh
 ./install.sh
 ```
 
-Command Line Tools 설치:
+이미 ZIP을 받았다면 압축을 푼 폴더에서 실행할 수도 있습니다.
 
 ```sh
-xcode-select --install
+chmod +x install.sh uninstall.sh Resources/*.sh scripts/*.sh
+./install.sh
 ```
 
 ## RStudio Addin 사용
@@ -168,16 +175,47 @@ rstatus_notify("idle", "")
 RStudio 로고 또는 상태 텍스트를 클릭하면 다음 기능을 사용할 수 있습니다.
 
 - 현재 작업 이름과 실행 시간 확인
+- R CPU 사용량 확인
+- R process와 병렬 worker 수 확인
 - 상태 초기화
 - 알림 테스트
 - RStudio 열기
 - 로그인 시 실행 설정
 - 현재 설치 버전 확인
-- **Check for Updates…**로 GitHub의 최신 공개 Release 확인
+- **Check for Updates…**로 GitHub `main` 브랜치의 최신 버전 확인
 - **Install/Update RStudio Addin…**으로 Addin 설치 또는 업데이트
 - 앱 종료
 
-업데이트가 없으면 `You're using the latest version.` 팝업이 표시됩니다. 새 공개 Release가 있으면 버전 정보와 **Open Download Page** 버튼이 표시됩니다. Draft와 pre-release는 최신 안정 버전 확인 대상에 포함되지 않습니다.
+업데이트가 없으면 `You're using the latest version.` 팝업이 표시됩니다. GitHub의 `main` 브랜치에 더 높은 버전이 있으면 **Open GitHub** 버튼이 표시됩니다. 저장소에서 최신 ZIP을 다시 받거나 `git pull` 후 `./install.sh`을 실행하면 업데이트됩니다.
+
+### 리소스 정보 해석
+
+메뉴의 리소스 정보는 약 2초마다 갱신됩니다.
+
+```text
+R Resource Usage
+CPU: 100.0%
+Parallel workers: 12
+R processes: 13
+```
+
+- **CPU**: `R`, `Rscript`, RStudio `rsession`의 코어별 CPU 사용률 합계를 현재 사용 가능한 논리 CPU 수로 나눈 값입니다. 로컬 CPU 전체 용량을 기준으로 0–100%로 표시됩니다.
+- **Parallel workers**: `parallel`, PSOCK 등으로 생성된 병렬 작업용 R 프로세스 수입니다.
+- **R processes**: main R 세션과 병렬 worker를 합친 전체 R 관련 프로세스 수입니다.
+
+논리 CPU가 12개인 컴퓨터를 예로 들면 다음과 같습니다.
+
+| 실행 방식 | CPU | Parallel workers | R processes |
+|---|---:|---:|---:|
+| R 세션 하나가 CPU 하나를 최대 사용 | 약 8.3% | 0 | 1 |
+| `makeCluster(3)`의 worker 3개가 각각 CPU 하나를 최대 사용 | 약 25% | 3 | 4 |
+| `makeCluster(12)`의 worker 12개가 전체 CPU를 최대 사용 | 약 100% | 12 | 13 |
+
+`R processes`에는 main R 세션도 포함되므로 일반적인 PSOCK 병렬 처리에서는 `Parallel workers + 1`로 표시됩니다. CPU 값은 순간 샘플과 운영체제 스케줄링에 따라 조금 달라질 수 있습니다.
+
+PSOCK cluster처럼 worker의 부모 PID가 분리되는 경우에는 실행 인자에서 `workRSOCK`과 `MASTER` 정보를 함께 확인해 worker를 계산합니다.
+
+병렬 지표를 확인하려면 [`examples/parallel-resource-test-20-seconds.R`](examples/parallel-resource-test-20-seconds.R)을 전체 선택하고 **Addins → Run Selection with Status**로 실행하세요. worker 3개가 약 20초 동안 행렬 연산을 수행하므로 일반적으로 `Parallel workers: 3`, `R processes: 4`가 표시됩니다. CPU는 전체 논리 CPU 용량을 기준으로 계산되므로, 예를 들어 논리 CPU 12개 중 worker 3개가 코어 하나씩 최대 사용하면 약 25%로 표시됩니다.
 
 ## 제거
 
@@ -256,7 +294,7 @@ make check
 
 ### 새 버전 공개
 
-앱의 업데이트 확인 기능은 공개 배포 저장소의 최신 Release를 기준으로 합니다. 새 버전을 배포할 때는 앱과 R 패키지 버전을 맞춘 뒤 `make release`와 `make publish`를 실행하세요. 자세한 절차는 [`DISTRIBUTION.md`](DISTRIBUTION.md)에 있습니다.
+앱의 업데이트 확인 기능은 `Dev-os-elop/R-status`의 `main` 브랜치에 있는 `Resources/Info.plist` 버전을 기준으로 합니다. 새 버전을 배포할 때는 앱과 R 패키지 버전을 맞추고 `main`에 반영하세요.
 
 주요 디렉터리:
 
@@ -266,7 +304,6 @@ Resources/               앱 Info.plist
 r-package/               R 패키지 및 RStudio Addin
 scripts/                 빌드·검사·설치 보조 스크립트
 examples/                동작 확인용 R 예제
-distribution/            공개 배포 문서와 DMG 안내
 ```
 
 ## 보안과 개인정보
@@ -274,6 +311,7 @@ distribution/            공개 배포 문서와 DMG 안내
 - 서버는 `127.0.0.1`에만 바인딩됩니다.
 - R 코드는 앱으로 전송되지 않습니다.
 - 앱에는 상태, 작업 이름, 오류 메시지만 전달됩니다.
+- 리소스 정보는 로컬의 `ps`에서만 읽으며 외부로 전송하지 않습니다.
 - 인터넷 연결은 Addin 의존성 설치와 업데이트 확인에 사용됩니다.
 
 ## 라이선스 및 상표
