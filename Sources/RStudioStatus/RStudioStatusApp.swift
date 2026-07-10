@@ -41,7 +41,6 @@ private struct ProgressUpdate: Decodable {
 private struct GitHubSourceVersion {
     let version: String
     let repository: String
-    let repositoryURL: URL
 }
 
 private struct GitHubLatestRelease: Decodable {
@@ -350,6 +349,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var taskPID: Int32?
     private var updateProcess: Process?
     private var updateLogURL: URL?
+    private var updateCheckPreviousApplication: NSRunningApplication?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -781,10 +781,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     @objc private func checkForUpdates() {
+        if let frontmostApplication = NSWorkspace.shared.frontmostApplication,
+           frontmostApplication.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+            updateCheckPreviousApplication = frontmostApplication
+        }
         let repository = Bundle.main.object(forInfoDictionaryKey: "GitHubRepository") as? String
             ?? "Dev-os-elop/R-status"
-        guard let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest"),
-              let repositoryURL = URL(string: "https://github.com/\(repository)") else { return }
+        guard let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest") else { return }
         let installedVersion = currentVersion
         updateItem?.title = "Checking for Updates…"
         updateItem?.isEnabled = false
@@ -807,8 +810,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                 let remoteVersion = release.tagName.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
                 let sourceVersion = GitHubSourceVersion(
                     version: remoteVersion,
-                    repository: repository,
-                    repositoryURL: repositoryURL
+                    repository: repository
                 )
                 result = isVersion(remoteVersion, newerThan: installedVersion)
                     ? .updateAvailable(sourceVersion)
@@ -826,6 +828,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private func showUpdateResult(_ result: UpdateCheckResult) {
         updateItem?.title = "Check for Updates…"
         updateItem?.isEnabled = true
+        defer { restorePreviousApplicationFocus() }
         NSApp.activate(ignoringOtherApps: true)
 
         let alert = NSAlert()
@@ -851,6 +854,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             alert.alertStyle = .warning
             alert.addButton(withTitle: "OK")
             alert.runModal()
+        }
+    }
+
+    private func restorePreviousApplicationFocus() {
+        guard let previousApplication = updateCheckPreviousApplication else { return }
+        updateCheckPreviousApplication = nil
+        DispatchQueue.main.async {
+            NSApp.deactivate()
+            previousApplication.activate(options: [.activateIgnoringOtherApps])
         }
     }
 
