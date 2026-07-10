@@ -53,7 +53,35 @@ chmod +x "$BINARY"
 "$ROOT/scripts/assemble-app.sh" "$BINARY"
 
 echo "[2/4] 앱 설치: $APP_PATH"
-pkill -x RStudioStatus 2>/dev/null || true
+RUNNING_PIDS=()
+if [[ "${RSTATUS_RUNNING_PID:-}" == <-> ]] && kill -0 "$RSTATUS_RUNNING_PID" 2>/dev/null; then
+    RUNNING_PIDS+=("$RSTATUS_RUNNING_PID")
+else
+    while IFS= read -r running_pid; do
+        [[ -n "$running_pid" ]] && RUNNING_PIDS+=("$running_pid")
+    done < <(pgrep -x RStudioStatus 2>/dev/null || true)
+fi
+
+for running_pid in "${RUNNING_PIDS[@]}"; do
+    kill -TERM "$running_pid" 2>/dev/null || true
+done
+for _ in {1..20}; do
+    remaining=0
+    for running_pid in "${RUNNING_PIDS[@]}"; do
+        if kill -0 "$running_pid" 2>/dev/null; then
+            remaining=1
+        fi
+    done
+    if (( remaining == 0 )); then
+        break
+    fi
+    sleep 0.1
+done
+for running_pid in "${RUNNING_PIDS[@]}"; do
+    if kill -0 "$running_pid" 2>/dev/null; then
+        kill -KILL "$running_pid" 2>/dev/null || true
+    fi
+done
 if [[ -d "$APP_PATH" ]]; then
     "$LSREGISTER" -u "$APP_PATH" 2>/dev/null || true
 fi
