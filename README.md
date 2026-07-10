@@ -283,43 +283,8 @@ lsof -nP -iTCP:47821 -sTCP:LISTEN
 
 macOS **시스템 설정 → 알림 → RStudio Status**에서 알림 허용이 켜져 있는지 확인하세요. 메뉴바 앱을 클릭한 뒤 **알림 테스트**로 확인할 수 있습니다.
 
-### RStudio 아이콘을 찾지 못함
 
-RStudio가 기본 위치가 아닌 곳에 설치되어 있다면 아이콘 경로를 지정합니다.
-
-```sh
-RSTUDIO_ICON_PATH="/path/to/RStudio.icns" ./install.sh
-```
-
-## 개발
-
-앱만 빌드:
-
-```sh
-make build
-```
-
-Swift 빌드와 R 패키지 검사:
-
-```sh
-make check
-```
-
-### 새 버전 공개
-
-앱의 업데이트 확인 기능은 `Dev-os-elop/R-status`의 `main` 브랜치에 있는 `Resources/Info.plist` 버전을 기준으로 합니다. 새 버전을 배포할 때는 앱과 R 패키지 버전을 맞추고 `main`에 반영하세요.
-
-주요 디렉터리:
-
-```text
-Sources/RStudioStatus/   macOS 메뉴바 앱
-Resources/               앱 Info.plist
-r-package/               R 패키지 및 RStudio Addin
-scripts/                 빌드·검사·설치 보조 스크립트
-examples/                동작 확인용 R 예제
-```
-
-## 보안과 개인정보
+## 보안
 
 - 서버는 `127.0.0.1`에만 바인딩됩니다.
 - R 코드는 앱으로 전송되지 않습니다.
