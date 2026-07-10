@@ -500,25 +500,29 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
         let displayCurrent = min(total, max(0, current))
         let ratio = min(1, max(0, displayCurrent / total))
-        let segmentCount = 14
+        let segmentCount = 8
         let completed = min(segmentCount, max(0, Int((ratio * Double(segmentCount)).rounded(.down))))
         let bar = String(repeating: "█", count: completed)
             + String(repeating: "░", count: segmentCount - completed)
         let percent = Int((ratio * 100).rounded())
-        let totalText = formatProgressValue(total)
-        let valueWidth = max(8, totalText.count + 2)
-        let currentText = fixedWidthField(formatProgressValue(displayCurrent), width: valueWidth)
+        let usesWholeNumbers = total.rounded() == total
+        let totalText = formatProgressValue(total, wholeNumbers: usesWholeNumbers)
+        let valueWidth = totalText.count
+        let currentText = fixedWidthField(
+            formatProgressValue(displayCurrent, wholeNumbers: usesWholeNumbers),
+            width: valueWidth
+        )
         let paddedTotal = fixedWidthField(totalText, width: valueWidth)
-        setMonospacedTitle(
+        setCompactProgressTitle(
             progressItem,
             "Progress: [\(bar)] \(String(format: "%3d", percent))% · \(currentText)/\(paddedTotal)"
         )
         progressItem.isHidden = false
 
         if let eta = update.etaSeconds, eta.isFinite, eta >= 0 {
-            setMonospacedTitle(etaItem, "Remaining: \(formatRemaining(eta))")
+            setCompactProgressTitle(etaItem, "Remaining: \(formatRemaining(eta))")
         } else {
-            setMonospacedTitle(etaItem, "Remaining: --:--:--")
+            setCompactProgressTitle(etaItem, "Remaining: --:--:--")
         }
         etaItem.isHidden = false
     }
@@ -532,8 +536,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         etaItem.isHidden = true
     }
 
-    private func formatProgressValue(_ value: Double) -> String {
-        value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
+    private func formatProgressValue(_ value: Double, wholeNumbers: Bool) -> String {
+        wholeNumbers ? String(Int(value.rounded())) : String(format: "%.1f", value)
     }
 
     private func fixedWidthField(_ text: String, width: Int) -> String {
@@ -551,10 +555,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         )
     }
 
-    private func setMonospacedTitle(_ item: NSMenuItem, _ title: String) {
+    private func setCompactProgressTitle(_ item: NSMenuItem, _ title: String) {
         item.attributedTitle = NSAttributedString(
             string: title,
-            attributes: [.font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
+            attributes: [.font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
         )
     }
 
