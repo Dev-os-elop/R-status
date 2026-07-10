@@ -349,9 +349,33 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var taskPID: Int32?
     private var updateProcess: Process?
     private var updateLogURL: URL?
+    private var instanceLockFD: Int32 = -1
+
+    private func acquireInstanceLock() -> Bool {
+        let lockPath = "/tmp/io.github.ljwook92.rstatus.instance.lock"
+        let fd = Darwin.open(lockPath, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard fd >= 0 else { return false }
+        var lock = flock(
+            l_start: 0,
+            l_len: 0,
+            l_pid: 0,
+            l_type: Int16(F_WRLCK),
+            l_whence: Int16(SEEK_SET)
+        )
+        guard Darwin.fcntl(fd, F_SETLK, &lock) == 0 else {
+            Darwin.close(fd)
+            return false
+        }
+        instanceLockFD = fd
+        return true
+    }
     private var updateCheckPreviousApplication: NSRunningApplication?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard acquireInstanceLock() else {
+            NSApp.terminate(nil)
+            return
+        }
         NSApp.setActivationPolicy(.accessory)
         if let url = Bundle.main.url(forResource: "RStudio", withExtension: "icns"),
            let icon = NSImage(contentsOf: url) {
@@ -384,6 +408,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         processWatchTimer?.invalidate()
         updateInstallTimer?.invalidate()
         server.stop()
+        if instanceLockFD >= 0 {
+            Darwin.close(instanceLockFD)
+            instanceLockFD = -1
+        }
     }
 
     private func configureMenu() {
