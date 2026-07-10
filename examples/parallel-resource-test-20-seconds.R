@@ -1,4 +1,4 @@
-# RStudio Status parallel resource-monitor test
+# ES Status parallel resource-monitor test
 #
 # Select the whole file and run:
 # Addins -> Run Selection with Status

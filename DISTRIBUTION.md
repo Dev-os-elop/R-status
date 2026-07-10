@@ -18,11 +18,11 @@ make release
 결과:
 
 ```text
-release/RStudio-Status-<version>.dmg
-release/RStudio-Status-<version>.dmg.sha256
+release/ES-Status-<version>.dmg
+release/ES-Status-<version>.dmg.sha256
 ```
 
-DMG의 앱에는 R Addin 패키지와 설치 스크립트가 포함됩니다. 사용자는 앱을 Applications로 옮긴 뒤 첫 실행에서 **Install Addin**만 누르면 됩니다.
+DMG의 앱에는 R Addin 패키지와 설치 스크립트가 포함됩니다. 사용자는 앱을 Applications로 옮긴 뒤 메뉴의 **Install/Update RStudio Addin…**을 사용할 수 있습니다.
 
 ## Developer ID 서명
 

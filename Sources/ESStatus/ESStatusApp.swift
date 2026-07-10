@@ -98,12 +98,12 @@ private func downloadAndLaunchUpdate(_ source: GitHubSourceVersion) throws -> La
 
     let fileManager = FileManager.default
     let updateRoot = fileManager.temporaryDirectory
-        .appendingPathComponent("RStudioStatusUpdate-\(UUID().uuidString)", isDirectory: true)
+        .appendingPathComponent("ESStatusUpdate-\(UUID().uuidString)", isDirectory: true)
     try fileManager.createDirectory(at: updateRoot, withIntermediateDirectories: true)
     let archivePath = updateRoot.appendingPathComponent("update.zip")
 
     var request = URLRequest(url: archiveURL)
-    request.setValue("RStudioStatus/\(source.version)", forHTTPHeaderField: "User-Agent")
+    request.setValue("ESStatus/\(source.version)", forHTTPHeaderField: "User-Agent")
     let semaphore = DispatchSemaphore(value: 0)
     var downloadData: Data?
     URLSession.shared.dataTask(with: request) { data, response, _ in
@@ -160,7 +160,7 @@ private func downloadAndLaunchUpdate(_ source: GitHubSourceVersion) throws -> La
         "/Library/Frameworks/R.framework/Resources/bin"
     ]
     environment["PATH"] = (updaterPaths + [environment["PATH"] ?? ""]).joined(separator: ":")
-    environment["RSTATUS_RUNNING_PID"] = String(Darwin.getpid())
+    environment["ESSTATUS_RUNNING_PID"] = String(Darwin.getpid())
     installer.environment = environment
     installer.standardOutput = logHandle
     installer.standardError = logHandle
@@ -203,13 +203,13 @@ private func versionComponents(_ version: String) -> [Int] {
 
 private final class LocalHTTPServer {
     private var listener: NWListener?
-    private let queue = DispatchQueue(label: "RStudioStatus.HTTPServer")
+    private let queue = DispatchQueue(label: "ESStatus.HTTPServer")
     var onStatus: ((StatusUpdate) -> Void)?
     var onProgress: ((ProgressUpdate) -> Void)?
 
     func start(port: UInt16 = 47821) throws {
         guard let port = NWEndpoint.Port(rawValue: port) else {
-            throw NSError(domain: "RStudioStatus", code: 1,
+            throw NSError(domain: "ESStatus", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "잘못된 포트입니다."])
         }
         let parameters = NWParameters.tcp
@@ -220,7 +220,7 @@ private final class LocalHTTPServer {
         }
         listener.stateUpdateHandler = { state in
             if case .failed(let error) = state {
-                NSLog("RStudio Status server failed: \(error)")
+                NSLog("ES Status server failed: \(error)")
             }
         }
         listener.start(queue: queue)
@@ -274,7 +274,7 @@ private final class LocalHTTPServer {
         }
 
         if firstLine.hasPrefix("GET /health ") {
-            respond(status: "200 OK", body: #"{"ok":true,"app":"RStudio Status"}"#, on: connection)
+            respond(status: "200 OK", body: #"{"ok":true,"app":"ES Status"}"#, on: connection)
             return
         }
 
@@ -469,7 +469,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(installAddinItem)
 
         menu.addItem(.separator())
-        let quitItem = NSMenuItem(title: L10n.text("RStudio Status 종료", "Quit RStudio Status"),
+        let quitItem = NSMenuItem(title: L10n.text("ES Status 종료", "Quit ES Status"),
                                   action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
@@ -839,7 +839,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     @objc private func testNotification() {
         postNotification(
-            title: "RStudio Status",
+            title: "ES Status",
             body: L10n.text("상태 알림 테스트입니다.", "This is a status notification test.")
         )
     }
@@ -903,7 +903,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         updateItem?.isEnabled = false
 
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
-        request.setValue("RStudioStatus/\(installedVersion)", forHTTPHeaderField: "User-Agent")
+        request.setValue("ESStatus/\(installedVersion)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
         request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
@@ -946,8 +946,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         case .updateAvailable(let sourceVersion):
             alert.messageText = L10n.text("업데이트 사용 가능", "Update Available")
             alert.informativeText = L10n.text(
-                "RStudio Status v\(sourceVersion.version)을 설치할 수 있습니다. 현재 버전은 v\(currentVersion)입니다.",
-                "RStudio Status v\(sourceVersion.version) is available on GitHub. You are using v\(currentVersion)."
+                "ES Status v\(sourceVersion.version)을 설치할 수 있습니다. 현재 버전은 v\(currentVersion)입니다.",
+                "ES Status v\(sourceVersion.version) is available on GitHub. You are using v\(currentVersion)."
             )
             alert.alertStyle = .informational
             alert.addButton(withTitle: L10n.text("다운로드 및 설치", "Download and Install"))
@@ -958,8 +958,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         case .latest:
             alert.messageText = L10n.text("최신 버전입니다", "You're up to date")
             alert.informativeText = L10n.text(
-                "RStudio Status 최신 버전(v\(currentVersion))을 사용 중입니다.",
-                "You're using the latest version of RStudio Status (v\(currentVersion))."
+                "ES Status 최신 버전(v\(currentVersion))을 사용 중입니다.",
+                "You're using the latest version of ES Status (v\(currentVersion))."
             )
             alert.alertStyle = .informational
             alert.addButton(withTitle: "OK")
@@ -1009,7 +1009,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             updateProcess = launched.process
             updateLogURL = launched.logURL
             postNotification(
-                title: "RStudio Status Update",
+                title: "ES Status Update",
                 body: "Installing v\(sourceVersion.version). The app will restart automatically."
             )
             updateInstallTimer?.invalidate()
@@ -1042,7 +1042,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         updateItem?.title = L10n.text("업데이트 확인…", "Check for Updates…")
         updateItem?.isEnabled = true
         postNotification(
-            title: "RStudio Status Update Failed",
+            title: "ES Status Update Failed",
             body: message.count > 180 ? String(message.prefix(180)) + "…" : message
         )
     }
@@ -1116,7 +1116,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 }
 
 @main
-private enum RStudioStatusMain {
+private enum ESStatusMain {
     private static var delegate: AppDelegate?
 
     static func main() {

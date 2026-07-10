@@ -2,17 +2,17 @@
 set -euo pipefail
 
 ROOT="${0:A:h}"
-APP_NAME="RStudio Status.app"
+APP_NAME="ES Status.app"
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/Resources/Info.plist")"
-ASSET_NAME="RStudioStatus-macos-arm64"
-ASSET_URL="${RSTATUS_ASSET_URL:-https://github.com/Dev-os-elop/R-status/releases/download/v${VERSION}/${ASSET_NAME}}"
-EXPECTED_SHA256="$(tr -d '[:space:]' < "$ROOT/Resources/RStudioStatus-macos-arm64.sha256")"
+ASSET_NAME="ESStatus-macos-arm64"
+ASSET_URL="${ESSTATUS_ASSET_URL:-${RSTATUS_ASSET_URL:-https://github.com/Dev-os-elop/R-status/releases/download/v${VERSION}/${ASSET_NAME}}}"
+EXPECTED_SHA256="$(tr -d '[:space:]' < "$ROOT/Resources/ESStatus-macos-arm64.sha256")"
 TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/rstatus-install.XXXXXX")"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
-    echo "오류: RStudio Status는 macOS에서만 설치할 수 있습니다." >&2
+    echo "오류: ES Status는 macOS에서만 설치할 수 있습니다." >&2
     exit 1
 fi
 
@@ -54,13 +54,29 @@ chmod +x "$BINARY"
 
 echo "[2/4] 앱 설치: $APP_PATH"
 RUNNING_PIDS=()
-if [[ "${RSTATUS_RUNNING_PID:-}" == <-> ]] && kill -0 "$RSTATUS_RUNNING_PID" 2>/dev/null; then
+if [[ "${ESSTATUS_RUNNING_PID:-}" == <-> ]] && kill -0 "$ESSTATUS_RUNNING_PID" 2>/dev/null; then
+    RUNNING_PIDS+=("$ESSTATUS_RUNNING_PID")
+elif [[ "${RSTATUS_RUNNING_PID:-}" == <-> ]] && kill -0 "$RSTATUS_RUNNING_PID" 2>/dev/null; then
     RUNNING_PIDS+=("$RSTATUS_RUNNING_PID")
 else
     while IFS= read -r running_pid; do
         [[ -n "$running_pid" ]] && RUNNING_PIDS+=("$running_pid")
-    done < <(pgrep -x RStudioStatus 2>/dev/null || true)
+    done < <({ pgrep -x ESStatus; pgrep -x RStudioStatus; } 2>/dev/null | sort -u || true)
 fi
+
+# Remove bundles installed under the former product name so users never end up
+# with both ES Status and RStudio Status in Applications or LaunchServices.
+LEGACY_APP_PATHS=(
+    "$APP_DIR/RStudio Status.app"
+    "/Applications/RStudio Status.app"
+    "$HOME/Applications/RStudio Status.app"
+)
+for legacy_app_path in "${LEGACY_APP_PATHS[@]}"; do
+    if [[ "$legacy_app_path" != "$APP_PATH" && -d "$legacy_app_path" ]]; then
+        "$LSREGISTER" -u "$legacy_app_path" 2>/dev/null || true
+        rm -rf "$legacy_app_path"
+    fi
+done
 
 if [[ -d "$APP_PATH" ]]; then
     "$LSREGISTER" -u "$APP_PATH" 2>/dev/null || true
@@ -79,16 +95,16 @@ codesign --verify --deep "$APP_PATH"
 
 echo "[3/4] RStudio Addin 설치"
 "$ROOT/scripts/install-r-package.sh"
-defaults write io.github.ljwook92.rstatus.cat installedAddinVersion -string "$VERSION"
-defaults write io.github.ljwook92.rstatus.cat addinPromptedVersion -string "$VERSION"
+defaults write io.github.ljwook92.esstatus installedAddinVersion -string "$VERSION"
+defaults write io.github.ljwook92.esstatus addinPromptedVersion -string "$VERSION"
 
 echo "[4/4] 앱 재실행 예약"
 # Remove one-shot restart jobs left by older updater versions before creating
 # the new one. The normal login item is intentionally not touched.
 while IFS= read -r restart_label; do
     [[ -n "$restart_label" ]] && /bin/launchctl remove "$restart_label" 2>/dev/null || true
-done < <(/bin/launchctl list 2>/dev/null | /usr/bin/awk '$3 ~ /^io.github.ljwook92.rstatus.restart\./ {print $3}')
-RESTART_LABEL="io.github.ljwook92.rstatus.restart.$$.$RANDOM"
+done < <(/bin/launchctl list 2>/dev/null | /usr/bin/awk '$3 ~ /^io.github.ljwook92.(rstatus|esstatus).restart\./ {print $3}')
+RESTART_LABEL="io.github.ljwook92.esstatus.restart.$$.$RANDOM"
 /bin/launchctl submit -l "$RESTART_LABEL" -- \
     /bin/zsh "$ROOT/scripts/restart-app.sh" "$RESTART_LABEL" "$APP_PATH" "${RUNNING_PIDS[@]}"
 

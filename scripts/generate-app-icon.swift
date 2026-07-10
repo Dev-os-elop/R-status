@@ -9,7 +9,7 @@ guard CommandLine.arguments.count == 2 else {
 let outputURL = URL(fileURLWithPath: CommandLine.arguments[1])
 let fileManager = FileManager.default
 let iconsetURL = fileManager.temporaryDirectory
-    .appendingPathComponent("RStatus-\(UUID().uuidString).iconset", isDirectory: true)
+    .appendingPathComponent("ESStatus-\(UUID().uuidString).iconset", isDirectory: true)
 try fileManager.createDirectory(at: iconsetURL, withIntermediateDirectories: true)
 defer { try? fileManager.removeItem(at: iconsetURL) }
 

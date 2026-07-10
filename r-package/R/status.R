@@ -46,7 +46,7 @@ rstatus_notify <- function(status, name = "R task", message = NULL,
     error = function(e) NULL
   )
   if (is.null(connection)) {
-    warning("RStudio Status \uc571\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \uc571\uc774 \uc2e4\ud589 \uc911\uc778\uc9c0 \ud655\uc778\ud558\uc138\uc694.", call. = FALSE)
+    warning("ES Status \uc571\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \uc571\uc774 \uc2e4\ud589 \uc911\uc778\uc9c0 \ud655\uc778\ud558\uc138\uc694.", call. = FALSE)
     return(invisible(FALSE))
   }
   on.exit(close(connection), add = TRUE)
@@ -56,11 +56,11 @@ rstatus_notify <- function(status, name = "R task", message = NULL,
     response <- readLines(connection, n = 1L, warn = FALSE, encoding = "UTF-8")
     ok <- length(response) == 1L && grepl("^HTTP/1\\.[01] 200 ", response)
     if (!ok) {
-      warning("RStudio Status \uc571\uc774 \uc694\uccad\uc744 \uc218\ub77d\ud558\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.", call. = FALSE)
+      warning("ES Status \uc571\uc774 \uc694\uccad\uc744 \uc218\ub77d\ud558\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.", call. = FALSE)
     }
     invisible(ok)
   }, error = function(e) {
-    warning("RStudio Status \uc804\uc1a1 \uc2e4\ud328: ", conditionMessage(e), call. = FALSE)
+    warning("ES Status \uc804\uc1a1 \uc2e4\ud328: ", conditionMessage(e), call. = FALSE)
     invisible(FALSE)
   })
 }
@@ -70,10 +70,10 @@ rstatus_notify <- function(status, name = "R task", message = NULL,
 .rstatus_progress_state$key <- NULL
 .rstatus_progress_state$last_sent <- 0
 
-#' Report progress to the RStudio Status menu bar app
+#' Report progress to the ES Status menu bar app
 #'
 #' This is normally called automatically for `progress` and `progressr` while
-#' code is executed through the RStudio Status Addin.
+#' code is executed through the ES Status Addin.
 #'
 #' @param current Current completed amount.
 #' @param total Total amount.

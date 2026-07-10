@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="${0:A:h:h}"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/Resources/Info.plist")"
 RELEASE_REPO="${RELEASE_REPO:-Ljwook92/R-status-releases}"
-DMG="$ROOT/release/RStudio-Status-$VERSION.dmg"
+DMG="$ROOT/release/ES-Status-$VERSION.dmg"
 CHECKSUM="$DMG.sha256"
 
 if ! command -v gh >/dev/null 2>&1; then
@@ -22,7 +22,7 @@ gh release create "v$VERSION" \
     "$DMG" \
     "$CHECKSUM" \
     --repo "$RELEASE_REPO" \
-    --title "RStudio Status v$VERSION" \
+    --title "ES Status v$VERSION" \
     --generate-notes
 
 echo "Published: https://github.com/$RELEASE_REPO/releases/tag/v$VERSION"

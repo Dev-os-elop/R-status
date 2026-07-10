@@ -29,7 +29,7 @@ for running_pid in "${RUNNING_PIDS[@]}"; do
     fi
 done
 
-APP_EXECUTABLE="$APP_PATH/Contents/MacOS/RStudioStatus"
+APP_EXECUTABLE="$APP_PATH/Contents/MacOS/ESStatus"
 if [[ -x "$APP_EXECUTABLE" ]]; then
     /usr/bin/open -g "$APP_PATH"
 fi

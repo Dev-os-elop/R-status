@@ -3,8 +3,8 @@ set -u
 
 ROOT="${0:A:h}"
 clear
-echo "RStudio Status 설치"
-echo "===================="
+echo "ES Status 설치"
+echo "=============="
 echo
 
 chmod +x "$ROOT/install.sh" "$ROOT/uninstall.sh" "$ROOT/Resources/"*.sh "$ROOT/scripts/"*.sh

@@ -18,4 +18,4 @@ rstatus_notify(
 \item{port}{Local app port.}
 }
 \value{Invisibly returns \code{TRUE} when the event was sent, otherwise \code{FALSE}.}
-\description{Sends a status event to the locally running RStudio Status app.}
+\description{Sends a status event to the locally running ES Status app.}

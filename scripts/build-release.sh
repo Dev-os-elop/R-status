@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT="${0:A:h:h}"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/Resources/Info.plist")"
-APP="$ROOT/dist/RStudio Status.app"
+APP="$ROOT/dist/ES Status.app"
 RELEASE_DIR="$ROOT/release"
-DMG="$RELEASE_DIR/RStudio-Status-$VERSION.dmg"
+DMG="$RELEASE_DIR/ES-Status-$VERSION.dmg"
 CHECKSUM="$DMG.sha256"
 STAGING="$(mktemp -d "${TMPDIR:-/tmp}/rstatus-release.XXXXXX")"
 trap 'rm -rf "$STAGING"' EXIT
@@ -20,12 +20,12 @@ fi
 mkdir -p "$RELEASE_DIR"
 rm -f "$DMG" "$CHECKSUM"
 
-ditto --norsrc --noextattr "$APP" "$STAGING/RStudio Status.app"
+ditto --norsrc --noextattr "$APP" "$STAGING/ES Status.app"
 ln -s /Applications "$STAGING/Applications"
 cp "$ROOT/distribution/INSTALL.txt" "$STAGING/INSTALL.txt"
 
 hdiutil create \
-    -volname "RStudio Status" \
+    -volname "ES Status" \
     -srcfolder "$STAGING" \
     -format UDZO \
     -ov \

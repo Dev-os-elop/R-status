@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0 - 2026-07-10
+
+- 앱의 공식 사용자 노출 이름을 ES Status로 변경
+- 앱 번들·설치 경로를 `ES Status.app`, 실행 파일을 `ESStatus`로 변경
+- 앱 ID를 `io.github.ljwook92.esstatus`로 변경하고 기존 v0.6.0 이하 설정 자동 마이그레이션
+- 설치 시 기존 `RStudio Status.app`을 자동 제거해 중복 앱 방지
+- 사전 빌드 자산 이름을 `ESStatus-macos-arm64`로 변경
+- 메뉴·알림·업데이트·문서의 제품명을 ES Status로 통일
+
 ## 0.6.0 - 2026-07-10
 
 - 알림 센터가 예전 R 아이콘을 번들 ID에 캐시하는 문제를 해결하기 위해 앱 ID를 `io.github.ljwook92.rstatus.cat`으로 이전

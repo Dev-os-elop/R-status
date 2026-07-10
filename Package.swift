@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "RStudioStatus",
+    name: "ESStatus",
     platforms: [.macOS(.v13)],
     products: [
-        .executable(name: "RStudioStatus", targets: ["RStudioStatus"])
+        .executable(name: "ESStatus", targets: ["ESStatus"])
     ],
     targets: [
         .executableTarget(
-            name: "RStudioStatus",
-            path: "Sources/RStudioStatus"
+            name: "ESStatus",
+            path: "Sources/ESStatus"
         )
     ]
 )
