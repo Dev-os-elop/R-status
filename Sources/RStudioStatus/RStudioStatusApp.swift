@@ -589,7 +589,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         ]
         let completedAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: NSColor.systemBlue
+            // Fixed color keeps the completed cells visually stable when the
+            // menu transitions between active and inactive states.
+            .foregroundColor: NSColor(calibratedRed: 0.08, green: 0.42, blue: 0.92, alpha: 1.0)
         ]
         let result = NSMutableAttributedString(string: "Progress: [", attributes: normalAttributes)
         result.append(NSAttributedString(
@@ -600,7 +602,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             string: String(repeating: "■", count: segmentCount - completed),
             attributes: [
                 .font: font,
-                .foregroundColor: NSColor.quaternaryLabelColor
+                .foregroundColor: NSColor(calibratedWhite: 0.62, alpha: 1.0)
             ]
         ))
         result.append(NSAttributedString(string: "] \(details)", attributes: normalAttributes))
