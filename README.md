@@ -86,12 +86,6 @@ chmod +x install.sh uninstall.sh Resources/*.sh scripts/*.sh
 7. 코드가 정상적으로 끝나면 `Complete ✅`, 오류가 발생하면 `Fail ⚠️`가 표시됩니다.
 8. 실행 중 RStudio Console의 **Stop** 버튼을 누르면 `Interrupted ⛔️`가 표시됩니다.
 
-Addin은 코드를 내부에서 바로 평가하지 않습니다. Addin 콜백이 먼저 종료된 후 짧은 지연을 두고 RStudio Console로 실행 명령을 전달합니다. 따라서 일반적인 Console 실행과 동일하게 Busy 표시와 Stop 버튼이 활성화됩니다. Console에는 다음과 유사한 명령이 한 줄 표시됩니다.
-
-```r
-rstudiostatus::run_file_with_status(".../rstudio-status-123.R", name = "analysis.R", cleanup = TRUE)
-```
-
 선택 영역이 비어 있으면 Addin이 실행할 코드가 없다는 오류를 표시합니다. 파일 전체를 실행하려면 코드를 선택하지 않고 **Run Current Document with Status**를 사용할 수도 있습니다.
 
 ### 20초 확인용 예제
