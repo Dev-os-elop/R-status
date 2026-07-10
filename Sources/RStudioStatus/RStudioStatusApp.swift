@@ -510,8 +510,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         let ratio = min(1, max(0, displayCurrent / total))
         let segmentCount = 8
         let completed = min(segmentCount, max(0, Int((ratio * Double(segmentCount)).rounded(.down))))
-        let bar = String(repeating: "█", count: completed)
-            + String(repeating: "░", count: segmentCount - completed)
         let percent = Int((ratio * 100).rounded())
         let usesWholeNumbers = total.rounded() == total
         let totalText = formatProgressValue(total, wholeNumbers: usesWholeNumbers)
@@ -521,9 +519,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             width: valueWidth
         )
         let paddedTotal = fixedWidthField(totalText, width: valueWidth)
-        setCompactProgressTitle(
-            progressItem,
-            "Progress: [\(bar)] \(String(format: "%3d", percent))% · \(currentText)/\(paddedTotal)"
+        setProgressTitle(
+            completed: completed,
+            segmentCount: segmentCount,
+            details: "\(String(format: "%3d", percent))% · \(currentText)/\(paddedTotal)"
         )
         progressItem.isHidden = false
 
@@ -568,6 +567,29 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             string: title,
             attributes: [.font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
         )
+    }
+
+    private func setProgressTitle(completed: Int, segmentCount: Int, details: String) {
+        let font = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        let normalAttributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.labelColor
+        ]
+        let result = NSMutableAttributedString(string: "Progress: [", attributes: normalAttributes)
+        result.append(NSAttributedString(
+            string: String(repeating: "■", count: completed),
+            attributes: normalAttributes
+        ))
+        result.append(NSAttributedString(
+            string: String(repeating: "■", count: segmentCount - completed),
+            attributes: [
+                .font: font,
+                .foregroundColor: NSColor.quaternaryLabelColor
+            ]
+        ))
+        result.append(NSAttributedString(string: "] \(details)", attributes: normalAttributes))
+        progressItem.title = result.string
+        progressItem.attributedTitle = result
     }
 
     private func startProcessWatchdog() {
