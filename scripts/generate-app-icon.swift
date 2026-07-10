@@ -45,6 +45,16 @@ func pngData(pixelSize: Int) -> Data {
     func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
         CGPoint(x: cat.minX + cat.width * x, y: cat.minY + cat.height * y)
     }
+
+    context.setStrokeColor(NSColor(calibratedRed: 0.28, green: 0.58, blue: 1.0, alpha: 0.9).cgColor)
+    context.setLineWidth(max(1, size * 0.035))
+    for scale in [0.92, 1.14] as [CGFloat] {
+        let diameter = cat.width * scale
+        context.strokeEllipse(in: CGRect(x: cat.midX - diameter / 2,
+                                         y: cat.midY - diameter / 2,
+                                         width: diameter, height: diameter))
+    }
+
     let head = CGMutablePath()
     head.move(to: point(0.18, 0.23))
     head.addCurve(to: point(0.15, 0.58), control1: point(0.10, 0.34), control2: point(0.11, 0.48))
@@ -56,9 +66,30 @@ func pngData(pixelSize: Int) -> Data {
     head.addCurve(to: point(0.82, 0.23), control1: point(0.89, 0.48), control2: point(0.90, 0.34))
     head.addCurve(to: point(0.18, 0.23), control1: point(0.68, 0.05), control2: point(0.32, 0.05))
     head.closeSubpath()
-    context.setFillColor(NSColor(calibratedRed: 0.10, green: 0.14, blue: 0.20, alpha: 1).cgColor)
+    let dark = NSColor(calibratedRed: 0.18, green: 0.23, blue: 0.32, alpha: 1)
+    context.setFillColor(NSColor.white.cgColor)
     context.addPath(head)
     context.fillPath()
+    context.setStrokeColor(dark.cgColor)
+    context.setLineWidth(max(1, cat.width * 0.065))
+    context.setLineCap(.round)
+    context.setLineJoin(.round)
+    context.addPath(head)
+    context.strokePath()
+
+    context.setFillColor(NSColor(calibratedRed: 1.0, green: 0.63, blue: 0.60, alpha: 1).cgColor)
+    for points in [
+        [point(0.18, 0.82), point(0.30, 0.72), point(0.22, 0.90)],
+        [point(0.82, 0.82), point(0.70, 0.72), point(0.78, 0.90)]
+    ] {
+        let ear = CGMutablePath()
+        ear.move(to: points[0])
+        ear.addLine(to: points[1])
+        ear.addLine(to: points[2])
+        ear.closeSubpath()
+        context.addPath(ear)
+        context.fillPath()
+    }
 
     let mark = CGMutablePath()
     mark.move(to: point(0.40, 0.73))
@@ -67,16 +98,60 @@ func pngData(pixelSize: Int) -> Data {
     mark.addLine(to: point(0.50, 0.67))
     mark.addLine(to: point(0.455, 0.61))
     mark.closeSubpath()
-    context.setFillColor(NSColor(calibratedWhite: 0.74, alpha: 1).cgColor)
+    context.setFillColor(NSColor(calibratedWhite: 0.38, alpha: 1).cgColor)
     context.addPath(mark)
     context.fillPath()
 
-    context.setFillColor(NSColor(calibratedRed: 0.20, green: 0.72, blue: 1.00, alpha: 1).cgColor)
+    context.setFillColor(dark.cgColor)
     for x in [0.35, 0.65] as [CGFloat] {
-        let center = point(x, 0.43)
-        let diameter = cat.width * 0.14
+        let center = point(x, 0.45)
+        let diameter = cat.width * 0.16
         context.fillEllipse(in: CGRect(x: center.x - diameter / 2, y: center.y - diameter / 2,
                                        width: diameter, height: diameter))
+        context.setFillColor(NSColor.white.cgColor)
+        let highlight = cat.width * 0.045
+        context.fillEllipse(in: CGRect(x: center.x - diameter * 0.20,
+                                       y: center.y + diameter * 0.08,
+                                       width: highlight, height: highlight))
+        context.setFillColor(dark.cgColor)
+    }
+
+    let pink = NSColor(calibratedRed: 0.95, green: 0.45, blue: 0.45, alpha: 1)
+    let noseCenter = point(0.50, 0.32)
+    let nose = CGMutablePath()
+    nose.move(to: CGPoint(x: noseCenter.x - cat.width * 0.045,
+                          y: noseCenter.y + cat.height * 0.025))
+    nose.addLine(to: CGPoint(x: noseCenter.x + cat.width * 0.045,
+                             y: noseCenter.y + cat.height * 0.025))
+    nose.addLine(to: CGPoint(x: noseCenter.x, y: noseCenter.y - cat.height * 0.035))
+    nose.closeSubpath()
+    context.setFillColor(pink.cgColor)
+    context.addPath(nose)
+    context.fillPath()
+
+    context.setStrokeColor(dark.cgColor)
+    context.setLineWidth(max(1, cat.width * 0.035))
+    let mouthY = noseCenter.y - cat.height * 0.075
+    context.move(to: CGPoint(x: cat.midX, y: noseCenter.y - cat.height * 0.03))
+    context.addLine(to: CGPoint(x: cat.midX, y: mouthY + cat.height * 0.02))
+    context.addCurve(to: CGPoint(x: cat.midX - cat.width * 0.10, y: mouthY + cat.height * 0.05),
+                     control1: CGPoint(x: cat.midX - cat.width * 0.03, y: mouthY - cat.height * 0.04),
+                     control2: CGPoint(x: cat.midX - cat.width * 0.08, y: mouthY - cat.height * 0.01))
+    context.move(to: CGPoint(x: cat.midX, y: mouthY + cat.height * 0.02))
+    context.addCurve(to: CGPoint(x: cat.midX + cat.width * 0.10, y: mouthY + cat.height * 0.05),
+                     control1: CGPoint(x: cat.midX + cat.width * 0.03, y: mouthY - cat.height * 0.04),
+                     control2: CGPoint(x: cat.midX + cat.width * 0.08, y: mouthY - cat.height * 0.01))
+    context.strokePath()
+
+    for side in [-1.0, 1.0] as [CGFloat] {
+        let innerX = cat.midX + side * cat.width * 0.25
+        let outerX = cat.midX + side * cat.width * 0.39
+        for yOffset in [-0.02, 0.045] as [CGFloat] {
+            let y = cat.minY + cat.height * (0.30 + yOffset)
+            context.move(to: CGPoint(x: innerX, y: y))
+            context.addLine(to: CGPoint(x: outerX, y: y + side * cat.height * 0.006))
+            context.strokePath()
+        }
     }
     NSGraphicsContext.restoreGraphicsState()
     return bitmap.representation(using: .png, properties: [:])!
