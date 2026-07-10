@@ -228,12 +228,6 @@ remove.packages("rstudiostatus")
 
 이 명령은 `/Applications` 또는 `~/Applications`의 앱과 사용자 R 라이브러리의 `rstudiostatus` 패키지를 제거합니다.
 
-## 문제 해결
-
-### `unable to lookup item 'PlatformPath'` 설치 오류
-
-이 오류는 소스를 로컬에서 빌드하던 0.3.5 이하 설치기에서 발생합니다. 최신 ZIP을 다시 내려받아 설치하세요. 0.3.6부터 일반 설치는 사전 빌드된 앱을 사용하므로 Xcode Command Line Tools가 필요하지 않습니다.
-
 ### Addins 메뉴에 항목이 보이지 않음
 
 RStudio를 완전히 종료하고 다시 실행하세요. 그래도 보이지 않으면 RStudio 콘솔에서 다음을 확인합니다.
