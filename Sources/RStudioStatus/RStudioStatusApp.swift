@@ -28,18 +28,13 @@ private struct StatusUpdate: Decodable {
     let message: String?
 }
 
-private struct GitHubRelease: Decodable {
-    let tagName: String
-    let htmlURL: URL
-
-    enum CodingKeys: String, CodingKey {
-        case tagName = "tag_name"
-        case htmlURL = "html_url"
-    }
+private struct GitHubSourceVersion {
+    let version: String
+    let repositoryURL: URL
 }
 
 private enum UpdateCheckResult {
-    case updateAvailable(GitHubRelease)
+    case updateAvailable(GitHubSourceVersion)
     case latest
     case failed(String)
 }
@@ -173,6 +168,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let summaryItem = NSMenuItem(title: "RStudio 연결 대기 중", action: nil, keyEquivalent: "")
     private let detailItem = NSMenuItem(title: "포트 47821", action: nil, keyEquivalent: "")
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
+    private let cpuItem = NSMenuItem(title: "CPU: —", action: nil, keyEquivalent: "")
+    private let memoryItem = NSMenuItem(title: "RAM: —", action: nil, keyEquivalent: "")
+    private let gpuItem = NSMenuItem(title: "GPU (system): —", action: nil, keyEquivalent: "")
+    private let tasksItem = NSMenuItem(title: "Tasks: —", action: nil, keyEquivalent: "")
+    private let processesItem = NSMenuItem(title: "Processes: —", action: nil, keyEquivalent: "")
     private var updateItem: NSMenuItem?
     private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
@@ -181,6 +182,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var detailMessage = ""
     private var startedAt: Date?
     private var timer: Timer?
+    private var resourceTimer: Timer?
+    private var isSamplingResources = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -190,6 +193,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         }
         configureMenu()
         updateDisplay()
+        startResourceMonitoring()
 
         server.onStatus = { [weak self] update in self?.apply(update) }
         do {
@@ -212,6 +216,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     func applicationWillTerminate(_ notification: Notification) {
         timer?.invalidate()
+        resourceTimer?.invalidate()
         server.stop()
     }
 
@@ -228,6 +233,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(summaryItem)
         menu.addItem(detailItem)
         menu.addItem(elapsedItem)
+        menu.addItem(.separator())
+
+        for item in [resourceHeaderItem, cpuItem, memoryItem, gpuItem, tasksItem, processesItem] {
+            item.isEnabled = false
+            menu.addItem(item)
+        }
+        gpuItem.toolTip = "System-wide GPU utilization. macOS does not expose reliable per-R-process GPU usage to regular apps."
         menu.addItem(.separator())
 
         let resetItem = NSMenuItem(title: "상태 초기화", action: #selector(resetStatus), keyEquivalent: "r")
@@ -273,6 +285,43 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private var currentVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+    }
+
+    private func startResourceMonitoring() {
+        refreshResourceUsage()
+        let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.refreshResourceUsage() }
+        }
+        resourceTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func refreshResourceUsage() {
+        guard !isSamplingResources else { return }
+        isSamplingResources = true
+        Task.detached(priority: .utility) {
+            let snapshot = RResourceMonitor.sample()
+            await MainActor.run { [weak self] in
+                self?.isSamplingResources = false
+                self?.updateResourceItems(snapshot)
+            }
+        }
+    }
+
+    private func updateResourceItems(_ snapshot: RResourceSnapshot) {
+        cpuItem.title = String(format: "CPU: %.1f%%", snapshot.cpuPercent)
+        memoryItem.title = "RAM: \(formatMemory(snapshot.residentMemoryBytes))"
+        gpuItem.title = snapshot.systemGPUPercent.map { "GPU (system): \($0)%" } ?? "GPU (system): N/A"
+        tasksItem.title = "Tasks: \(snapshot.activeTaskCount) active · \(snapshot.workerCount) workers"
+        processesItem.title = "Processes: \(snapshot.processCount) · Threads: \(snapshot.threadCount)"
+    }
+
+    private func formatMemory(_ bytes: UInt64) -> String {
+        let megabytes = Double(bytes) / 1_048_576
+        if megabytes >= 1_024 {
+            return String(format: "%.2f GB", megabytes / 1_024)
+        }
+        return String(format: "%.0f MB", megabytes)
     }
 
     private func loadMenuBarIcon() -> NSImage? {
@@ -452,35 +501,34 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     @objc private func checkForUpdates() {
-        let repository = Bundle.main.object(forInfoDictionaryKey: "GitHubReleaseRepository") as? String
-            ?? "Ljwook92/R-status-releases"
-        guard let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest") else { return }
+        let repository = Bundle.main.object(forInfoDictionaryKey: "GitHubRepository") as? String
+            ?? "Dev-os-elop/R-status"
+        guard let url = URL(string: "https://raw.githubusercontent.com/\(repository)/main/Resources/Info.plist"),
+              let repositoryURL = URL(string: "https://github.com/\(repository)") else { return }
         let installedVersion = currentVersion
         updateItem?.title = "Checking for Updates…"
         updateItem?.isEnabled = false
 
         var request = URLRequest(url: url)
-        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("RStudioStatus/\(installedVersion)", forHTTPHeaderField: "User-Agent")
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             let result: UpdateCheckResult
             if let error {
                 result = .failed(error.localizedDescription)
-            } else if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
-                // The repository has no published Release yet. The locally built
-                // version is therefore the latest available version.
-                result = .latest
             } else if let httpResponse = response as? HTTPURLResponse,
                       !(200...299).contains(httpResponse.statusCode) {
                 result = .failed("GitHub returned HTTP \(httpResponse.statusCode).")
             } else if let data,
-                      let release = try? JSONDecoder().decode(GitHubRelease.self, from: data) {
-                result = isVersion(release.tagName, newerThan: installedVersion)
-                    ? .updateAvailable(release)
+                      let plist = try? PropertyListSerialization.propertyList(from: data, format: nil),
+                      let dictionary = plist as? [String: Any],
+                      let remoteVersion = dictionary["CFBundleShortVersionString"] as? String {
+                let sourceVersion = GitHubSourceVersion(version: remoteVersion, repositoryURL: repositoryURL)
+                result = isVersion(remoteVersion, newerThan: installedVersion)
+                    ? .updateAvailable(sourceVersion)
                     : .latest
             } else {
-                result = .failed("The GitHub release response could not be read.")
+                result = .failed("The GitHub version file could not be read.")
             }
 
             DispatchQueue.main.async { [weak self] in
@@ -496,14 +544,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
         let alert = NSAlert()
         switch result {
-        case .updateAvailable(let release):
+        case .updateAvailable(let sourceVersion):
             alert.messageText = "Update Available"
-            alert.informativeText = "RStudio Status \(release.tagName) is available. You are using v\(currentVersion)."
+            alert.informativeText = "RStudio Status v\(sourceVersion.version) is available on GitHub. You are using v\(currentVersion)."
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "Open Download Page")
+            alert.addButton(withTitle: "Open GitHub")
             alert.addButton(withTitle: "Later")
             if alert.runModal() == .alertFirstButtonReturn {
-                NSWorkspace.shared.open(release.htmlURL)
+                NSWorkspace.shared.open(sourceVersion.repositoryURL)
             }
         case .latest:
             alert.messageText = "You're up to date"

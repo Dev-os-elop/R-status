@@ -1,0 +1,38 @@
+# RStudio Status parallel resource-monitor test
+#
+# Select the whole file and run:
+# Addins -> Run Selection with Status
+#
+# Expected menu values while running (approximately):
+# - Processes: 4 (one main R session + three workers)
+# - Tasks: 3 active
+# - Workers: 3
+# - CPU: may approach 300% because each core contributes up to 100%
+
+local({
+worker_count <- 3L
+cluster <- parallel::makeCluster(worker_count)
+on.exit(parallel::stopCluster(cluster), add = TRUE)
+
+message("Starting ", worker_count, " parallel workers for 20 seconds")
+
+results <- parallel::clusterEvalQ(cluster, {
+  started_at <- proc.time()[["elapsed"]]
+  iterations <- 0L
+  checksum <- 0
+
+  while (proc.time()[["elapsed"]] - started_at < 20) {
+    values <- matrix(rnorm(400L * 400L), nrow = 400L)
+    checksum <- checksum + sum(diag(crossprod(values)))
+    iterations <- iterations + 1L
+  }
+
+  list(iterations = iterations, checksum = checksum)
+})
+
+message(
+  "Parallel test complete: ",
+  sum(vapply(results, `[[`, integer(1), "iterations")),
+  " total iterations"
+)
+})
