@@ -498,33 +498,64 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             return
         }
 
-        let ratio = min(1, max(0, current / total))
+        let displayCurrent = min(total, max(0, current))
+        let ratio = min(1, max(0, displayCurrent / total))
         let segmentCount = 14
         let completed = min(segmentCount, max(0, Int((ratio * Double(segmentCount)).rounded(.down))))
         let bar = String(repeating: "█", count: completed)
             + String(repeating: "░", count: segmentCount - completed)
         let percent = Int((ratio * 100).rounded())
-        progressItem.title = "Progress: [\(bar)] \(percent)% · \(formatProgressValue(current))/\(formatProgressValue(total))"
+        let totalText = formatProgressValue(total)
+        let valueWidth = max(8, totalText.count + 2)
+        let currentText = fixedWidthField(formatProgressValue(displayCurrent), width: valueWidth)
+        let paddedTotal = fixedWidthField(totalText, width: valueWidth)
+        setMonospacedTitle(
+            progressItem,
+            "Progress: [\(bar)] \(String(format: "%3d", percent))% · \(currentText)/\(paddedTotal)"
+        )
         progressItem.isHidden = false
 
-        let message = update.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if let eta = update.etaSeconds, eta.isFinite, eta >= 0 {
-            etaItem.title = "Remaining: \(formatElapsed(eta))" + (message.isEmpty ? "" : " · \(message)")
+            setMonospacedTitle(etaItem, "Remaining: \(formatRemaining(eta))")
         } else {
-            etaItem.title = "Remaining: calculating…" + (message.isEmpty ? "" : " · \(message)")
+            setMonospacedTitle(etaItem, "Remaining: --:--:--")
         }
         etaItem.isHidden = false
     }
 
     private func clearProgress() {
         progressItem.title = ""
+        progressItem.attributedTitle = NSAttributedString(string: "")
         progressItem.isHidden = true
         etaItem.title = ""
+        etaItem.attributedTitle = NSAttributedString(string: "")
         etaItem.isHidden = true
     }
 
     private func formatProgressValue(_ value: Double) -> String {
         value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
+    }
+
+    private func fixedWidthField(_ text: String, width: Int) -> String {
+        let clipped = text.count > width ? String(text.suffix(width)) : text
+        return String(repeating: " ", count: max(0, width - clipped.count)) + clipped
+    }
+
+    private func formatRemaining(_ interval: TimeInterval) -> String {
+        let seconds = min(359_999, max(0, Int(interval.rounded(.up))))
+        return String(
+            format: "%02d:%02d:%02d",
+            seconds / 3_600,
+            (seconds % 3_600) / 60,
+            seconds % 60
+        )
+    }
+
+    private func setMonospacedTitle(_ item: NSMenuItem, _ title: String) {
+        item.attributedTitle = NSAttributedString(
+            string: title,
+            attributes: [.font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
+        )
     }
 
     private func startProcessWatchdog() {

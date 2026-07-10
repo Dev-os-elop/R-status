@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 - 2026-07-10
+
+- 진행률 퍼센트와 현재/전체 값을 고정 폭으로 정렬
+- Progress와 Remaining 항목에 monospaced font 적용
+- 남은 시간을 항상 고정 길이 `HH:MM:SS`로 표시
+- 진행 메시지 길이 변화로 메뉴 폭이 흔들리지 않도록 별도 메시지 제거
+
 ## 0.4.0 - 2026-07-10
 
 - `progress::progress_bar`와 `progressr` 진행 이벤트 자동 연동
