@@ -508,18 +508,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         let segmentCount = 8
         let completed = min(segmentCount, max(0, Int((ratio * Double(segmentCount)).rounded(.down))))
         let percent = Int((ratio * 100).rounded())
-        let usesWholeNumbers = total.rounded() == total
-        let totalText = formatProgressValue(total, wholeNumbers: usesWholeNumbers)
-        let valueWidth = totalText.count
-        let currentText = fixedWidthField(
-            formatProgressValue(displayCurrent, wholeNumbers: usesWholeNumbers),
-            width: valueWidth
-        )
-        let paddedTotal = fixedWidthField(totalText, width: valueWidth)
         setProgressTitle(
             completed: completed,
             segmentCount: segmentCount,
-            details: "\(String(format: "%3d", percent))% · \(currentText)/\(paddedTotal)"
+            details: "\(String(format: "%3d", percent))%"
         )
         progressItem.isEnabled = true
         progressItem.isHidden = false
@@ -542,15 +534,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         etaItem.attributedTitle = NSAttributedString(string: "")
         etaItem.isEnabled = false
         etaItem.isHidden = true
-    }
-
-    private func formatProgressValue(_ value: Double, wholeNumbers: Bool) -> String {
-        wholeNumbers ? String(Int(value.rounded())) : String(format: "%.1f", value)
-    }
-
-    private func fixedWidthField(_ text: String, width: Int) -> String {
-        let clipped = text.count > width ? String(text.suffix(width)) : text
-        return String(repeating: " ", count: max(0, width - clipped.count)) + clipped
     }
 
     private func formatRemaining(_ interval: TimeInterval) -> String {
