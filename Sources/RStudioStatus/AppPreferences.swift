@@ -49,10 +49,20 @@ enum AppPreferences {
     private static let languageKey = "appLanguage"
     private static let iconStyleKey = "statusIconStyle"
     static let elapsedTimeKey = "showElapsedTimeInMenuBar"
+    private static let legacyDefaults = UserDefaults(suiteName: "io.github.ljwook92.rstatus")
+
+    private static func migratedObject(forKey key: String) -> Any? {
+        if let value = UserDefaults.standard.object(forKey: key) {
+            return value
+        }
+        guard let value = legacyDefaults?.object(forKey: key) else { return nil }
+        UserDefaults.standard.set(value, forKey: key)
+        return value
+    }
 
     static var language: AppLanguage {
         get {
-            guard let rawValue = UserDefaults.standard.string(forKey: languageKey),
+            guard let rawValue = migratedObject(forKey: languageKey) as? String,
                   let value = AppLanguage(rawValue: rawValue) else { return .system }
             return value
         }
@@ -61,7 +71,7 @@ enum AppPreferences {
 
     static var iconStyle: StatusIconStyle {
         get {
-            guard let rawValue = UserDefaults.standard.string(forKey: iconStyleKey),
+            guard let rawValue = migratedObject(forKey: iconStyleKey) as? String,
                   let value = StatusIconStyle(rawValue: rawValue) else { return .catOutline }
             return value
         }
@@ -70,8 +80,8 @@ enum AppPreferences {
 
     static var showElapsedTime: Bool {
         get {
-            guard UserDefaults.standard.object(forKey: elapsedTimeKey) != nil else { return true }
-            return UserDefaults.standard.bool(forKey: elapsedTimeKey)
+            guard let value = migratedObject(forKey: elapsedTimeKey) as? NSNumber else { return true }
+            return value.boolValue
         }
         set { UserDefaults.standard.set(newValue, forKey: elapsedTimeKey) }
     }

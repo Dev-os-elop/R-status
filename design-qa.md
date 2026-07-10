@@ -25,6 +25,7 @@ The source is a structural reference rather than a pixel-identical target. The i
 - Cat Original, Cat Silhouette, Status Pulse, Progress Blocks, Signal Orbit, Window Check, and Layered S display live previews and persist the selected theme.
 - Appearance selections affect the menu-bar status glyph only; the app and notification identity remains the white Cat Original icon.
 - The bundle icon is registered as `CatOriginal.icns`, and updates replace the entire bundle so stale icon files cannot survive installation.
+- Notification Center receives a new app identity at `io.github.ljwook92.rstatus.cat`; legacy appearance preferences migrate automatically.
 - Show Elapsed Time in Menu Bar uses a native `NSSwitch` and updates the status item immediately.
 - Launch at Login uses a native `NSSwitch` backed by `SMAppService`.
 - Selecting language or appearance rebuilds the menu without opening a separate app window.

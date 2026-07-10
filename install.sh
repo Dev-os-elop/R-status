@@ -79,8 +79,8 @@ codesign --verify --deep "$APP_PATH"
 
 echo "[3/4] RStudio Addin 설치"
 "$ROOT/scripts/install-r-package.sh"
-defaults write io.github.ljwook92.rstatus installedAddinVersion -string "$VERSION"
-defaults write io.github.ljwook92.rstatus addinPromptedVersion -string "$VERSION"
+defaults write io.github.ljwook92.rstatus.cat installedAddinVersion -string "$VERSION"
+defaults write io.github.ljwook92.rstatus.cat addinPromptedVersion -string "$VERSION"
 
 echo "[4/4] 앱 재실행 예약"
 # Remove one-shot restart jobs left by older updater versions before creating
