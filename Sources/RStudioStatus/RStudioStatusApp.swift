@@ -350,7 +350,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var taskPID: Int32?
     private var updateProcess: Process?
     private var updateLogURL: URL?
-    private var updateRepositoryURL: URL?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -377,9 +376,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         center.delegate = self
         center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-            self?.promptForAddinInstallationIfNeeded()
-        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -741,24 +737,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         postNotification(title: "RStudio Status", body: "RStudio 로고 알림 테스트입니다.")
     }
 
-    private func promptForAddinInstallationIfNeeded() {
-        let defaults = UserDefaults.standard
-        guard defaults.string(forKey: "installedAddinVersion") != currentVersion,
-              defaults.string(forKey: "addinPromptedVersion") != currentVersion else { return }
-
-        defaults.set(currentVersion, forKey: "addinPromptedVersion")
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.messageText = "Install RStudio Addin?"
-        alert.informativeText = "RStudio Status can install its Addin automatically. RStudio must be restarted after installation."
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Install Addin")
-        alert.addButton(withTitle: "Later")
-        if alert.runModal() == .alertFirstButtonReturn {
-            installBundledAddin()
-        }
-    }
-
     @objc private func installAddinFromMenu() {
         installBundledAddin()
     }
@@ -786,23 +764,20 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         isInstallingAddin = false
         addinInstallItem?.title = "Install/Update RStudio Addin…"
         addinInstallItem?.isEnabled = true
-        NSApp.activate(ignoringOtherApps: true)
-
-        let alert = NSAlert()
         switch result {
         case .success:
             UserDefaults.standard.set(currentVersion, forKey: "installedAddinVersion")
-            alert.messageText = "RStudio Addin Installed"
-            alert.informativeText = "Restart RStudio, then open Addins and choose Run Selection with Status."
-            alert.alertStyle = .informational
+            postNotification(
+                title: "RStudio Addin Installed",
+                body: "Restart RStudio, then choose Run Selection with Status from Addins."
+            )
         case .failure(let error):
-            alert.messageText = "Addin Installation Failed"
             let message = error.localizedDescription
-            alert.informativeText = message.count > 1_500 ? String(message.prefix(1_500)) + "…" : message
-            alert.alertStyle = .warning
+            postNotification(
+                title: "RStudio Addin Installation Failed",
+                body: message.count > 180 ? String(message.prefix(180)) + "…" : message
+            )
         }
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
     }
 
     @objc private func checkForUpdates() {
@@ -905,7 +880,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             updateItem?.title = "Installing Update…"
             updateProcess = launched.process
             updateLogURL = launched.logURL
-            updateRepositoryURL = sourceVersion.repositoryURL
             postNotification(
                 title: "RStudio Status Update",
                 body: "Installing v\(sourceVersion.version). The app will restart automatically."
@@ -917,7 +891,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             updateInstallTimer = timer
             RunLoop.main.add(timer, forMode: .common)
         case .failure(let error):
-            showUpdateInstallFailure(error.localizedDescription, repositoryURL: sourceVersion.repositoryURL)
+            showUpdateInstallFailure(error.localizedDescription)
         }
     }
 
@@ -930,29 +904,19 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         let message = log.isEmpty
             ? "The installer exited with status \(updateProcess.terminationStatus)."
             : log
-        showUpdateInstallFailure(
-            message,
-            repositoryURL: updateRepositoryURL ?? URL(string: "https://github.com/Dev-os-elop/R-status")!
-        )
+        showUpdateInstallFailure(message)
         self.updateProcess = nil
         updateLogURL = nil
-        updateRepositoryURL = nil
     }
 
-    private func showUpdateInstallFailure(_ message: String, repositoryURL: URL) {
+    private func showUpdateInstallFailure(_ message: String) {
         isInstallingUpdate = false
         updateItem?.title = "Check for Updates…"
         updateItem?.isEnabled = true
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.messageText = "Update Installation Failed"
-        alert.informativeText = message.count > 1_500 ? String(message.prefix(1_500)) + "…" : message
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "Open GitHub")
-        alert.addButton(withTitle: "OK")
-        if alert.runModal() == .alertFirstButtonReturn {
-            NSWorkspace.shared.open(repositoryURL)
-        }
+        postNotification(
+            title: "RStudio Status Update Failed",
+            body: message.count > 180 ? String(message.prefix(180)) + "…" : message
+        )
     }
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter,

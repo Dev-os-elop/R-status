@@ -29,5 +29,5 @@ for running_pid in "${RUNNING_PIDS[@]}"; do
 done
 
 if [[ -d "$APP_PATH" ]]; then
-    /usr/bin/open "$APP_PATH"
+    /usr/bin/open -g "$APP_PATH"
 fi
