@@ -6,8 +6,8 @@
 # 4. To test interruption, click RStudio's Stop button while it is running.
 #
 # Expected menu-bar flow:
-# RStudio logo -> Running -> Complete
-#                        `-> Interrupted (when Stop is clicked)
+# Status icon -> Running -> Complete
+#                         `-> Interrupted (when Stop is clicked)
 
 message("20-second matrix computation started")
 
