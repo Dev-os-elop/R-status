@@ -39,7 +39,7 @@ final result: passed
 
 - Source visual truth: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/TemporaryItems/NSIRD_screencaptureui_GlwgHQ/Screenshot.png`
 - Implementation screenshot: `/tmp/RStatus-cat-states.png`
-- Bundle icon preview: `/tmp/RStatus-cat-original.png`
+- Bundle icon preview: `/tmp/RStatus-cat-original-v053.png`
 - Combined comparison evidence: `/tmp/RStatus-cat-qa-comparison.png`
 - Comparison viewport: 1840 × 720, source and implementation shown in the same frame.
 - State: Cat Original idle, running, complete, interrupted, and fail; Cat Silhouette retained as the secondary option.
@@ -59,5 +59,7 @@ final result: passed
 - P1 in v0.5.1: Cat Silhouette was incorrectly made the official default despite the selected white-cat design.
 - Fix: restored the selected design as Cat Original, changed the default and bundle icon, and retained Cat Silhouette only as an optional theme.
 - Post-fix evidence: `/tmp/RStatus-cat-qa-comparison.png`.
+- P3 in v0.5.2: the Cat Original face had slightly more internal padding than requested.
+- Fix: enlarged the menu-bar face by approximately 8% and reduced cat app-icon insets while preserving status-glyph spacing.
 
 final result: passed
