@@ -64,6 +64,10 @@ fi
 
 if [[ -d "$APP_PATH" ]]; then
     "$LSREGISTER" -u "$APP_PATH" 2>/dev/null || true
+    # Replace the entire bundle instead of merging into it. This removes stale
+    # icon resources from older versions and forces LaunchServices to register
+    # the current Cat Original icon filename.
+    rm -rf "$APP_PATH"
 fi
 mkdir -p "$APP_DIR"
 ditto "$ROOT/dist/$APP_NAME" "$APP_PATH"
