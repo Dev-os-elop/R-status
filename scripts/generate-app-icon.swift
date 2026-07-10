@@ -41,7 +41,7 @@ func pngData(pixelSize: Int) -> Data {
                            cornerHeight: size * 0.20, transform: nil))
     context.fillPath()
 
-    let cat = tile.insetBy(dx: size * 0.16, dy: size * 0.15)
+    let cat = tile.insetBy(dx: size * 0.13, dy: size * 0.12)
     func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
         CGPoint(x: cat.minX + cat.width * x, y: cat.minY + cat.height * y)
     }

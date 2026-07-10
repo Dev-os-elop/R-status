@@ -48,7 +48,8 @@ enum StatusIconRenderer {
                                    cornerHeight: size * 0.20, transform: nil))
             context.fillPath()
 
-            let iconRect = tile.insetBy(dx: size * 0.16, dy: size * 0.16)
+            let iconInset = isCat ? size * 0.13 : size * 0.16
+            let iconRect = tile.insetBy(dx: iconInset, dy: iconInset)
             if style == .catOutline {
                 drawCatOriginalAppRings(rect: iconRect, context: context)
                 drawCatOriginal(state: .idle, rect: iconRect,
@@ -110,13 +111,13 @@ enum StatusIconRenderer {
                                         context: CGContext, forApplicationIcon: Bool) {
         let faceRect: CGRect
         if forApplicationIcon {
-            faceRect = rect.insetBy(dx: rect.width * 0.05, dy: rect.height * 0.05)
+            faceRect = rect.insetBy(dx: rect.width * 0.02, dy: rect.height * 0.02)
         } else {
             faceRect = CGRect(
                 x: rect.minX,
-                y: rect.minY + rect.height * 0.08,
-                width: rect.width * 0.74,
-                height: rect.height * 0.84
+                y: rect.minY + rect.height * 0.06,
+                width: rect.width * 0.77,
+                height: rect.height * 0.88
             )
         }
 
