@@ -49,15 +49,22 @@ enum AppPreferences {
     private static let languageKey = "appLanguage"
     private static let iconStyleKey = "statusIconStyle"
     static let elapsedTimeKey = "showElapsedTimeInMenuBar"
-    private static let legacyDefaults = UserDefaults(suiteName: "io.github.ljwook92.rstatus")
+    private static let legacyDefaults = [
+        "io.github.ljwook92.rstatus.cat",
+        "io.github.ljwook92.rstatus"
+    ].compactMap(UserDefaults.init(suiteName:))
 
     private static func migratedObject(forKey key: String) -> Any? {
         if let value = UserDefaults.standard.object(forKey: key) {
             return value
         }
-        guard let value = legacyDefaults?.object(forKey: key) else { return nil }
-        UserDefaults.standard.set(value, forKey: key)
-        return value
+        for defaults in legacyDefaults {
+            if let value = defaults.object(forKey: key) {
+                UserDefaults.standard.set(value, forKey: key)
+                return value
+            }
+        }
+        return nil
     }
 
     static var language: AppLanguage {

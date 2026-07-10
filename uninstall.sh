@@ -3,10 +3,13 @@ set -euo pipefail
 
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
 APP_CANDIDATES=(
+    "/Applications/ES Status.app"
+    "$HOME/Applications/ES Status.app"
     "/Applications/RStudio Status.app"
     "$HOME/Applications/RStudio Status.app"
 )
 
+pkill -x ESStatus 2>/dev/null || true
 pkill -x RStudioStatus 2>/dev/null || true
 
 for app_path in "${APP_CANDIDATES[@]}"; do
@@ -27,4 +30,4 @@ if (dir.exists(user_library) && "rstudiostatus" %in% rownames(installed.packages
 }
 RSCRIPT
 
-echo "RStudio Status 제거가 완료되었습니다."
+echo "ES Status 제거가 완료되었습니다."

@@ -4,29 +4,31 @@
 <dict>
     <key>CFBundleDevelopmentRegion</key>
     <string>ko</string>
+    <key>CFBundleDisplayName</key>
+    <string>ES Status</string>
     <key>CFBundleExecutable</key>
-    <string>RStudioStatus</string>
+    <string>ESStatus</string>
     <key>CFBundleIdentifier</key>
-    <string>io.github.ljwook92.rstatus.cat</string>
+    <string>io.github.ljwook92.esstatus</string>
     <key>CFBundleIconFile</key>
     <string>CatOriginal.icns</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>RStudio Status</string>
+    <string>ES Status</string>
     <key>GitHubRepository</key>
     <string>Dev-os-elop/R-status</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.6.0</string>
+    <string>0.7.0</string>
     <key>CFBundleVersion</key>
-    <string>41</string>
+    <string>42</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>RStudio Status</string>
+    <string>ES Status</string>
 </dict>
 </plist>

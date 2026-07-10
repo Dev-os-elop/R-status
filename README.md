@@ -1,4 +1,4 @@
-# RStudio Status
+# ES Status
 
 RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로 보여주는 앱입니다.
 
@@ -40,7 +40,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 
 1. [Dev-os-elop/R-status](https://github.com/Dev-os-elop/R-status)에서 **Code → Download ZIP**을 선택합니다.
 2. 다운로드한 ZIP의 압축을 풉니다.
-3. 폴더 안의 **Install RStudio Status.command**를 더블클릭합니다.
+3. 폴더 안의 **Install ES Status.command**를 더블클릭합니다.
 4. macOS가 실행을 막으면 파일을 우클릭하고 **Open**을 선택합니다.
 5. 설치가 완료되면 RStudio를 완전히 종료했다가 다시 실행합니다.
 6. RStudio에서 **Addins → Run Selection with Status**를 사용합니다.
@@ -49,7 +49,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 
 처음 실행하면 macOS가 알림 권한을 요청합니다. 완료·실패 알림을 받으려면 **허용**을 선택하세요.
 
-v0.6.0은 이전 알림 센터에 캐시된 R 아이콘을 교체하기 위해 앱 신원을 새 번들 ID로 이전합니다. 업데이트 후 알림 권한을 한 번 다시 허용해야 하며, **로그인 시 실행**을 사용했다면 Settings에서 해당 스위치를 다시 켜세요. 언어·메뉴바 아이콘·실행 시간 설정은 자동으로 이전됩니다.
+v0.7.0부터 앱 이름과 설치 경로는 **ES Status**와 `ES Status.app`을 사용합니다. 기존 RStudio Status 앱은 업데이트 중 자동 제거됩니다. 새 앱 신원으로 알림 권한을 한 번 다시 허용해야 하며, **로그인 시 실행**을 사용했다면 Settings에서 해당 스위치를 다시 켜세요. 기존 언어·메뉴바 아이콘·실행 시간 설정은 자동으로 이전됩니다.
 
 ### 터미널에서 설치하기
 
@@ -175,7 +175,7 @@ rstatus_notify("idle", "")
 - **Install/Update RStudio Addin…**으로 Addin 설치 또는 업데이트
 - 앱 종료
 
-업데이트가 없으면 `You're using the latest version.` 팝업이 표시됩니다. 새 버전이 있으면 **Download and Install**을 눌러 태그 ZIP과 검증된 사전 빌드 실행 파일을 내려받고, 앱과 Addin을 설치한 뒤 RStudio Status를 자동으로 재실행합니다. Xcode는 필요하지 않습니다.
+업데이트가 없으면 `You're using the latest version.` 팝업이 표시됩니다. 새 버전이 있으면 **Download and Install**을 눌러 태그 ZIP과 검증된 사전 빌드 실행 파일을 내려받고, 앱과 Addin을 설치한 뒤 ES Status를 자동으로 재실행합니다. Xcode는 필요하지 않습니다.
 
 ### 고양이 아이콘 테마
 
@@ -230,7 +230,7 @@ PSOCK cluster처럼 worker의 부모 PID가 분리되는 경우에는 실행 인
 
 ## 제거
 
-앱을 종료하고 Applications에서 `RStudio Status.app`을 휴지통으로 이동합니다. Addin도 제거하려면 RStudio Console에서 실행합니다.
+앱을 종료하고 Applications에서 `ES Status.app`을 휴지통으로 이동합니다. Addin도 제거하려면 RStudio Console에서 실행합니다.
 
 ```r
 remove.packages("rstudiostatus")
@@ -246,7 +246,7 @@ remove.packages("rstudiostatus")
 
 ### `'git' 명령에는 명령어 라인 개발자 도구가 필요합니다` 팝업
 
-RStudio Status의 ZIP 설치와 자동 업데이트는 `git`을 사용하지 않으며 Xcode Command Line Tools가 필요하지 않습니다. 이 팝업은 보통 `git clone`을 실행했거나, RStudio가 `.git` 폴더가 있는 프로젝트의 Git 상태를 확인할 때 macOS의 `/usr/bin/git`이 표시합니다.
+ES Status의 ZIP 설치와 자동 업데이트는 `git`을 사용하지 않으며 Xcode Command Line Tools가 필요하지 않습니다. 이 팝업은 보통 `git clone`을 실행했거나, RStudio가 `.git` 폴더가 있는 프로젝트의 Git 상태를 확인할 때 macOS의 `/usr/bin/git`이 표시합니다.
 
 - 설치할 때는 `git clone` 대신 위의 **Code → Download ZIP**을 사용하세요.
 - RStudio에서 Git을 사용하지 않는다면 **Tools → Global Options → Git/SVN**에서 **Enable version control interface for RStudio projects**를 끄고 RStudio를 재시작하세요.
@@ -274,7 +274,7 @@ curl http://127.0.0.1:47821/health
 정상 응답:
 
 ```json
-{"ok":true,"app":"RStudio Status"}
+{"ok":true,"app":"ES Status"}
 ```
 
 포트 47821을 다른 프로그램이 사용 중인지 확인하려면 다음을 실행합니다.
@@ -285,7 +285,7 @@ lsof -nP -iTCP:47821 -sTCP:LISTEN
 
 ### 알림이 오지 않음
 
-macOS **시스템 설정 → 알림 → RStudio Status**에서 알림 허용이 켜져 있는지 확인하세요. 메뉴바 앱을 클릭한 뒤 **알림 테스트**로 확인할 수 있습니다.
+macOS **시스템 설정 → 알림 → ES Status**에서 알림 허용이 켜져 있는지 확인하세요. 메뉴바 앱을 클릭한 뒤 **알림 테스트**로 확인할 수 있습니다.
 
 
 ## 보안

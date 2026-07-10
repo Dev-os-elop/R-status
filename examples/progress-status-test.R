@@ -1,4 +1,4 @@
-# RStudio Status progress integration test
+# ES Status progress integration test
 #
 # Select the whole file and run:
 # Addins -> Run Selection with Status

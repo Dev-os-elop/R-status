@@ -3,8 +3,8 @@ set -u
 
 ROOT="${0:A:h}"
 clear
-echo "RStudio Status 제거"
-echo "===================="
+echo "ES Status 제거"
+echo "=============="
 echo
 
 chmod +x "$ROOT/uninstall.sh"

@@ -1,4 +1,4 @@
-# RStudio Status 20-second computation test
+# ES Status 20-second computation test
 #
 # 1. Select this entire file in RStudio (Cmd + A).
 # 2. Open Addins in the top menu.

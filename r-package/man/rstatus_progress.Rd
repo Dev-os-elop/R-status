@@ -1,6 +1,6 @@
 \name{rstatus_progress}
 \alias{rstatus_progress}
-\title{Report progress to the RStudio Status menu bar app}
+\title{Report progress to the ES Status menu bar app}
 \usage{
 rstatus_progress(
   current = NULL,
@@ -22,5 +22,5 @@ rstatus_progress(
 \value{Invisibly returns whether the app accepted the update.}
 \description{
 This is normally called automatically for \code{progress} and \code{progressr}
-while code is executed through the RStudio Status Addin.
+while code is executed through the ES Status Addin.
 }

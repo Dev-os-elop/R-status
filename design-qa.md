@@ -5,7 +5,7 @@
 - Source reference: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/TemporaryItems/NSIRD_screencaptureui_2ppdht/Screenshot.png`
 - Implementation capture: `/tmp/rstatus-settings-submenu-switches.png`
 - Viewport: 3840 × 2486 desktop capture; the open Settings menu is fully visible and legible.
-- State: RStudio Status Settings submenu open.
+- State: ES Status Settings submenu open.
 
 The source is a structural reference rather than a pixel-identical target. The implementation intentionally uses a native macOS menu instead of copying the gray dashboard card, while retaining the requested right-side grouping and direct controls.
 
@@ -25,7 +25,7 @@ The source is a structural reference rather than a pixel-identical target. The i
 - Cat Original, Cat Silhouette, Status Pulse, Progress Blocks, Signal Orbit, Window Check, and Layered S display live previews and persist the selected theme.
 - Appearance selections affect the menu-bar status glyph only; the app and notification identity remains the white Cat Original icon.
 - The bundle icon is registered as `CatOriginal.icns`, and updates replace the entire bundle so stale icon files cannot survive installation.
-- Notification Center receives a new app identity at `io.github.ljwook92.rstatus.cat`; legacy appearance preferences migrate automatically.
+- Notification Center receives a new app identity at `io.github.ljwook92.esstatus`; legacy appearance preferences migrate automatically.
 - Show Elapsed Time in Menu Bar uses a native `NSSwitch` and updates the status item immediately.
 - Launch at Login uses a native `NSSwitch` backed by `SMAppService`.
 - Selecting language or appearance rebuilds the menu without opening a separate app window.
@@ -47,13 +47,13 @@ final result: passed
 - Combined comparison evidence: `/tmp/RStatus-cat-qa-comparison.png`
 - Comparison viewport: 1840 × 720, source and implementation shown in the same frame.
 - State: Cat Original idle, running, complete, interrupted, and fail; Cat Silhouette retained as the secondary option.
-- Focused comparison: not required because the combined frame includes enlarged 19 px renders and native 19 px previews for every state.
+- Focused comparison: not required because the combined frame includes enlarged 24 px renders and native 24 px previews for every state.
 
 **Findings**
 
 - No actionable P0/P1/P2 differences remain. Cat Original preserves the source's white face, pink ears and nose, short whiskers, gray forehead mark, state-colored outline, expression changes, and external status glyphs.
 - Fonts and typography: labels are QA-only and do not ship in the icon asset; native menu typography remains unchanged.
-- Spacing and layout rhythm: face-to-glyph proportions remain readable at 19 px without changing status-item height.
+- Spacing and layout rhythm: face-to-glyph proportions remain readable at 24 px without changing status-item height.
 - Colors and visual tokens: graphite idle, cobalt running, emerald complete, amber interrupted, and red fail match the selected visual target.
 - Image quality and asset fidelity: the bundle icon uses the same Cat Original face and blue ring treatment; standard `.icns` sizes were regenerated.
 - Copy and content: Appearance names the selected design Cat Original and keeps Cat Silhouette as a separate option.

@@ -2,9 +2,10 @@
 set -euo pipefail
 
 ROOT="${0:A:h:h}"
-APP="$ROOT/dist/RStudio Status.app"
+APP="$ROOT/dist/ES Status.app"
+LEGACY_APP="$ROOT/dist/RStudio Status.app"
 BINARY="${1:-}"
-APP_ICON="$ROOT/Resources/RStatus.icns"
+APP_ICON="$ROOT/Resources/ESStatus.icns"
 
 if [[ -z "$BINARY" || ! -f "$BINARY" ]]; then
     echo "오류: 앱 실행 파일을 찾을 수 없습니다: $BINARY" >&2
@@ -16,10 +17,10 @@ if [[ ! -f "$APP_ICON" ]]; then
     exit 1
 fi
 
-rm -rf "$APP"
+rm -rf "$APP" "$LEGACY_APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BINARY" "$APP/Contents/MacOS/RStudioStatus"
-chmod +x "$APP/Contents/MacOS/RStudioStatus"
+cp "$BINARY" "$APP/Contents/MacOS/ESStatus"
+chmod +x "$APP/Contents/MacOS/ESStatus"
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
 cp "$APP_ICON" "$APP/Contents/Resources/CatOriginal.icns"
 cp "$ROOT/Resources/install-addin.sh" "$APP/Contents/Resources/install-addin.sh"
