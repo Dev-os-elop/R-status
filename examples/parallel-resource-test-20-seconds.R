@@ -15,23 +15,26 @@ on.exit(parallel::stopCluster(cluster), add = TRUE)
 
 message("Starting ", worker_count, " parallel workers for 20 seconds")
 
-results <- parallel::clusterEvalQ(cluster, {
-  started_at <- proc.time()[["elapsed"]]
-  iterations <- 0L
-  checksum <- 0
+# Submit short batches instead of one 20-second job per worker. RStudio can
+# then stop between batches, and stopCluster() only waits for the current short
+# matrix operation before the worker processes disappear.
+started_at <- proc.time()[["elapsed"]]
+iterations <- 0L
+checksum <- 0
 
-  while (proc.time()[["elapsed"]] - started_at < 20) {
+while (proc.time()[["elapsed"]] - started_at < 20) {
+  batch <- parallel::parLapply(cluster, seq_len(worker_count), function(worker) {
     values <- matrix(rnorm(400L * 400L), nrow = 400L)
-    checksum <- checksum + sum(diag(crossprod(values)))
-    iterations <- iterations + 1L
-  }
-
-  list(iterations = iterations, checksum = checksum)
-})
+    sum(diag(crossprod(values)))
+  })
+  checksum <- checksum + sum(unlist(batch, use.names = FALSE))
+  iterations <- iterations + length(batch)
+}
 
 message(
   "Parallel test complete: ",
-  sum(vapply(results, `[[`, integer(1), "iterations")),
-  " total iterations"
+  iterations,
+  " total iterations; checksum = ",
+  format(checksum, scientific = TRUE, digits = 4)
 )
 })
