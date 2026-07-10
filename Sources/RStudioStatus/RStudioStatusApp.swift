@@ -732,7 +732,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func updateApplicationIcon() {
         NSApp.applicationIconImage = StatusIconRenderer.applicationIcon(
-            style: AppPreferences.iconStyle,
+            style: .catOutline,
             size: 256
         )
     }
