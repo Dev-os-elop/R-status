@@ -65,6 +65,95 @@ rstatus_notify <- function(status, name = "R task", message = NULL,
   })
 }
 
+.rstatus_progress_state <- new.env(parent = emptyenv())
+.rstatus_progress_state$enabled <- FALSE
+.rstatus_progress_state$key <- NULL
+.rstatus_progress_state$last_sent <- 0
+
+#' Report progress to the RStudio Status menu bar app
+#'
+#' This is normally called automatically for `progress` and `progressr` while
+#' code is executed through the RStudio Status Addin.
+#'
+#' @param current Current completed amount.
+#' @param total Total amount.
+#' @param message Optional progress label.
+#' @param started_at Optional start time used to estimate remaining time.
+#' @param active Whether the progress display is active.
+#' @param force Send immediately instead of applying the update throttle.
+#' @return Invisibly returns whether the app accepted the update.
+#' @export
+rstatus_progress <- function(current = NULL, total = NULL, message = NULL,
+                             started_at = NULL, active = TRUE, force = FALSE) {
+  if (!isTRUE(.rstatus_progress_state$enabled)) return(invisible(FALSE))
+
+  fields <- '"active":false'
+  if (isTRUE(active)) {
+    current <- suppressWarnings(as.numeric(current)[1L])
+    total <- suppressWarnings(as.numeric(total)[1L])
+    if (!is.finite(current) || !is.finite(total) || total <= 0) {
+      return(invisible(FALSE))
+    }
+
+    now <- as.numeric(Sys.time())
+    start <- if (length(started_at)) suppressWarnings(as.numeric(started_at)[1L]) else NA_real_
+    if (!is.finite(start)) start <- now
+    key <- paste(format(start, digits = 15), format(total, digits = 15), sep = ":")
+    if (!identical(.rstatus_progress_state$key, key)) {
+      .rstatus_progress_state$key <- key
+      .rstatus_progress_state$last_sent <- 0
+    }
+
+    final_update <- current >= total
+    if (!isTRUE(force) && current > 0 && !final_update &&
+        now - .rstatus_progress_state$last_sent < 0.25) {
+      return(invisible(FALSE))
+    }
+    .rstatus_progress_state$last_sent <- now
+
+    elapsed <- max(0, now - start)
+    eta <- if (current > 0 && current < total && elapsed > 0) {
+      elapsed * (total - current) / current
+    } else if (final_update) {
+      0
+    } else {
+      NA_real_
+    }
+    fields <- c(
+      '"active":true',
+      sprintf('"current":%.10g', current),
+      sprintf('"total":%.10g', total)
+    )
+    if (is.finite(eta)) fields <- c(fields, sprintf('"etaSeconds":%.10g', eta))
+    if (!is.null(message) && nzchar(paste(message, collapse = ""))) {
+      fields <- c(fields, sprintf('"message":"%s"', .rstatus_json_escape(paste(message, collapse = ""))))
+    }
+  }
+
+  body <- paste0("{", paste(fields, collapse = ","), "}")
+  body_raw <- charToRaw(enc2utf8(body))
+  request <- paste0(
+    "POST /progress HTTP/1.1\r\n",
+    "Host: 127.0.0.1:47821\r\n",
+    "Content-Type: application/json; charset=utf-8\r\n",
+    "Content-Length: ", length(body_raw), "\r\n",
+    "Connection: close\r\n\r\n"
+  )
+  connection <- tryCatch(
+    socketConnection(host = "127.0.0.1", port = 47821L, open = "w+b",
+                     blocking = TRUE, timeout = 1, encoding = "bytes"),
+    error = function(e) NULL
+  )
+  if (is.null(connection)) return(invisible(FALSE))
+  on.exit(close(connection), add = TRUE)
+  tryCatch({
+    writeBin(c(charToRaw(request), body_raw), connection)
+    flush(connection)
+    response <- readLines(connection, n = 1L, warn = FALSE, encoding = "UTF-8")
+    invisible(length(response) == 1L && grepl("^HTTP/1\\.[01] 200 ", response))
+  }, error = function(e) invisible(FALSE))
+}
+
 #' Run R code while showing its status in the macOS menu bar
 #'
 #' @param expr R expression to evaluate.
@@ -73,6 +162,8 @@ rstatus_notify <- function(status, name = "R task", message = NULL,
 #' @export
 rstatus_run <- function(expr, name = deparse1(substitute(expr), nlines = 1L)) {
   expression <- substitute(expr)
+  progress_hooks <- .rstatus_install_progress_integrations()
+  on.exit(.rstatus_restore_progress_integrations(progress_hooks), add = TRUE)
   rstatus_notify("running", name)
   tryCatch({
     value <- eval(expression, envir = parent.frame())

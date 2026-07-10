@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-07-10
+
+- `progress::progress_bar`와 `progressr` 진행 이벤트 자동 연동
+- R Resource Usage 아래에 진행 바, 퍼센트, 현재/전체, 남은 시간 표시
+- 진행 패키지를 사용하지 않을 때 관련 메뉴 항목 자동 숨김
+- 진행 이벤트 전송을 약 0.25초 간격으로 제한하고 기존 progressr handler 복원
+
 ## 0.3.9 - 2026-07-10
 
 - Check for Updates에서 새 버전을 직접 다운로드하고 설치하도록 변경
