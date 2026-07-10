@@ -32,7 +32,139 @@ private struct StatusUpdate: Decodable {
 
 private struct GitHubSourceVersion {
     let version: String
+    let repository: String
     let repositoryURL: URL
+}
+
+private enum UpdateInstallError: LocalizedError {
+    case invalidVersion
+    case invalidDownloadURL
+    case downloadFailed
+    case extractionFailed(String)
+    case installerMissing
+    case installerLaunchFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidVersion:
+            return "The update version is invalid."
+        case .invalidDownloadURL:
+            return "The GitHub update URL could not be created."
+        case .downloadFailed:
+            return "The update ZIP could not be downloaded from GitHub."
+        case .extractionFailed(let message):
+            return message.isEmpty ? "The update ZIP could not be extracted." : message
+        case .installerMissing:
+            return "The downloaded update does not contain install.sh."
+        case .installerLaunchFailed(let message):
+            return message.isEmpty ? "The update installer could not be started." : message
+        }
+    }
+}
+
+private struct LaunchedUpdate {
+    let process: Process
+    let logURL: URL
+}
+
+private func runAndCapture(_ executable: String, arguments: [String]) throws -> (Int32, String) {
+    let process = Process()
+    let pipe = Pipe()
+    process.executableURL = URL(fileURLWithPath: executable)
+    process.arguments = arguments
+    process.standardOutput = pipe
+    process.standardError = pipe
+    try process.run()
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    return (process.terminationStatus, String(data: data, encoding: .utf8) ?? "")
+}
+
+private func downloadAndLaunchUpdate(_ source: GitHubSourceVersion) throws -> LaunchedUpdate {
+    guard source.version.range(of: #"^[0-9]+(?:\.[0-9]+)*$"#, options: .regularExpression) != nil else {
+        throw UpdateInstallError.invalidVersion
+    }
+    guard let archiveURL = URL(
+        string: "https://github.com/\(source.repository)/archive/refs/tags/v\(source.version).zip"
+    ) else {
+        throw UpdateInstallError.invalidDownloadURL
+    }
+
+    let fileManager = FileManager.default
+    let updateRoot = fileManager.temporaryDirectory
+        .appendingPathComponent("RStudioStatusUpdate-\(UUID().uuidString)", isDirectory: true)
+    try fileManager.createDirectory(at: updateRoot, withIntermediateDirectories: true)
+    let archivePath = updateRoot.appendingPathComponent("update.zip")
+
+    var request = URLRequest(url: archiveURL)
+    request.setValue("RStudioStatus/\(source.version)", forHTTPHeaderField: "User-Agent")
+    let semaphore = DispatchSemaphore(value: 0)
+    var downloadData: Data?
+    URLSession.shared.dataTask(with: request) { data, response, _ in
+        if let response = response as? HTTPURLResponse,
+           (200...299).contains(response.statusCode) {
+            downloadData = data
+        }
+        semaphore.signal()
+    }.resume()
+    semaphore.wait()
+    guard let downloadData else { throw UpdateInstallError.downloadFailed }
+    try downloadData.write(to: archivePath, options: .atomic)
+
+    let extractedRoot = updateRoot.appendingPathComponent("source", isDirectory: true)
+    try fileManager.createDirectory(at: extractedRoot, withIntermediateDirectories: true)
+    let (extractStatus, extractOutput) = try runAndCapture(
+        "/usr/bin/ditto",
+        arguments: ["-x", "-k", archivePath.path, extractedRoot.path]
+    )
+    guard extractStatus == 0 else {
+        throw UpdateInstallError.extractionFailed(extractOutput)
+    }
+
+    let candidates = (try? fileManager.contentsOfDirectory(
+        at: extractedRoot,
+        includingPropertiesForKeys: [.isDirectoryKey],
+        options: [.skipsHiddenFiles]
+    )) ?? []
+    guard let sourceRoot = candidates.first(where: {
+        fileManager.fileExists(atPath: $0.appendingPathComponent("install.sh").path)
+    }) else {
+        throw UpdateInstallError.installerMissing
+    }
+
+    if let enumerator = fileManager.enumerator(at: sourceRoot, includingPropertiesForKeys: nil) {
+        for case let fileURL as URL in enumerator where fileURL.pathExtension == "sh" {
+            try? fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fileURL.path)
+        }
+    }
+    let installerURL = sourceRoot.appendingPathComponent("install.sh")
+    try fileManager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: installerURL.path)
+
+    let logURL = updateRoot.appendingPathComponent("install.log")
+    fileManager.createFile(atPath: logURL.path, contents: nil)
+    let logHandle = try FileHandle(forWritingTo: logURL)
+    let installer = Process()
+    installer.executableURL = URL(fileURLWithPath: "/bin/zsh")
+    installer.arguments = [installerURL.path]
+    installer.currentDirectoryURL = sourceRoot
+    var environment = ProcessInfo.processInfo.environment
+    let updaterPaths = [
+        "/usr/local/bin",
+        "/opt/homebrew/bin",
+        "/Library/Frameworks/R.framework/Resources/bin"
+    ]
+    environment["PATH"] = (updaterPaths + [environment["PATH"] ?? ""]).joined(separator: ":")
+    installer.environment = environment
+    installer.standardOutput = logHandle
+    installer.standardError = logHandle
+    do {
+        try installer.run()
+        try? logHandle.close()
+        return LaunchedUpdate(process: installer, logURL: logURL)
+    } catch {
+        try? logHandle.close()
+        throw UpdateInstallError.installerLaunchFailed(error.localizedDescription)
+    }
 }
 
 private enum UpdateCheckResult {
@@ -177,6 +309,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var updateItem: NSMenuItem?
     private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
+    private var isInstallingUpdate = false
     private var state: RunState = .idle
     private var taskName = ""
     private var detailMessage = ""
@@ -184,9 +317,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var timer: Timer?
     private var resourceTimer: Timer?
     private var processWatchTimer: Timer?
+    private var updateInstallTimer: Timer?
     private var isSamplingResources = false
     private var resourceRefreshPending = false
     private var taskPID: Int32?
+    private var updateProcess: Process?
+    private var updateLogURL: URL?
+    private var updateRepositoryURL: URL?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -221,6 +358,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         timer?.invalidate()
         resourceTimer?.invalidate()
         processWatchTimer?.invalidate()
+        updateInstallTimer?.invalidate()
         server.stop()
     }
 
@@ -558,7 +696,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                       let plist = try? PropertyListSerialization.propertyList(from: data, format: nil),
                       let dictionary = plist as? [String: Any],
                       let remoteVersion = dictionary["CFBundleShortVersionString"] as? String {
-                let sourceVersion = GitHubSourceVersion(version: remoteVersion, repositoryURL: repositoryURL)
+                let sourceVersion = GitHubSourceVersion(
+                    version: remoteVersion,
+                    repository: repository,
+                    repositoryURL: repositoryURL
+                )
                 result = isVersion(remoteVersion, newerThan: installedVersion)
                     ? .updateAvailable(sourceVersion)
                     : .latest
@@ -583,10 +725,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             alert.messageText = "Update Available"
             alert.informativeText = "RStudio Status v\(sourceVersion.version) is available on GitHub. You are using v\(currentVersion)."
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "Open GitHub")
+            alert.addButton(withTitle: "Download and Install")
             alert.addButton(withTitle: "Later")
             if alert.runModal() == .alertFirstButtonReturn {
-                NSWorkspace.shared.open(sourceVersion.repositoryURL)
+                installUpdate(sourceVersion)
             }
         case .latest:
             alert.messageText = "You're up to date"
@@ -600,6 +742,82 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             alert.alertStyle = .warning
             alert.addButton(withTitle: "OK")
             alert.runModal()
+        }
+    }
+
+    private func installUpdate(_ sourceVersion: GitHubSourceVersion) {
+        guard !isInstallingUpdate else { return }
+        isInstallingUpdate = true
+        updateItem?.title = "Downloading Update…"
+        updateItem?.isEnabled = false
+
+        Task.detached(priority: .userInitiated) {
+            let result: Result<LaunchedUpdate, Error>
+            do {
+                result = .success(try downloadAndLaunchUpdate(sourceVersion))
+            } catch {
+                result = .failure(error)
+            }
+            await MainActor.run { [weak self] in
+                self?.handleUpdateLaunch(result, sourceVersion: sourceVersion)
+            }
+        }
+    }
+
+    private func handleUpdateLaunch(_ result: Result<LaunchedUpdate, Error>,
+                                    sourceVersion: GitHubSourceVersion) {
+        switch result {
+        case .success(let launched):
+            updateItem?.title = "Installing Update…"
+            updateProcess = launched.process
+            updateLogURL = launched.logURL
+            updateRepositoryURL = sourceVersion.repositoryURL
+            postNotification(
+                title: "RStudio Status Update",
+                body: "Installing v\(sourceVersion.version). The app will restart automatically."
+            )
+            updateInstallTimer?.invalidate()
+            let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
+                Task { @MainActor in self?.checkUpdateInstaller() }
+            }
+            updateInstallTimer = timer
+            RunLoop.main.add(timer, forMode: .common)
+        case .failure(let error):
+            showUpdateInstallFailure(error.localizedDescription, repositoryURL: sourceVersion.repositoryURL)
+        }
+    }
+
+    private func checkUpdateInstaller() {
+        guard let updateProcess, !updateProcess.isRunning else { return }
+        updateInstallTimer?.invalidate()
+        updateInstallTimer = nil
+        guard updateProcess.terminationStatus != 0 else { return }
+        let log = updateLogURL.flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
+        let message = log.isEmpty
+            ? "The installer exited with status \(updateProcess.terminationStatus)."
+            : log
+        showUpdateInstallFailure(
+            message,
+            repositoryURL: updateRepositoryURL ?? URL(string: "https://github.com/Dev-os-elop/R-status")!
+        )
+        self.updateProcess = nil
+        updateLogURL = nil
+        updateRepositoryURL = nil
+    }
+
+    private func showUpdateInstallFailure(_ message: String, repositoryURL: URL) {
+        isInstallingUpdate = false
+        updateItem?.title = "Check for Updates…"
+        updateItem?.isEnabled = true
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Update Installation Failed"
+        alert.informativeText = message.count > 1_500 ? String(message.prefix(1_500)) + "…" : message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open GitHub")
+        alert.addButton(withTitle: "OK")
+        if alert.runModal() == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(repositoryURL)
         }
     }
 
