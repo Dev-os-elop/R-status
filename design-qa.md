@@ -24,6 +24,7 @@ The source is a structural reference rather than a pixel-identical target. The i
 - Language opens a nested System Language / 한국어 / English selector.
 - Cat Original, Cat Silhouette, Status Pulse, Progress Blocks, Signal Orbit, Window Check, and Layered S display live previews and persist the selected theme.
 - Appearance selections affect the menu-bar status glyph only; the app and notification identity remains the white Cat Original icon.
+- The bundle icon is registered as `CatOriginal.icns`, and updates replace the entire bundle so stale icon files cannot survive installation.
 - Show Elapsed Time in Menu Bar uses a native `NSSwitch` and updates the status item immediately.
 - Launch at Login uses a native `NSSwitch` backed by `SMAppService`.
 - Selecting language or appearance rebuilds the menu without opening a separate app window.

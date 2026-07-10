@@ -9,7 +9,7 @@
     <key>CFBundleIdentifier</key>
     <string>io.github.ljwook92.rstatus</string>
     <key>CFBundleIconFile</key>
-    <string>RStatus.icns</string>
+    <string>CatOriginal.icns</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -19,9 +19,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.5.5</string>
+    <string>0.5.6</string>
     <key>CFBundleVersion</key>
-    <string>39</string>
+    <string>40</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>
