@@ -351,6 +351,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var updateLogURL: URL?
     private var instanceLockFD: Int32 = -1
 
+    private var showElapsedTimeInMenuBar: Bool {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: "showElapsedTimeInMenuBar") != nil else { return true }
+        return defaults.bool(forKey: "showElapsedTimeInMenuBar")
+    }
+
     private func acquireInstanceLock() -> Bool {
         let lockPath = "/tmp/io.github.ljwook92.rstatus.instance.lock"
         let fd = Darwin.open(lockPath, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
@@ -455,6 +461,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             launchItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
             menu.addItem(launchItem)
         }
+
+        let elapsedToggleItem = NSMenuItem(
+            title: "메뉴바에 실행 시간 표시",
+            action: #selector(toggleElapsedTimeInMenuBar(_:)),
+            keyEquivalent: ""
+        )
+        elapsedToggleItem.target = self
+        elapsedToggleItem.state = showElapsedTimeInMenuBar ? .on : .off
+        menu.addItem(elapsedToggleItem)
 
         menu.addItem(.separator())
 
@@ -689,7 +704,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func updateDisplay() {
         var title = state.menuTitle
-        if state == .running, let startedAt {
+        if state == .running, showElapsedTimeInMenuBar, let startedAt {
             title += " \(formatElapsed(Date().timeIntervalSince(startedAt)))"
         }
         if state == .idle {
@@ -990,6 +1005,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             detailMessage = "로그인 실행 설정 실패: \(error.localizedDescription)"
             updateDisplay()
         }
+    }
+
+    @objc private func toggleElapsedTimeInMenuBar(_ sender: NSMenuItem) {
+        let enabled = sender.state != .on
+        UserDefaults.standard.set(enabled, forKey: "showElapsedTimeInMenuBar")
+        sender.state = enabled ? .on : .off
+        updateDisplay()
     }
 
     @objc private func quit() {
