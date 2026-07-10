@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 - 2026-07-09
+
+- 앱 번들에 RStudio Addin 포함
+- 첫 실행 및 메뉴에서 Addin 원클릭 설치·업데이트 지원
+- GitHub Release용 DMG와 SHA-256 생성 스크립트 추가
+- Developer ID 서명과 Apple 공증 옵션 추가
+- 비공개 소스·공개 바이너리 배포 문서 추가
+
 ## 0.1.5 - 2026-07-09
 
 - 메뉴에서 기본 `localhost:47821` 상세 행 제거

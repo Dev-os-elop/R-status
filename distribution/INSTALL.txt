@@ -1,0 +1,20 @@
+RStudio Status 설치
+===================
+
+1. RStudio Status.app을 Applications 폴더로 드래그합니다.
+2. Applications에서 RStudio Status를 실행합니다.
+3. 첫 실행 팝업에서 Install Addin을 선택합니다.
+4. 설치가 끝나면 RStudio를 완전히 종료했다가 다시 실행합니다.
+5. RStudio의 Addins 메뉴에서 Run Selection with Status를 사용합니다.
+
+필수 조건: macOS 13 이상, R, RStudio Desktop
+
+서명·공증되지 않은 테스트 빌드는 macOS 보안 경고가 나타날 수 있습니다.
+
+---
+
+1. Drag RStudio Status.app to Applications.
+2. Open RStudio Status from Applications.
+3. Choose Install Addin on first launch.
+4. Restart RStudio after installation.
+5. Use Addins > Run Selection with Status.

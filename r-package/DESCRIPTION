@@ -1,14 +1,14 @@
 Package: rstudiostatus
 Type: Package
 Title: Show RStudio Run Status in the macOS Menu Bar
-Version: 0.1.5
+Version: 0.2.0
 Authors@R: person("JeongWook", "Lee", role = c("aut", "cre"), email = "gunzion12@gmail.com")
 Description: Sends running, completion, and failure events from R and RStudio
     Addins to the local RStudio Status macOS menu bar application.
 License: MIT + file LICENSE
 Encoding: UTF-8
-URL: https://github.com/Ljwook92/R_status
-BugReports: https://github.com/Ljwook92/R_status/issues
+URL: https://github.com/Ljwook92/R-status-releases
+BugReports: https://github.com/Ljwook92/R-status-releases/issues
 Imports:
     later,
     rstudioapi

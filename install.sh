@@ -46,6 +46,9 @@ codesign --verify --deep "$APP_PATH"
 
 echo "[3/4] RStudio Addin 설치"
 "$ROOT/scripts/install-r-package.sh"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/Resources/Info.plist")"
+defaults write io.github.ljwook92.rstatus installedAddinVersion -string "$VERSION"
+defaults write io.github.ljwook92.rstatus addinPromptedVersion -string "$VERSION"
 
 echo "[4/4] 앱 실행"
 open "$APP_PATH"

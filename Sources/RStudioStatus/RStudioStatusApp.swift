@@ -174,6 +174,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let detailItem = NSMenuItem(title: "포트 47821", action: nil, keyEquivalent: "")
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private var updateItem: NSMenuItem?
+    private var addinInstallItem: NSMenuItem?
+    private var isInstallingAddin = false
     private var state: RunState = .idle
     private var taskName = ""
     private var detailMessage = ""
@@ -202,6 +204,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         let center = UNUserNotificationCenter.current()
         center.delegate = self
         center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            self?.promptForAddinInstallationIfNeeded()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -253,6 +259,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         checkItem.target = self
         updateItem = checkItem
         menu.addItem(checkItem)
+
+        let installAddinItem = NSMenuItem(title: "Install/Update RStudio Addin…", action: #selector(installAddinFromMenu), keyEquivalent: "")
+        installAddinItem.target = self
+        addinInstallItem = installAddinItem
+        menu.addItem(installAddinItem)
 
         menu.addItem(.separator())
         let quitItem = NSMenuItem(title: "RStudio Status 종료", action: #selector(quit), keyEquivalent: "q")
@@ -376,8 +387,74 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         postNotification(title: "RStudio Status", body: "RStudio 로고 알림 테스트입니다.")
     }
 
+    private func promptForAddinInstallationIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard defaults.string(forKey: "installedAddinVersion") != currentVersion,
+              defaults.string(forKey: "addinPromptedVersion") != currentVersion else { return }
+
+        defaults.set(currentVersion, forKey: "addinPromptedVersion")
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Install RStudio Addin?"
+        alert.informativeText = "RStudio Status can install its Addin automatically. RStudio must be restarted after installation."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Install Addin")
+        alert.addButton(withTitle: "Later")
+        if alert.runModal() == .alertFirstButtonReturn {
+            installBundledAddin()
+        }
+    }
+
+    @objc private func installAddinFromMenu() {
+        installBundledAddin()
+    }
+
+    private func installBundledAddin() {
+        guard !isInstallingAddin else { return }
+        guard let scriptURL = Bundle.main.url(forResource: "install-addin", withExtension: "sh") else {
+            showAddinInstallationResult(.failure(.missingInstaller))
+            return
+        }
+
+        isInstallingAddin = true
+        addinInstallItem?.title = "Installing RStudio Addin…"
+        addinInstallItem?.isEnabled = false
+
+        Task.detached(priority: .userInitiated) {
+            let result = AddinInstaller.run(scriptURL: scriptURL)
+            await MainActor.run { [weak self] in
+                self?.showAddinInstallationResult(result)
+            }
+        }
+    }
+
+    private func showAddinInstallationResult(_ result: Result<String, AddinInstallerError>) {
+        isInstallingAddin = false
+        addinInstallItem?.title = "Install/Update RStudio Addin…"
+        addinInstallItem?.isEnabled = true
+        NSApp.activate(ignoringOtherApps: true)
+
+        let alert = NSAlert()
+        switch result {
+        case .success:
+            UserDefaults.standard.set(currentVersion, forKey: "installedAddinVersion")
+            alert.messageText = "RStudio Addin Installed"
+            alert.informativeText = "Restart RStudio, then open Addins and choose Run Selection with Status."
+            alert.alertStyle = .informational
+        case .failure(let error):
+            alert.messageText = "Addin Installation Failed"
+            let message = error.localizedDescription
+            alert.informativeText = message.count > 1_500 ? String(message.prefix(1_500)) + "…" : message
+            alert.alertStyle = .warning
+        }
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
     @objc private func checkForUpdates() {
-        guard let url = URL(string: "https://api.github.com/repos/Ljwook92/R_status/releases/latest") else { return }
+        let repository = Bundle.main.object(forInfoDictionaryKey: "GitHubReleaseRepository") as? String
+            ?? "Ljwook92/R-status-releases"
+        guard let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest") else { return }
         let installedVersion = currentVersion
         updateItem?.title = "Checking for Updates…"
         updateItem?.isEnabled = false
