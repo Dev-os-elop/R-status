@@ -24,7 +24,10 @@ enum StatusIconRenderer {
             guard let context = NSGraphicsContext.current?.cgContext else { return false }
             context.setShouldAntialias(true)
             context.setAllowsAntialiasing(true)
-            draw(style: style, state: state, in: rect.insetBy(dx: size * 0.08, dy: size * 0.08), context: context)
+            let isCat = style == .catOutline || style == .catSilhouette
+            let inset = isCat ? size * 0.03 : size * 0.08
+            draw(style: style, state: state,
+                 in: rect.insetBy(dx: inset, dy: inset), context: context)
             return true
         }
         image.isTemplate = false
@@ -115,9 +118,9 @@ enum StatusIconRenderer {
         } else {
             faceRect = CGRect(
                 x: rect.minX,
-                y: rect.minY + rect.height * 0.06,
-                width: rect.width * 0.77,
-                height: rect.height * 0.88
+                y: rect.minY + rect.height * 0.14,
+                width: rect.width * 0.76,
+                height: rect.height * 0.72
             )
         }
 
