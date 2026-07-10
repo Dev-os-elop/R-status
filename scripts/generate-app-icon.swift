@@ -35,29 +35,49 @@ func pngData(pixelSize: Int) -> Data {
 
     let size = CGFloat(pixelSize)
     let tile = CGRect(x: size * 0.07, y: size * 0.07, width: size * 0.86, height: size * 0.86)
-    context.setFillColor(NSColor.white.cgColor)
+    let blue = NSColor(calibratedRed: 0.07, green: 0.39, blue: 0.92, alpha: 1)
+    context.setFillColor(blue.cgColor)
     context.addPath(CGPath(roundedRect: tile, cornerWidth: size * 0.20,
                            cornerHeight: size * 0.20, transform: nil))
     context.fillPath()
-    context.setStrokeColor(NSColor(calibratedWhite: 0.82, alpha: 1).cgColor)
-    context.setLineWidth(max(1, size * 0.012))
-    context.addPath(CGPath(roundedRect: tile, cornerWidth: size * 0.20,
-                           cornerHeight: size * 0.20, transform: nil))
-    context.strokePath()
 
-    let blue = NSColor(calibratedRed: 0.08, green: 0.42, blue: 0.92, alpha: 1)
-    let center = CGPoint(x: size / 2, y: size / 2)
-    context.setStrokeColor(blue.cgColor)
-    context.setLineCap(.round)
-    context.setLineWidth(max(1.5, size * 0.055))
-    for diameter in [size * 0.34, size * 0.58] {
-        context.strokeEllipse(in: CGRect(x: center.x - diameter / 2, y: center.y - diameter / 2,
-                                         width: diameter, height: diameter))
+    let cat = tile.insetBy(dx: size * 0.16, dy: size * 0.15)
+    func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+        CGPoint(x: cat.minX + cat.width * x, y: cat.minY + cat.height * y)
     }
-    context.setFillColor(blue.cgColor)
-    let dot = size * 0.17
-    context.fillEllipse(in: CGRect(x: center.x - dot / 2, y: center.y - dot / 2,
-                                   width: dot, height: dot))
+    let head = CGMutablePath()
+    head.move(to: point(0.18, 0.23))
+    head.addCurve(to: point(0.15, 0.58), control1: point(0.10, 0.34), control2: point(0.11, 0.48))
+    head.addLine(to: point(0.12, 0.91))
+    head.addLine(to: point(0.38, 0.72))
+    head.addCurve(to: point(0.62, 0.72), control1: point(0.45, 0.76), control2: point(0.55, 0.76))
+    head.addLine(to: point(0.88, 0.91))
+    head.addLine(to: point(0.85, 0.58))
+    head.addCurve(to: point(0.82, 0.23), control1: point(0.89, 0.48), control2: point(0.90, 0.34))
+    head.addCurve(to: point(0.18, 0.23), control1: point(0.68, 0.05), control2: point(0.32, 0.05))
+    head.closeSubpath()
+    context.setFillColor(NSColor(calibratedRed: 0.10, green: 0.14, blue: 0.20, alpha: 1).cgColor)
+    context.addPath(head)
+    context.fillPath()
+
+    let mark = CGMutablePath()
+    mark.move(to: point(0.40, 0.73))
+    mark.addLine(to: point(0.60, 0.73))
+    mark.addLine(to: point(0.545, 0.61))
+    mark.addLine(to: point(0.50, 0.67))
+    mark.addLine(to: point(0.455, 0.61))
+    mark.closeSubpath()
+    context.setFillColor(NSColor(calibratedWhite: 0.74, alpha: 1).cgColor)
+    context.addPath(mark)
+    context.fillPath()
+
+    context.setFillColor(NSColor(calibratedRed: 0.20, green: 0.72, blue: 1.00, alpha: 1).cgColor)
+    for x in [0.35, 0.65] as [CGFloat] {
+        let center = point(x, 0.43)
+        let diameter = cat.width * 0.14
+        context.fillEllipse(in: CGRect(x: center.x - diameter / 2, y: center.y - diameter / 2,
+                                       width: diameter, height: diameter))
+    }
     NSGraphicsContext.restoreGraphicsState()
     return bitmap.representation(using: .png, properties: [:])!
 }

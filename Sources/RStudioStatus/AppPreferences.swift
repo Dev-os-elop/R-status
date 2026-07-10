@@ -24,6 +24,8 @@ enum AppLanguage: String, CaseIterable {
 }
 
 enum StatusIconStyle: String, CaseIterable {
+    case catOutline
+    case catSilhouette
     case statusPulse
     case progressBlocks
     case signalOrbit
@@ -32,6 +34,8 @@ enum StatusIconStyle: String, CaseIterable {
 
     var displayName: String {
         switch self {
+        case .catOutline: return "Cat Outline"
+        case .catSilhouette: return "Cat Silhouette"
         case .statusPulse: return "Status Pulse"
         case .progressBlocks: return "Progress Blocks"
         case .signalOrbit: return "Signal Orbit"
@@ -58,7 +62,7 @@ enum AppPreferences {
     static var iconStyle: StatusIconStyle {
         get {
             guard let rawValue = UserDefaults.standard.string(forKey: iconStyleKey),
-                  let value = StatusIconStyle(rawValue: rawValue) else { return .statusPulse }
+                  let value = StatusIconStyle(rawValue: rawValue) else { return .catSilhouette }
             return value
         }
         set { UserDefaults.standard.set(newValue.rawValue, forKey: iconStyleKey) }
