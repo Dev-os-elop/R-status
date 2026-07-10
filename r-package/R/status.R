@@ -24,7 +24,8 @@ rstatus_notify <- function(status, name = "R task", message = NULL,
   status <- match.arg(status, c("idle", "running", "complete", "fail", "interrupted"))
   fields <- c(
     sprintf('"status":"%s"', .rstatus_json_escape(status)),
-    sprintf('"name":"%s"', .rstatus_json_escape(name))
+    sprintf('"name":"%s"', .rstatus_json_escape(name)),
+    sprintf('"pid":%d', Sys.getpid())
   )
   if (!is.null(message)) {
     fields <- c(fields, sprintf('"message":"%s"', .rstatus_json_escape(message)))
