@@ -182,6 +182,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var timer: Timer?
     private var resourceTimer: Timer?
     private var isSamplingResources = false
+    private var resourceRefreshPending = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -293,14 +294,22 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         RunLoop.main.add(timer, forMode: .common)
     }
 
-    private func refreshResourceUsage() {
-        guard !isSamplingResources else { return }
+    private func refreshResourceUsage(forceAfterCurrent: Bool = false) {
+        guard !isSamplingResources else {
+            if forceAfterCurrent { resourceRefreshPending = true }
+            return
+        }
         isSamplingResources = true
         Task.detached(priority: .utility) {
             let snapshot = RResourceMonitor.sample()
             await MainActor.run { [weak self] in
-                self?.isSamplingResources = false
-                self?.updateResourceItems(snapshot)
+                guard let self else { return }
+                self.isSamplingResources = false
+                self.updateResourceItems(snapshot)
+                if self.resourceRefreshPending {
+                    self.resourceRefreshPending = false
+                    self.refreshResourceUsage()
+                }
             }
         }
     }
@@ -347,7 +356,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         } else {
             timer?.invalidate()
             timer = nil
-            if state == .complete || state == .fail || state == .interrupted { sendNotification() }
+            if state == .complete || state == .fail || state == .interrupted {
+                refreshResourceUsage(forceAfterCurrent: true)
+                sendNotification()
+            }
         }
         updateDisplay()
     }
