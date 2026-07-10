@@ -170,6 +170,7 @@ private func downloadAndLaunchUpdate(_ source: GitHubSourceVersion) throws -> La
         "/Library/Frameworks/R.framework/Resources/bin"
     ]
     environment["PATH"] = (updaterPaths + [environment["PATH"] ?? ""]).joined(separator: ":")
+    environment["RSTATUS_RUNNING_PID"] = String(Darwin.getpid())
     installer.environment = environment
     installer.standardOutput = logHandle
     installer.standardError = logHandle
