@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2 - 2026-07-09
+
+- 메뉴와 샘플러에서 시스템 GPU 사용률 제거
+- CPU, RAM, task, worker, process, thread 정보만 유지
+
 ## 0.3.1 - 2026-07-09
 
 - 기본 배포 방식을 GitHub ZIP 또는 git clone 후 로컬 설치로 변경

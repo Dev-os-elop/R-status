@@ -7,7 +7,6 @@ struct RResourceSnapshot {
     let activeTaskCount: Int
     let workerCount: Int
     let threadCount: Int
-    let systemGPUPercent: Int?
 
     static let empty = RResourceSnapshot(
         cpuPercent: 0,
@@ -15,8 +14,7 @@ struct RResourceSnapshot {
         processCount: 0,
         activeTaskCount: 0,
         workerCount: 0,
-        threadCount: 0,
-        systemGPUPercent: nil
+        threadCount: 0
     )
 }
 
@@ -56,8 +54,7 @@ enum RResourceMonitor {
             processCount: rProcesses.count,
             activeTaskCount: rProcesses.filter { $0.cpuPercent >= 0.5 }.count,
             workerCount: workerCount,
-            threadCount: rProcesses.reduce(0) { $0 + threadCount(for: $1.pid) },
-            systemGPUPercent: systemGPUUtilization()
+            threadCount: rProcesses.reduce(0) { $0 + threadCount(for: $1.pid) }
         )
     }
 
@@ -92,17 +89,6 @@ enum RResourceMonitor {
     private static func threadCount(for pid: Int) -> Int {
         guard let output = run("/bin/ps", arguments: ["-M", "\(pid)"]) else { return 0 }
         return max(0, output.split(whereSeparator: \.isNewline).count - 1)
-    }
-
-    private static func systemGPUUtilization() -> Int? {
-        guard let output = run("/usr/sbin/ioreg", arguments: ["-r", "-c", "IOAccelerator", "-d", "1"]),
-              let regex = try? NSRegularExpression(pattern: #"\"Device Utilization %\"\s*=\s*(\d+)"#),
-              let match = regex.firstMatch(
-                in: output,
-                range: NSRange(output.startIndex..., in: output)
-              ),
-              let valueRange = Range(match.range(at: 1), in: output) else { return nil }
-        return Int(output[valueRange])
     }
 
     private static func run(_ executable: String, arguments: [String]) -> String? {

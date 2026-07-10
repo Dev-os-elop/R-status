@@ -171,7 +171,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
     private let cpuItem = NSMenuItem(title: "CPU: —", action: nil, keyEquivalent: "")
     private let memoryItem = NSMenuItem(title: "RAM: —", action: nil, keyEquivalent: "")
-    private let gpuItem = NSMenuItem(title: "GPU (system): —", action: nil, keyEquivalent: "")
     private let tasksItem = NSMenuItem(title: "Tasks: —", action: nil, keyEquivalent: "")
     private let processesItem = NSMenuItem(title: "Processes: —", action: nil, keyEquivalent: "")
     private var updateItem: NSMenuItem?
@@ -235,11 +234,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(elapsedItem)
         menu.addItem(.separator())
 
-        for item in [resourceHeaderItem, cpuItem, memoryItem, gpuItem, tasksItem, processesItem] {
+        for item in [resourceHeaderItem, cpuItem, memoryItem, tasksItem, processesItem] {
             item.isEnabled = false
             menu.addItem(item)
         }
-        gpuItem.toolTip = "System-wide GPU utilization. macOS does not expose reliable per-R-process GPU usage to regular apps."
         menu.addItem(.separator())
 
         let resetItem = NSMenuItem(title: "상태 초기화", action: #selector(resetStatus), keyEquivalent: "r")
@@ -311,7 +309,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private func updateResourceItems(_ snapshot: RResourceSnapshot) {
         cpuItem.title = String(format: "CPU: %.1f%%", snapshot.cpuPercent)
         memoryItem.title = "RAM: \(formatMemory(snapshot.residentMemoryBytes))"
-        gpuItem.title = snapshot.systemGPUPercent.map { "GPU (system): \($0)%" } ?? "GPU (system): N/A"
         tasksItem.title = "Tasks: \(snapshot.activeTaskCount) active · \(snapshot.workerCount) workers"
         processesItem.title = "Processes: \(snapshot.processCount) · Threads: \(snapshot.threadCount)"
     }
