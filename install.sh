@@ -79,9 +79,14 @@ defaults write io.github.ljwook92.rstatus installedAddinVersion -string "$VERSIO
 defaults write io.github.ljwook92.rstatus addinPromptedVersion -string "$VERSION"
 
 echo "[4/4] 앱 재실행 예약"
+# Remove one-shot restart jobs left by older updater versions before creating
+# the new one. The normal login item is intentionally not touched.
+while IFS= read -r restart_label; do
+    [[ -n "$restart_label" ]] && /bin/launchctl remove "$restart_label" 2>/dev/null || true
+done < <(/bin/launchctl list 2>/dev/null | /usr/bin/awk '$3 ~ /^io.github.ljwook92.rstatus.restart\./ {print $3}')
 RESTART_LABEL="io.github.ljwook92.rstatus.restart.$$.$RANDOM"
 /bin/launchctl submit -l "$RESTART_LABEL" -- \
-    /bin/zsh "$ROOT/scripts/restart-app.sh" "$APP_PATH" "${RUNNING_PIDS[@]}"
+    /bin/zsh "$ROOT/scripts/restart-app.sh" "$RESTART_LABEL" "$APP_PATH" "${RUNNING_PIDS[@]}"
 
 echo
 echo "설치가 완료되었습니다."
