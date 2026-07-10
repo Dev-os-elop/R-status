@@ -14,7 +14,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 
 ## 기능
 
-- 상태에 따라 색상이 바뀌는 독자적인 macOS 메뉴바 아이콘
+- Cat Outline·Cat Silhouette을 포함한 선택형 macOS 메뉴바 아이콘
 - 실행 경과 시간 표시
 - 전체 CPU 용량 기준 R 사용률, R 프로세스, 병렬 worker 실시간 표시
 - 완료·실패·사용자 중단 시 macOS 알림
@@ -45,7 +45,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 5. 설치가 완료되면 RStudio를 완전히 종료했다가 다시 실행합니다.
 6. RStudio에서 **Addins → Run Selection with Status**를 사용합니다.
 
-설치 파일은 GitHub Release에서 사전 빌드된 Apple Silicon 실행 파일을 내려받고 SHA-256을 검증합니다. 일반 사용자는 Xcode나 Command Line Tools를 설치할 필요가 없습니다. 앱은 프로젝트의 독자적인 Status Pulse 아이콘을 포함하며 RStudio 로고를 사용하지 않습니다.
+설치 파일은 GitHub Release에서 사전 빌드된 Apple Silicon 실행 파일을 내려받고 SHA-256을 검증합니다. 일반 사용자는 Xcode나 Command Line Tools를 설치할 필요가 없습니다. 앱은 프로젝트의 독자적인 고양이 아이콘을 포함하며 RStudio 로고를 사용하지 않습니다.
 
 처음 실행하면 macOS가 알림 권한을 요청합니다. 완료·실패 알림을 받으려면 **허용**을 선택하세요.
 
@@ -174,6 +174,15 @@ rstatus_notify("idle", "")
 - 앱 종료
 
 업데이트가 없으면 `You're using the latest version.` 팝업이 표시됩니다. 새 버전이 있으면 **Download and Install**을 눌러 태그 ZIP과 검증된 사전 빌드 실행 파일을 내려받고, 앱과 Addin을 설치한 뒤 RStudio Status를 자동으로 재실행합니다. Xcode는 필요하지 않습니다.
+
+### 고양이 아이콘 테마
+
+**Settings → Appearance**에서 두 가지 고양이 디자인을 선택할 수 있습니다.
+
+- **Cat Outline**: 흰 얼굴과 진한 윤곽을 사용하는 가벼운 디자인
+- **Cat Silhouette**: 진한 고양이 실루엣과 상태색 눈만 사용하는 초단순 디자인이며 새 설치의 기본값입니다.
+
+두 디자인 모두 입·코·수염을 표시하지 않습니다. 대기는 회색 원, 실행은 파란 재생 모양, 완료는 초록 체크, 중단은 주황 일시정지, 실패는 빨간 X 모양의 눈으로 구분하므로 색상만 보지 않아도 상태를 식별할 수 있습니다.
 
 ### Progress 표시
 
