@@ -49,7 +49,11 @@ enum StatusIconRenderer {
             context.fillPath()
 
             let iconRect = tile.insetBy(dx: size * 0.16, dy: size * 0.16)
-            if style == .catOutline || style == .catSilhouette {
+            if style == .catOutline {
+                drawCatOriginalAppRings(rect: iconRect, context: context)
+                drawCatOriginal(state: .idle, rect: iconRect,
+                                context: context, forApplicationIcon: true)
+            } else if style == .catSilhouette {
                 drawCat(style: style, state: .running, rect: iconRect,
                         context: context, forApplicationIcon: true, brandEyes: true)
             } else {
@@ -64,7 +68,10 @@ enum StatusIconRenderer {
     private static func draw(style: StatusIconStyle, state: StatusVisualState,
                              in rect: CGRect, context: CGContext) {
         switch style {
-        case .catOutline, .catSilhouette:
+        case .catOutline:
+            drawCatOriginal(state: state, rect: rect,
+                            context: context, forApplicationIcon: false)
+        case .catSilhouette:
             drawCat(style: style, state: state, rect: rect,
                     context: context, forApplicationIcon: false, brandEyes: false)
         case .statusPulse: drawPulse(state: state, rect: rect, context: context)
@@ -82,30 +89,244 @@ enum StatusIconRenderer {
         context.setLineJoin(.round)
     }
 
+    private static func drawCatOriginalAppRings(rect: CGRect, context: CGContext) {
+        configureStroke(
+            context,
+            color: NSColor(calibratedRed: 0.28, green: 0.58, blue: 1.0, alpha: 0.85),
+            width: rect.width * 0.055
+        )
+        for scale in [0.92, 1.16] as [CGFloat] {
+            let diameter = rect.width * scale
+            context.strokeEllipse(in: CGRect(
+                x: rect.midX - diameter / 2,
+                y: rect.midY - diameter / 2,
+                width: diameter,
+                height: diameter
+            ))
+        }
+    }
+
+    private static func drawCatOriginal(state: StatusVisualState, rect: CGRect,
+                                        context: CGContext, forApplicationIcon: Bool) {
+        let faceRect: CGRect
+        if forApplicationIcon {
+            faceRect = rect.insetBy(dx: rect.width * 0.05, dy: rect.height * 0.05)
+        } else {
+            faceRect = CGRect(
+                x: rect.minX,
+                y: rect.minY + rect.height * 0.08,
+                width: rect.width * 0.74,
+                height: rect.height * 0.84
+            )
+        }
+
+        let dark = NSColor(calibratedRed: 0.18, green: 0.23, blue: 0.32, alpha: 1)
+        let outline = forApplicationIcon ? dark : state.color
+        let head = catHeadPath(in: faceRect)
+        context.setFillColor(NSColor.white.cgColor)
+        context.addPath(head)
+        context.fillPath()
+        configureStroke(context, color: outline, width: faceRect.width * 0.065)
+        context.addPath(head)
+        context.strokePath()
+
+        drawCatOriginalEars(rect: faceRect, context: context)
+        drawCatOriginalForehead(rect: faceRect, context: context)
+        drawCatOriginalFace(state: state, rect: faceRect, context: context)
+
+        if !forApplicationIcon {
+            drawCatOriginalBadge(state: state, faceRect: faceRect,
+                                 fullRect: rect, context: context)
+        }
+    }
+
+    private static func drawCatOriginalEars(rect: CGRect, context: CGContext) {
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + rect.width * x, y: rect.minY + rect.height * y)
+        }
+        context.setFillColor(NSColor(calibratedRed: 1.0, green: 0.63, blue: 0.60, alpha: 1).cgColor)
+        for points in [
+            [point(0.18, 0.82), point(0.30, 0.72), point(0.22, 0.90)],
+            [point(0.82, 0.82), point(0.70, 0.72), point(0.78, 0.90)]
+        ] {
+            let path = CGMutablePath()
+            path.move(to: points[0])
+            path.addLine(to: points[1])
+            path.addLine(to: points[2])
+            path.closeSubpath()
+            context.addPath(path)
+            context.fillPath()
+        }
+    }
+
+    private static func drawCatOriginalForehead(rect: CGRect, context: CGContext) {
+        context.setFillColor(NSColor(calibratedWhite: 0.38, alpha: 1).cgColor)
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: rect.midX - rect.width * 0.11, y: rect.minY + rect.height * 0.73))
+        path.addLine(to: CGPoint(x: rect.midX + rect.width * 0.11, y: rect.minY + rect.height * 0.73))
+        path.addLine(to: CGPoint(x: rect.midX + rect.width * 0.05, y: rect.minY + rect.height * 0.61))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.minY + rect.height * 0.67))
+        path.addLine(to: CGPoint(x: rect.midX - rect.width * 0.05, y: rect.minY + rect.height * 0.61))
+        path.closeSubpath()
+        context.addPath(path)
+        context.fillPath()
+    }
+
+    private static func drawCatOriginalFace(state: StatusVisualState,
+                                            rect: CGRect, context: CGContext) {
+        let dark = NSColor(calibratedRed: 0.18, green: 0.23, blue: 0.32, alpha: 1)
+        let eyeCenters = [
+            CGPoint(x: rect.minX + rect.width * 0.34, y: rect.minY + rect.height * 0.45),
+            CGPoint(x: rect.minX + rect.width * 0.66, y: rect.minY + rect.height * 0.45)
+        ]
+
+        if state == .complete {
+            configureStroke(context, color: dark, width: rect.width * 0.055)
+            for center in eyeCenters {
+                let path = CGMutablePath()
+                path.move(to: CGPoint(x: center.x - rect.width * 0.075,
+                                       y: center.y - rect.height * 0.025))
+                path.addQuadCurve(to: CGPoint(x: center.x + rect.width * 0.075,
+                                               y: center.y - rect.height * 0.025),
+                                  control: CGPoint(x: center.x, y: center.y + rect.height * 0.07))
+                context.addPath(path)
+                context.strokePath()
+            }
+        } else {
+            context.setFillColor(dark.cgColor)
+            for center in eyeCenters {
+                let diameter = rect.width * 0.16
+                context.fillEllipse(in: CGRect(x: center.x - diameter / 2,
+                                               y: center.y - diameter / 2,
+                                               width: diameter, height: diameter))
+                context.setFillColor(NSColor.white.cgColor)
+                let highlight = rect.width * 0.045
+                context.fillEllipse(in: CGRect(x: center.x - diameter * 0.20,
+                                               y: center.y + diameter * 0.08,
+                                               width: highlight, height: highlight))
+                context.setFillColor(dark.cgColor)
+            }
+        }
+
+        let pink = NSColor(calibratedRed: 0.95, green: 0.45, blue: 0.45, alpha: 1)
+        let noseCenter = CGPoint(x: rect.midX, y: rect.minY + rect.height * 0.32)
+        let nose = CGMutablePath()
+        nose.move(to: CGPoint(x: noseCenter.x - rect.width * 0.045,
+                              y: noseCenter.y + rect.height * 0.025))
+        nose.addLine(to: CGPoint(x: noseCenter.x + rect.width * 0.045,
+                                 y: noseCenter.y + rect.height * 0.025))
+        nose.addLine(to: CGPoint(x: noseCenter.x, y: noseCenter.y - rect.height * 0.035))
+        nose.closeSubpath()
+        context.setFillColor(pink.cgColor)
+        context.addPath(nose)
+        context.fillPath()
+
+        configureStroke(context, color: dark, width: rect.width * 0.035)
+        let mouthY = noseCenter.y - rect.height * 0.075
+        if state == .fail {
+            context.setFillColor(pink.withAlphaComponent(0.75).cgColor)
+            context.fillEllipse(in: CGRect(x: rect.midX - rect.width * 0.032,
+                                           y: mouthY - rect.height * 0.045,
+                                           width: rect.width * 0.064,
+                                           height: rect.height * 0.09))
+            context.strokeEllipse(in: CGRect(x: rect.midX - rect.width * 0.032,
+                                             y: mouthY - rect.height * 0.045,
+                                             width: rect.width * 0.064,
+                                             height: rect.height * 0.09))
+        } else if state == .interrupted {
+            context.move(to: CGPoint(x: rect.midX, y: noseCenter.y - rect.height * 0.03))
+            context.addLine(to: CGPoint(x: rect.midX, y: mouthY + rect.height * 0.02))
+            context.move(to: CGPoint(x: rect.midX, y: mouthY + rect.height * 0.02))
+            context.addLine(to: CGPoint(x: rect.midX - rect.width * 0.06, y: mouthY - rect.height * 0.02))
+            context.move(to: CGPoint(x: rect.midX, y: mouthY + rect.height * 0.02))
+            context.addLine(to: CGPoint(x: rect.midX + rect.width * 0.06, y: mouthY - rect.height * 0.02))
+            context.strokePath()
+        } else {
+            context.move(to: CGPoint(x: rect.midX, y: noseCenter.y - rect.height * 0.03))
+            context.addLine(to: CGPoint(x: rect.midX, y: mouthY + rect.height * 0.02))
+            context.addCurve(to: CGPoint(x: rect.midX - rect.width * 0.10, y: mouthY + rect.height * 0.05),
+                             control1: CGPoint(x: rect.midX - rect.width * 0.03, y: mouthY - rect.height * 0.04),
+                             control2: CGPoint(x: rect.midX - rect.width * 0.08, y: mouthY - rect.height * 0.01))
+            context.move(to: CGPoint(x: rect.midX, y: mouthY + rect.height * 0.02))
+            context.addCurve(to: CGPoint(x: rect.midX + rect.width * 0.10, y: mouthY + rect.height * 0.05),
+                             control1: CGPoint(x: rect.midX + rect.width * 0.03, y: mouthY - rect.height * 0.04),
+                             control2: CGPoint(x: rect.midX + rect.width * 0.08, y: mouthY - rect.height * 0.01))
+            context.strokePath()
+        }
+
+        for side in [-1.0, 1.0] as [CGFloat] {
+            let innerX = rect.midX + side * rect.width * 0.25
+            let outerX = rect.midX + side * rect.width * 0.39
+            for yOffset in [-0.02, 0.045] as [CGFloat] {
+                let y = rect.minY + rect.height * (0.30 + yOffset)
+                context.move(to: CGPoint(x: innerX, y: y))
+                context.addLine(to: CGPoint(x: outerX, y: y + side * rect.height * 0.006))
+                context.strokePath()
+            }
+        }
+    }
+
+    private static func drawCatOriginalBadge(state: StatusVisualState, faceRect: CGRect,
+                                             fullRect: CGRect, context: CGContext) {
+        let color = state.color
+        let center = CGPoint(x: fullRect.minX + fullRect.width * 0.88,
+                             y: fullRect.minY + fullRect.height * 0.36)
+        let radius = fullRect.width * 0.105
+        context.setFillColor(color.cgColor)
+        configureStroke(context, color: color, width: max(1.1, fullRect.width * 0.055))
+
+        switch state {
+        case .idle:
+            context.fillEllipse(in: CGRect(x: center.x - radius * 0.65,
+                                           y: center.y - radius * 0.65,
+                                           width: radius * 1.3, height: radius * 1.3))
+        case .running:
+            context.addArc(center: center, radius: radius,
+                           startAngle: .pi * 0.28, endAngle: .pi * 1.88, clockwise: false)
+            context.strokePath()
+            let arrow = CGMutablePath()
+            arrow.move(to: CGPoint(x: center.x + radius * 0.94, y: center.y + radius * 0.34))
+            arrow.addLine(to: CGPoint(x: center.x + radius * 0.30, y: center.y + radius * 0.37))
+            arrow.addLine(to: CGPoint(x: center.x + radius * 0.78, y: center.y - radius * 0.08))
+            arrow.closeSubpath()
+            context.addPath(arrow)
+            context.fillPath()
+        case .complete:
+            context.move(to: CGPoint(x: center.x - radius * 0.85, y: center.y))
+            context.addLine(to: CGPoint(x: center.x - radius * 0.20, y: center.y - radius * 0.62))
+            context.addLine(to: CGPoint(x: center.x + radius * 0.95, y: center.y + radius * 0.72))
+            context.strokePath()
+        case .interrupted:
+            context.strokeEllipse(in: CGRect(x: center.x - radius, y: center.y - radius,
+                                             width: radius * 2, height: radius * 2))
+            context.setFillColor(color.cgColor)
+            for x in [-0.32, 0.32] as [CGFloat] {
+                let bar = CGRect(x: center.x + radius * x - radius * 0.12,
+                                 y: center.y - radius * 0.48,
+                                 width: radius * 0.24, height: radius * 0.96)
+                context.fill(bar)
+            }
+        case .fail:
+            context.strokeEllipse(in: CGRect(x: center.x - radius, y: center.y - radius,
+                                             width: radius * 2, height: radius * 2))
+            context.move(to: CGPoint(x: center.x, y: center.y + radius * 0.48))
+            context.addLine(to: CGPoint(x: center.x, y: center.y - radius * 0.12))
+            context.strokePath()
+            context.fillEllipse(in: CGRect(x: center.x - radius * 0.10,
+                                           y: center.y - radius * 0.55,
+                                           width: radius * 0.20, height: radius * 0.20))
+        }
+    }
+
     private static func drawCat(style: StatusIconStyle, state: StatusVisualState,
                                 rect: CGRect, context: CGContext,
                                 forApplicationIcon: Bool, brandEyes: Bool) {
         let head = catHeadPath(in: rect)
         let dark = NSColor(calibratedRed: 0.10, green: 0.14, blue: 0.20, alpha: 1)
 
-        if style == .catOutline {
-            context.setFillColor(
-                (forApplicationIcon ? NSColor.white : NSColor.controlBackgroundColor).cgColor
-            )
-            context.addPath(head)
-            context.fillPath()
-            configureStroke(
-                context,
-                color: forApplicationIcon ? dark : NSColor.labelColor,
-                width: rect.width * 0.075
-            )
-            context.addPath(head)
-            context.strokePath()
-        } else {
-            context.setFillColor((forApplicationIcon ? dark : NSColor.labelColor).cgColor)
-            context.addPath(head)
-            context.fillPath()
-        }
+        context.setFillColor((forApplicationIcon ? dark : NSColor.labelColor).cgColor)
+        context.addPath(head)
+        context.fillPath()
 
         drawForeheadMark(style: style, rect: rect, context: context,
                          forApplicationIcon: forApplicationIcon)

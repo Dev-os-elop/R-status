@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2 - 2026-07-10
+
+- 사용자가 선택한 흰 고양이 디자인을 Cat Original 테마로 적용
+- Cat Original에 분홍 귀·코, 짧은 수염, 상태별 표정과 외곽선 색상 적용
+- 대기 점, 실행 회전 화살표, 완료 체크, 중단 일시정지, 실패 느낌표 보조 기호 적용
+- 새 설치의 기본 테마와 앱 번들 아이콘을 Cat Original로 변경
+- 초단순 눈 상태 디자인은 Cat Silhouette 선택 옵션으로 유지
+
 ## 0.5.1 - 2026-07-10
 
 - Appearance에 Cat Outline과 Cat Silhouette 아이콘 테마 추가

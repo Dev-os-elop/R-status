@@ -16,13 +16,13 @@ The source is a structural reference rather than a pixel-identical target. The i
 | Typography | Native San Francisco menu typography is consistent with macOS menu conventions. |
 | Spacing and layout | Settings opens to the right of the existing menu. Basic, Appearance, and Advanced are separated into compact groups with native separators. |
 | Colors and tokens | Native menu vibrancy is preserved. Icon previews use stable state colors: blue running, green complete, red fail, and orange interrupted. |
-| Image quality and assets | All seven menu-bar themes are rendered programmatically at menu-bar resolution. The Cat Silhouette bundle icon remains sharp at standard `.icns` sizes. |
+| Image quality and assets | All seven menu-bar themes are rendered programmatically at menu-bar resolution. The Cat Original bundle icon remains sharp at standard `.icns` sizes. |
 | Copy and content | Language, seven icon choices, elapsed-time visibility, and launch-at-login controls match the requested settings scope. |
 
 ## Interaction QA
 
 - Language opens a nested System Language / 한국어 / English selector.
-- Cat Outline, Cat Silhouette, Status Pulse, Progress Blocks, Signal Orbit, Window Check, and Layered S display live previews and persist the selected theme.
+- Cat Original, Cat Silhouette, Status Pulse, Progress Blocks, Signal Orbit, Window Check, and Layered S display live previews and persist the selected theme.
 - Show Elapsed Time in Menu Bar uses a native `NSSwitch` and updates the status item immediately.
 - Launch at Login uses a native `NSSwitch` backed by `SMAppService`.
 - Selecting language or appearance rebuilds the menu without opening a separate app window.
@@ -37,11 +37,27 @@ final result: passed
 
 ## Cat icon extension
 
-- Source reference: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/TemporaryItems/NSIRD_screencaptureui_U6auwu/Screenshot.png`
-- Implementation contact sheet: `/tmp/RStatus-cat-states.png`
-- Bundle icon preview: `/tmp/RStatus-cat.png`
-- Verified states: idle gray circles, running blue play eyes, complete green check eyes, interrupted amber pause eyes, and fail red X eyes.
-- Verified styles: Cat Outline and Cat Silhouette share the same geometry and remain recognizable at a rendered 19 px preview.
-- Intentional simplification: no mouth, nose, whiskers, body, tail, or external state badge; status information lives entirely in eye color and shape.
+- Source visual truth: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/TemporaryItems/NSIRD_screencaptureui_GlwgHQ/Screenshot.png`
+- Implementation screenshot: `/tmp/RStatus-cat-states.png`
+- Bundle icon preview: `/tmp/RStatus-cat-original.png`
+- Combined comparison evidence: `/tmp/RStatus-cat-qa-comparison.png`
+- Comparison viewport: 1840 × 720, source and implementation shown in the same frame.
+- State: Cat Original idle, running, complete, interrupted, and fail; Cat Silhouette retained as the secondary option.
+- Focused comparison: not required because the combined frame includes enlarged 19 px renders and native 19 px previews for every state.
+
+**Findings**
+
+- No actionable P0/P1/P2 differences remain. Cat Original preserves the source's white face, pink ears and nose, short whiskers, gray forehead mark, state-colored outline, expression changes, and external status glyphs.
+- Fonts and typography: labels are QA-only and do not ship in the icon asset; native menu typography remains unchanged.
+- Spacing and layout rhythm: face-to-glyph proportions remain readable at 19 px without changing status-item height.
+- Colors and visual tokens: graphite idle, cobalt running, emerald complete, amber interrupted, and red fail match the selected visual target.
+- Image quality and asset fidelity: the bundle icon uses the same Cat Original face and blue ring treatment; standard `.icns` sizes were regenerated.
+- Copy and content: Appearance names the selected design Cat Original and keeps Cat Silhouette as a separate option.
+
+**Comparison history**
+
+- P1 in v0.5.1: Cat Silhouette was incorrectly made the official default despite the selected white-cat design.
+- Fix: restored the selected design as Cat Original, changed the default and bundle icon, and retained Cat Silhouette only as an optional theme.
+- Post-fix evidence: `/tmp/RStatus-cat-qa-comparison.png`.
 
 final result: passed
