@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 - 2026-07-10
+
+- 별도 창 없이 기존 메뉴 오른쪽에 펼쳐지는 Settings 서브메뉴 추가
+- Basic에서 시스템 언어·한국어·영어 선택 지원
+- Appearance에서 Status Pulse, Progress Blocks, Signal Orbit, Window Check, Layered S 선택 지원
+- Advanced에서 메뉴바 실행 시간과 로그인 시 실행 토글 지원
+- 선택한 아이콘을 메뉴바 상태별 색상과 앱 아이콘에 즉시 적용
+- RStudio 상표 아이콘 제거 및 독자적인 Status Pulse 앱 아이콘 적용
+
 ## 0.4.15 - 2026-07-10
 
 - 메뉴바 실행 시간 표시 체크 옵션 추가

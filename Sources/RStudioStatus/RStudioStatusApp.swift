@@ -12,15 +12,6 @@ private enum RunState: String, Codable {
     case fail
     case interrupted
 
-    var menuTitle: String {
-        switch self {
-        case .idle: return ""
-        case .running: return "Running ⏳"
-        case .complete: return "Complete ✅"
-        case .fail: return "Fail ⚠️"
-        case .interrupted: return "Interrupted ⛔️"
-        }
-    }
 }
 
 private struct StatusUpdate: Decodable {
@@ -351,12 +342,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var updateLogURL: URL?
     private var instanceLockFD: Int32 = -1
 
-    private var showElapsedTimeInMenuBar: Bool {
-        let defaults = UserDefaults.standard
-        guard defaults.object(forKey: "showElapsedTimeInMenuBar") != nil else { return true }
-        return defaults.bool(forKey: "showElapsedTimeInMenuBar")
-    }
-
     private func acquireInstanceLock() -> Bool {
         let lockPath = "/tmp/io.github.ljwook92.rstatus.instance.lock"
         let fd = Darwin.open(lockPath, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
@@ -383,10 +368,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             return
         }
         NSApp.setActivationPolicy(.accessory)
-        if let url = Bundle.main.url(forResource: "RStudio", withExtension: "icns"),
-           let icon = NSImage(contentsOf: url) {
-            NSApp.applicationIconImage = icon
-        }
+        updateApplicationIcon()
         configureMenu()
         updateDisplay()
         startResourceMonitoring()
@@ -395,7 +377,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         server.onProgress = { [weak self] update in self?.applyProgress(update) }
         do {
             try server.start()
-            summaryItem.title = "RStudio 연결 준비됨"
+            summaryItem.title = L10n.text("RStudio 연결 준비됨", "RStudio connection ready")
         } catch {
             state = .fail
             detailMessage = "포트 47821을 열 수 없습니다: \(error.localizedDescription)"
@@ -421,8 +403,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func configureMenu() {
+        menu.removeAllItems()
         statusItem.button?.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
-        statusItem.button?.toolTip = "RStudio 작업 상태"
+        statusItem.button?.toolTip = L10n.text("R 작업 상태", "R task status")
         statusItem.button?.imageScaling = .scaleNone
         statusItem.menu = menu
 
@@ -435,6 +418,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(elapsedItem)
         menu.addItem(.separator())
 
+        resourceHeaderItem.title = L10n.text("R 리소스 사용량", "R Resource Usage")
         for item in [resourceHeaderItem, cpuItem, workersItem, processesItem, progressItem, etaItem] {
             item.isEnabled = false
             menu.addItem(item)
@@ -443,33 +427,26 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         etaItem.isHidden = true
         menu.addItem(.separator())
 
-        let resetItem = NSMenuItem(title: "상태 초기화", action: #selector(resetStatus), keyEquivalent: "r")
+        let resetItem = NSMenuItem(title: L10n.text("상태 초기화", "Reset Status"),
+                                   action: #selector(resetStatus), keyEquivalent: "r")
         resetItem.target = self
         menu.addItem(resetItem)
 
-        let notificationItem = NSMenuItem(title: "알림 테스트", action: #selector(testNotification), keyEquivalent: "n")
+        let notificationItem = NSMenuItem(title: L10n.text("알림 테스트", "Test Notification"),
+                                          action: #selector(testNotification), keyEquivalent: "n")
         notificationItem.target = self
         menu.addItem(notificationItem)
 
-        let openItem = NSMenuItem(title: "RStudio 열기", action: #selector(openRStudio), keyEquivalent: "o")
+        let openItem = NSMenuItem(title: L10n.text("RStudio 열기", "Open RStudio"),
+                                  action: #selector(openRStudio), keyEquivalent: "o")
         openItem.target = self
         menu.addItem(openItem)
 
-        if #available(macOS 13.0, *) {
-            let launchItem = NSMenuItem(title: "로그인 시 실행", action: #selector(toggleLaunchAtLogin(_:)), keyEquivalent: "")
-            launchItem.target = self
-            launchItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
-            menu.addItem(launchItem)
-        }
-
-        let elapsedToggleItem = NSMenuItem(
-            title: "메뉴바에 실행 시간 표시",
-            action: #selector(toggleElapsedTimeInMenuBar(_:)),
-            keyEquivalent: ""
-        )
-        elapsedToggleItem.target = self
-        elapsedToggleItem.state = showElapsedTimeInMenuBar ? .on : .off
-        menu.addItem(elapsedToggleItem)
+        let settingsItem = NSMenuItem(title: L10n.text("설정", "Settings"),
+                                      action: nil, keyEquivalent: "")
+        settingsItem.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: settingsItem.title)
+        settingsItem.submenu = makeSettingsMenu()
+        menu.addItem(settingsItem)
 
         menu.addItem(.separator())
 
@@ -477,20 +454,91 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         versionItem.isEnabled = false
         menu.addItem(versionItem)
 
-        let checkItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "u")
+        let checkItem = NSMenuItem(title: L10n.text("업데이트 확인…", "Check for Updates…"),
+                                   action: #selector(checkForUpdates), keyEquivalent: "u")
         checkItem.target = self
         updateItem = checkItem
         menu.addItem(checkItem)
 
-        let installAddinItem = NSMenuItem(title: "Install/Update RStudio Addin…", action: #selector(installAddinFromMenu), keyEquivalent: "")
+        let installAddinItem = NSMenuItem(
+            title: L10n.text("RStudio Addin 설치/업데이트…", "Install/Update RStudio Addin…"),
+            action: #selector(installAddinFromMenu), keyEquivalent: ""
+        )
         installAddinItem.target = self
         addinInstallItem = installAddinItem
         menu.addItem(installAddinItem)
 
         menu.addItem(.separator())
-        let quitItem = NSMenuItem(title: "RStudio Status 종료", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: L10n.text("RStudio Status 종료", "Quit RStudio Status"),
+                                  action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
+    }
+
+    private func makeSettingsMenu() -> NSMenu {
+        let settingsMenu = NSMenu(title: L10n.text("설정", "Settings"))
+
+        let basicHeader = NSMenuItem(title: L10n.text("기본", "Basic"), action: nil, keyEquivalent: "")
+        basicHeader.isEnabled = false
+        settingsMenu.addItem(basicHeader)
+
+        let languageItem = NSMenuItem(title: L10n.text("언어", "Language"), action: nil, keyEquivalent: "")
+        languageItem.image = NSImage(systemSymbolName: "globe", accessibilityDescription: languageItem.title)
+        languageItem.submenu = makeLanguageMenu()
+        settingsMenu.addItem(languageItem)
+
+        settingsMenu.addItem(.separator())
+        let appearanceHeader = NSMenuItem(title: L10n.text("모양", "Appearance"), action: nil, keyEquivalent: "")
+        appearanceHeader.isEnabled = false
+        settingsMenu.addItem(appearanceHeader)
+
+        for style in StatusIconStyle.allCases {
+            let item = NSMenuItem(title: style.displayName, action: #selector(selectIconStyle(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = style.rawValue
+            item.state = style == AppPreferences.iconStyle ? .on : .off
+            item.image = StatusIconRenderer.image(style: style, state: .running, size: 19)
+            settingsMenu.addItem(item)
+        }
+
+        settingsMenu.addItem(.separator())
+        let advancedHeader = NSMenuItem(title: L10n.text("고급", "Advanced"), action: nil, keyEquivalent: "")
+        advancedHeader.isEnabled = false
+        settingsMenu.addItem(advancedHeader)
+
+        let elapsedItem = NSMenuItem()
+        elapsedItem.view = SettingsToggleMenuItemView(
+            title: L10n.text("메뉴바에 실행 시간 표시", "Show Elapsed Time in Menu Bar"),
+            isOn: AppPreferences.showElapsedTime
+        ) { [weak self] enabled in
+            AppPreferences.showElapsedTime = enabled
+            self?.preferencesDidChange()
+        }
+        settingsMenu.addItem(elapsedItem)
+
+        let launchItem = NSMenuItem()
+        launchItem.view = SettingsToggleMenuItemView(
+            title: L10n.text("로그인 시 실행", "Launch at Login"),
+            isOn: SMAppService.mainApp.status == .enabled
+        ) { [weak self] enabled in
+            self?.setLaunchAtLogin(enabled)
+        }
+        settingsMenu.addItem(launchItem)
+
+        return settingsMenu
+    }
+
+    private func makeLanguageMenu() -> NSMenu {
+        let languageMenu = NSMenu(title: L10n.text("언어", "Language"))
+        for language in AppLanguage.allCases {
+            let item = NSMenuItem(title: language.displayName,
+                                  action: #selector(selectLanguage(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = language.rawValue
+            item.state = language == AppPreferences.language ? .on : .off
+            languageMenu.addItem(item)
+        }
+        return languageMenu
     }
 
     private var currentVersion: String {
@@ -528,8 +576,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func updateResourceItems(_ snapshot: RResourceSnapshot) {
         cpuItem.title = String(format: "CPU: %.1f%%", snapshot.cpuPercent)
-        workersItem.title = "Parallel workers: \(snapshot.workerCount)"
-        processesItem.title = "R processes: \(snapshot.processCount)"
+        workersItem.title = "\(L10n.text("병렬 워커", "Parallel workers")): \(snapshot.workerCount)"
+        processesItem.title = "\(L10n.text("R 프로세스", "R processes")): \(snapshot.processCount)"
     }
 
     private func applyProgress(_ update: ProgressUpdate) {
@@ -560,9 +608,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         progressItem.isHidden = false
 
         if let eta = update.etaSeconds, eta.isFinite, eta >= 0 {
-            setCompactProgressTitle(etaItem, "Remaining: \(formatRemaining(eta))")
+            setCompactProgressTitle(etaItem, "\(L10n.text("남은 시간", "Remaining")): \(formatRemaining(eta))")
         } else {
-            setCompactProgressTitle(etaItem, "Remaining: --:--:--")
+            setCompactProgressTitle(etaItem, "\(L10n.text("남은 시간", "Remaining")): --:--:--")
         }
         etaItem.isEnabled = true
         etaItem.isHidden = false
@@ -608,7 +656,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             // menu transitions between active and inactive states.
             .foregroundColor: NSColor(calibratedRed: 0.08, green: 0.42, blue: 0.92, alpha: 1.0)
         ]
-        let result = NSMutableAttributedString(string: "Progress: [", attributes: normalAttributes)
+        let result = NSMutableAttributedString(
+            string: "\(L10n.text("진행률", "Progress")): [",
+            attributes: normalAttributes
+        )
         result.append(NSAttributedString(
             string: String(repeating: "■", count: completed),
             attributes: completedAttributes
@@ -651,24 +702,40 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         sendNotification()
     }
 
-    private func loadMenuBarIcon() -> NSImage? {
-        guard let url = Bundle.main.url(forResource: "RStudio", withExtension: "icns"),
-              let sourceImage = NSImage(contentsOf: url) else { return nil }
-
-        var proposedRect = NSRect(x: 0, y: 0, width: 1024, height: 1024)
-        guard let source = sourceImage.cgImage(forProposedRect: &proposedRect, context: nil, hints: nil) else {
-            return nil
+    private func stateTitle(_ state: RunState) -> String {
+        switch state {
+        case .idle: return L10n.text("준비됨", "Ready")
+        case .running: return L10n.text("실행 중", "Running")
+        case .complete: return L10n.text("완료", "Complete")
+        case .fail: return L10n.text("실패", "Fail")
+        case .interrupted: return L10n.text("중단됨", "Interrupted")
         }
+    }
 
-        // App icons contain transparent safety padding. Remove it so the logo is
-        // visibly larger instead of being normalized back to the menu-bar default.
-        let side = CGFloat(min(source.width, source.height))
-        let inset = side * 0.075
-        let cropRect = CGRect(x: inset, y: inset, width: side - inset * 2, height: side - inset * 2)
-        guard let cropped = source.cropping(to: cropRect) else { return nil }
-        let menuImage = NSImage(cgImage: cropped, size: NSSize(width: 24, height: 24))
-        menuImage.isTemplate = false
-        return menuImage
+    private func visualState(_ state: RunState) -> StatusVisualState {
+        switch state {
+        case .idle: return .idle
+        case .running: return .running
+        case .complete: return .complete
+        case .fail: return .fail
+        case .interrupted: return .interrupted
+        }
+    }
+
+    private func menuBarIcon(size: CGFloat = 22) -> NSImage {
+        StatusIconRenderer.image(
+            style: AppPreferences.iconStyle,
+            state: visualState(state),
+            size: size
+        )
+    }
+
+    private func updateApplicationIcon() {
+        NSApp.applicationIconImage = StatusIconRenderer.image(
+            style: AppPreferences.iconStyle,
+            state: .running,
+            size: 256
+        )
     }
 
     private func apply(_ update: StatusUpdate) {
@@ -703,22 +770,22 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func updateDisplay() {
-        var title = state.menuTitle
-        if state == .running, showElapsedTimeInMenuBar, let startedAt {
+        var title = stateTitle(state)
+        if state == .running, AppPreferences.showElapsedTime, let startedAt {
             title += " \(formatElapsed(Date().timeIntervalSince(startedAt)))"
         }
+        statusItem.button?.image = menuBarIcon(size: state == .idle ? 24 : 19)
+        statusItem.button?.imageScaling = .scaleNone
         if state == .idle {
             statusItem.length = 28
-            statusItem.button?.image = loadMenuBarIcon()
             statusItem.button?.imagePosition = .imageOnly
             statusItem.button?.title = ""
         } else {
             statusItem.length = NSStatusItem.variableLength
-            statusItem.button?.image = nil
-            statusItem.button?.imagePosition = .noImage
+            statusItem.button?.imagePosition = .imageLeft
             statusItem.button?.title = title
         }
-        let summary = state == .idle ? "RStudio Ready" : state.menuTitle
+        let summary = state == .idle ? L10n.text("R 상태 준비됨", "R Status Ready") : stateTitle(state)
         summaryItem.title = taskName.isEmpty ? summary : "\(summary) · \(taskName)"
 
         if !detailMessage.isEmpty {
@@ -730,7 +797,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         }
 
         if let startedAt {
-            elapsedItem.title = "실행 시간: \(formatElapsed(Date().timeIntervalSince(startedAt)))"
+            elapsedItem.title = "\(L10n.text("실행 시간", "Elapsed time")): \(formatElapsed(Date().timeIntervalSince(startedAt)))"
             elapsedItem.isHidden = false
         } else {
             elapsedItem.isHidden = true
@@ -748,15 +815,17 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func sendNotification() {
-        let title = taskName.isEmpty ? state.menuTitle : taskName
+        let title = taskName.isEmpty ? stateTitle(state) : taskName
         let body: String
         switch state {
         case .complete:
-            body = "R 작업이 완료되었습니다."
+            body = L10n.text("R 작업이 완료되었습니다.", "The R task completed.")
         case .interrupted:
-            body = "R 작업이 사용자에 의해 중단되었습니다."
+            body = L10n.text("R 작업이 사용자에 의해 중단되었습니다.", "The R task was interrupted.")
         default:
-            body = detailMessage.isEmpty ? "R 작업이 실패했습니다." : detailMessage
+            body = detailMessage.isEmpty
+                ? L10n.text("R 작업이 실패했습니다.", "The R task failed.")
+                : detailMessage
         }
         postNotification(title: title, body: body)
     }
@@ -770,7 +839,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     @objc private func testNotification() {
-        postNotification(title: "RStudio Status", body: "RStudio 로고 알림 테스트입니다.")
+        postNotification(
+            title: "RStudio Status",
+            body: L10n.text("상태 알림 테스트입니다.", "This is a status notification test.")
+        )
     }
 
     @objc private func installAddinFromMenu() {
@@ -785,7 +857,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         }
 
         isInstallingAddin = true
-        addinInstallItem?.title = "Installing RStudio Addin…"
+        addinInstallItem?.title = L10n.text("RStudio Addin 설치 중…", "Installing RStudio Addin…")
         addinInstallItem?.isEnabled = false
 
         Task.detached(priority: .userInitiated) {
@@ -798,7 +870,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func showAddinInstallationResult(_ result: Result<String, AddinInstallerError>) {
         isInstallingAddin = false
-        addinInstallItem?.title = "Install/Update RStudio Addin…"
+        addinInstallItem?.title = L10n.text(
+            "RStudio Addin 설치/업데이트…",
+            "Install/Update RStudio Addin…"
+        )
         addinInstallItem?.isEnabled = true
         switch result {
         case .success:
@@ -825,7 +900,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             ?? "Dev-os-elop/R-status"
         guard let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest") else { return }
         let installedVersion = currentVersion
-        updateItem?.title = "Checking for Updates…"
+        updateItem?.title = L10n.text("업데이트 확인 중…", "Checking for Updates…")
         updateItem?.isEnabled = false
 
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
@@ -862,7 +937,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func showUpdateResult(_ result: UpdateCheckResult) {
-        updateItem?.title = "Check for Updates…"
+        updateItem?.title = L10n.text("업데이트 확인…", "Check for Updates…")
         updateItem?.isEnabled = true
         defer { restorePreviousApplicationFocus() }
         NSApp.activate(ignoringOtherApps: true)
@@ -870,22 +945,28 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         let alert = NSAlert()
         switch result {
         case .updateAvailable(let sourceVersion):
-            alert.messageText = "Update Available"
-            alert.informativeText = "RStudio Status v\(sourceVersion.version) is available on GitHub. You are using v\(currentVersion)."
+            alert.messageText = L10n.text("업데이트 사용 가능", "Update Available")
+            alert.informativeText = L10n.text(
+                "RStudio Status v\(sourceVersion.version)을 설치할 수 있습니다. 현재 버전은 v\(currentVersion)입니다.",
+                "RStudio Status v\(sourceVersion.version) is available on GitHub. You are using v\(currentVersion)."
+            )
             alert.alertStyle = .informational
-            alert.addButton(withTitle: "Download and Install")
-            alert.addButton(withTitle: "Later")
+            alert.addButton(withTitle: L10n.text("다운로드 및 설치", "Download and Install"))
+            alert.addButton(withTitle: L10n.text("나중에", "Later"))
             if alert.runModal() == .alertFirstButtonReturn {
                 installUpdate(sourceVersion)
             }
         case .latest:
-            alert.messageText = "You're up to date"
-            alert.informativeText = "You're using the latest version of RStudio Status (v\(currentVersion))."
+            alert.messageText = L10n.text("최신 버전입니다", "You're up to date")
+            alert.informativeText = L10n.text(
+                "RStudio Status 최신 버전(v\(currentVersion))을 사용 중입니다.",
+                "You're using the latest version of RStudio Status (v\(currentVersion))."
+            )
             alert.alertStyle = .informational
             alert.addButton(withTitle: "OK")
             alert.runModal()
         case .failed(let message):
-            alert.messageText = "Unable to Check for Updates"
+            alert.messageText = L10n.text("업데이트 확인 실패", "Unable to Check for Updates")
             alert.informativeText = message
             alert.alertStyle = .warning
             alert.addButton(withTitle: "OK")
@@ -905,7 +986,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private func installUpdate(_ sourceVersion: GitHubSourceVersion) {
         guard !isInstallingUpdate else { return }
         isInstallingUpdate = true
-        updateItem?.title = "Downloading Update…"
+        updateItem?.title = L10n.text("업데이트 다운로드 중…", "Downloading Update…")
         updateItem?.isEnabled = false
 
         Task.detached(priority: .userInitiated) {
@@ -925,7 +1006,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                                     sourceVersion: GitHubSourceVersion) {
         switch result {
         case .success(let launched):
-            updateItem?.title = "Installing Update…"
+            updateItem?.title = L10n.text("업데이트 설치 중…", "Installing Update…")
             updateProcess = launched.process
             updateLogURL = launched.logURL
             postNotification(
@@ -959,7 +1040,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func showUpdateInstallFailure(_ message: String) {
         isInstallingUpdate = false
-        updateItem?.title = "Check for Updates…"
+        updateItem?.title = L10n.text("업데이트 확인…", "Check for Updates…")
         updateItem?.isEnabled = true
         postNotification(
             title: "RStudio Status Update Failed",
@@ -991,27 +1072,43 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         }
     }
 
-    @available(macOS 13.0, *)
-    @objc private func toggleLaunchAtLogin(_ sender: NSMenuItem) {
-        do {
-            if SMAppService.mainApp.status == .enabled {
-                try SMAppService.mainApp.unregister()
-                sender.state = .off
-            } else {
-                try SMAppService.mainApp.register()
-                sender.state = .on
-            }
-        } catch {
-            detailMessage = "로그인 실행 설정 실패: \(error.localizedDescription)"
-            updateDisplay()
-        }
+    @objc private func selectLanguage(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String,
+              let language = AppLanguage(rawValue: rawValue) else { return }
+        AppPreferences.language = language
+        preferencesDidChange()
     }
 
-    @objc private func toggleElapsedTimeInMenuBar(_ sender: NSMenuItem) {
-        let enabled = sender.state != .on
-        UserDefaults.standard.set(enabled, forKey: "showElapsedTimeInMenuBar")
-        sender.state = enabled ? .on : .off
+    @objc private func selectIconStyle(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String,
+              let style = StatusIconStyle(rawValue: rawValue) else { return }
+        AppPreferences.iconStyle = style
+        preferencesDidChange()
+    }
+
+    private func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            detailMessage = L10n.text(
+                "로그인 실행 설정 실패: \(error.localizedDescription)",
+                "Launch at login failed: \(error.localizedDescription)"
+            )
+        }
+        preferencesDidChange()
+    }
+
+    private func preferencesDidChange() {
+        updateApplicationIcon()
         updateDisplay()
+        DispatchQueue.main.async { [weak self] in
+            self?.configureMenu()
+            self?.updateDisplay()
+        }
     }
 
     @objc private func quit() {

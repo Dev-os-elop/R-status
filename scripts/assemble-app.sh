@@ -4,27 +4,15 @@ set -euo pipefail
 ROOT="${0:A:h:h}"
 APP="$ROOT/dist/RStudio Status.app"
 BINARY="${1:-}"
-RSTUDIO_ICON="${RSTUDIO_ICON_PATH:-}"
+APP_ICON="$ROOT/Resources/RStatus.icns"
 
 if [[ -z "$BINARY" || ! -f "$BINARY" ]]; then
     echo "오류: 앱 실행 파일을 찾을 수 없습니다: $BINARY" >&2
     exit 1
 fi
 
-if [[ -z "$RSTUDIO_ICON" ]]; then
-    for candidate in \
-        "/Applications/RStudio.app/Contents/Resources/RStudio.icns" \
-        "$HOME/Applications/RStudio.app/Contents/Resources/RStudio.icns"; do
-        if [[ -f "$candidate" ]]; then
-            RSTUDIO_ICON="$candidate"
-            break
-        fi
-    done
-fi
-
-if [[ -z "$RSTUDIO_ICON" || ! -f "$RSTUDIO_ICON" ]]; then
-    echo "오류: RStudio 공식 아이콘을 찾을 수 없습니다." >&2
-    echo "RStudio Desktop을 설치하거나 RSTUDIO_ICON_PATH를 지정해 주세요." >&2
+if [[ ! -f "$APP_ICON" ]]; then
+    echo "오류: 앱 아이콘을 찾을 수 없습니다: $APP_ICON" >&2
     exit 1
 fi
 
@@ -33,7 +21,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/RStudioStatus"
 chmod +x "$APP/Contents/MacOS/RStudioStatus"
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
-cp "$RSTUDIO_ICON" "$APP/Contents/Resources/RStudio.icns"
+cp "$APP_ICON" "$APP/Contents/Resources/RStatus.icns"
 cp "$ROOT/Resources/install-addin.sh" "$APP/Contents/Resources/install-addin.sh"
 chmod +x "$APP/Contents/Resources/install-addin.sh"
 ditto --norsrc --noextattr "$ROOT/r-package" "$APP/Contents/Resources/r-package"
