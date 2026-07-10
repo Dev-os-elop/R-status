@@ -135,7 +135,7 @@ enum StatusIconRenderer {
 
         let dark = NSColor(calibratedRed: 0.18, green: 0.23, blue: 0.32, alpha: 1)
         let outline = forApplicationIcon ? dark : state.color
-        let head = catHeadPath(in: faceRect)
+        let head = catHeadPath(in: faceRect, roundedEars: forApplicationIcon)
         context.setFillColor(NSColor.white.cgColor)
         context.addPath(head)
         context.fillPath()
@@ -346,7 +346,7 @@ enum StatusIconRenderer {
         drawCatEyes(state: state, rect: rect, context: context, brandEyes: brandEyes)
     }
 
-    private static func catHeadPath(in rect: CGRect) -> CGPath {
+    private static func catHeadPath(in rect: CGRect, roundedEars: Bool = false) -> CGPath {
         func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
             CGPoint(x: rect.minX + rect.width * x, y: rect.minY + rect.height * y)
         }
@@ -354,11 +354,21 @@ enum StatusIconRenderer {
         let path = CGMutablePath()
         path.move(to: point(0.18, 0.23))
         path.addCurve(to: point(0.15, 0.58), control1: point(0.10, 0.34), control2: point(0.11, 0.48))
-        path.addLine(to: point(0.12, 0.91))
-        path.addLine(to: point(0.38, 0.72))
+        if roundedEars {
+            path.addCurve(to: point(0.16, 0.86), control1: point(0.13, 0.69), control2: point(0.13, 0.83))
+            path.addCurve(to: point(0.38, 0.72), control1: point(0.20, 0.88), control2: point(0.30, 0.78))
+        } else {
+            path.addLine(to: point(0.12, 0.91))
+            path.addLine(to: point(0.38, 0.72))
+        }
         path.addCurve(to: point(0.62, 0.72), control1: point(0.45, 0.76), control2: point(0.55, 0.76))
-        path.addLine(to: point(0.88, 0.91))
-        path.addLine(to: point(0.85, 0.58))
+        if roundedEars {
+            path.addCurve(to: point(0.84, 0.86), control1: point(0.70, 0.78), control2: point(0.80, 0.88))
+            path.addCurve(to: point(0.85, 0.58), control1: point(0.87, 0.83), control2: point(0.87, 0.69))
+        } else {
+            path.addLine(to: point(0.88, 0.91))
+            path.addLine(to: point(0.85, 0.58))
+        }
         path.addCurve(to: point(0.82, 0.23), control1: point(0.89, 0.48), control2: point(0.90, 0.34))
         path.addCurve(to: point(0.18, 0.23), control1: point(0.68, 0.05), control2: point(0.32, 0.05))
         path.closeSubpath()
