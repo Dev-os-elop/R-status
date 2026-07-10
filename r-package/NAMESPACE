@@ -1,4 +1,5 @@
 export(rstatus_notify)
+export(rstatus_progress)
 export(rstatus_run)
 export(run_file_with_status)
 export(run_current_document_with_status)

@@ -30,6 +30,14 @@ private struct StatusUpdate: Decodable {
     let pid: Int32?
 }
 
+private struct ProgressUpdate: Decodable {
+    let active: Bool
+    let current: Double?
+    let total: Double?
+    let etaSeconds: Double?
+    let message: String?
+}
+
 private struct GitHubSourceVersion {
     let version: String
     let repository: String
@@ -198,6 +206,7 @@ private final class LocalHTTPServer {
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "RStudioStatus.HTTPServer")
     var onStatus: ((StatusUpdate) -> Void)?
+    var onProgress: ((ProgressUpdate) -> Void)?
 
     func start(port: UInt16 = 47821) throws {
         guard let port = NWEndpoint.Port(rawValue: port) else {
@@ -270,16 +279,23 @@ private final class LocalHTTPServer {
             return
         }
 
-        guard firstLine.hasPrefix("POST /status "),
-              let bodyRange = request.range(of: Data("\r\n\r\n".utf8)) else {
+        guard let bodyRange = request.range(of: Data("\r\n\r\n".utf8)) else {
             respond(status: "404 Not Found", body: #"{"ok":false}"#, on: connection)
             return
         }
 
         let body = request[bodyRange.upperBound...]
         do {
-            let update = try JSONDecoder().decode(StatusUpdate.self, from: body)
-            DispatchQueue.main.async { [weak self] in self?.onStatus?(update) }
+            if firstLine.hasPrefix("POST /status ") {
+                let update = try JSONDecoder().decode(StatusUpdate.self, from: body)
+                DispatchQueue.main.async { [weak self] in self?.onStatus?(update) }
+            } else if firstLine.hasPrefix("POST /progress ") {
+                let update = try JSONDecoder().decode(ProgressUpdate.self, from: body)
+                DispatchQueue.main.async { [weak self] in self?.onProgress?(update) }
+            } else {
+                respond(status: "404 Not Found", body: #"{"ok":false}"#, on: connection)
+                return
+            }
             respond(status: "200 OK", body: #"{"ok":true}"#, on: connection)
         } catch {
             respond(status: "400 Bad Request", body: #"{"ok":false,"error":"invalid status"}"#, on: connection)
@@ -306,6 +322,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let cpuItem = NSMenuItem(title: "CPU: —", action: nil, keyEquivalent: "")
     private let workersItem = NSMenuItem(title: "Parallel workers: —", action: nil, keyEquivalent: "")
     private let processesItem = NSMenuItem(title: "R processes: —", action: nil, keyEquivalent: "")
+    private let progressItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private let etaItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private var updateItem: NSMenuItem?
     private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
@@ -336,6 +354,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         startResourceMonitoring()
 
         server.onStatus = { [weak self] update in self?.apply(update) }
+        server.onProgress = { [weak self] update in self?.applyProgress(update) }
         do {
             try server.start()
             summaryItem.title = "RStudio 연결 준비됨"
@@ -377,10 +396,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(elapsedItem)
         menu.addItem(.separator())
 
-        for item in [resourceHeaderItem, cpuItem, workersItem, processesItem] {
+        for item in [resourceHeaderItem, cpuItem, workersItem, processesItem, progressItem, etaItem] {
             item.isEnabled = false
             menu.addItem(item)
         }
+        progressItem.isHidden = true
+        etaItem.isHidden = true
         menu.addItem(.separator())
 
         let resetItem = NSMenuItem(title: "상태 초기화", action: #selector(resetStatus), keyEquivalent: "r")
@@ -463,6 +484,49 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         processesItem.title = "R processes: \(snapshot.processCount)"
     }
 
+    private func applyProgress(_ update: ProgressUpdate) {
+        guard state == .running, update.active else {
+            clearProgress()
+            return
+        }
+        guard let current = update.current,
+              let total = update.total,
+              current.isFinite,
+              total.isFinite,
+              total > 0 else {
+            clearProgress()
+            return
+        }
+
+        let ratio = min(1, max(0, current / total))
+        let segmentCount = 14
+        let completed = min(segmentCount, max(0, Int((ratio * Double(segmentCount)).rounded(.down))))
+        let bar = String(repeating: "█", count: completed)
+            + String(repeating: "░", count: segmentCount - completed)
+        let percent = Int((ratio * 100).rounded())
+        progressItem.title = "Progress: [\(bar)] \(percent)% · \(formatProgressValue(current))/\(formatProgressValue(total))"
+        progressItem.isHidden = false
+
+        let message = update.message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if let eta = update.etaSeconds, eta.isFinite, eta >= 0 {
+            etaItem.title = "Remaining: \(formatElapsed(eta))" + (message.isEmpty ? "" : " · \(message)")
+        } else {
+            etaItem.title = "Remaining: calculating…" + (message.isEmpty ? "" : " · \(message)")
+        }
+        etaItem.isHidden = false
+    }
+
+    private func clearProgress() {
+        progressItem.title = ""
+        progressItem.isHidden = true
+        etaItem.title = ""
+        etaItem.isHidden = true
+    }
+
+    private func formatProgressValue(_ value: Double) -> String {
+        value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
+    }
+
     private func startProcessWatchdog() {
         processWatchTimer?.invalidate()
         guard let taskPID, taskPID > 0 else { return }
@@ -516,6 +580,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         if let pid = update.pid, pid > 0 { taskPID = pid }
 
         if state == .running {
+            clearProgress()
             startedAt = Date()
             timer?.invalidate()
             let refreshTimer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -525,6 +590,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             RunLoop.main.add(refreshTimer, forMode: .common)
             startProcessWatchdog()
         } else {
+            clearProgress()
             timer?.invalidate()
             timer = nil
             processWatchTimer?.invalidate()
@@ -834,6 +900,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         taskName = ""
         detailMessage = ""
         startedAt = nil
+        clearProgress()
         updateDisplay()
     }
 
