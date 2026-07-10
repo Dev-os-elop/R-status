@@ -24,8 +24,12 @@ enum StatusIconRenderer {
             guard let context = NSGraphicsContext.current?.cgContext else { return false }
             context.setShouldAntialias(true)
             context.setAllowsAntialiasing(true)
-            let isCat = style == .catOutline || style == .catSilhouette
-            let inset = isCat ? size * 0.03 : size * 0.08
+            let inset: CGFloat
+            switch style {
+            case .catOutline: inset = 0
+            case .catSilhouette: inset = size * 0.03
+            default: inset = size * 0.08
+            }
             draw(style: style, state: state,
                  in: rect.insetBy(dx: inset, dy: inset), context: context)
             return true
@@ -51,7 +55,12 @@ enum StatusIconRenderer {
                                    cornerHeight: size * 0.20, transform: nil))
             context.fillPath()
 
-            let iconInset = isCat ? size * 0.13 : size * 0.16
+            let iconInset: CGFloat
+            switch style {
+            case .catOutline: iconInset = size * 0.10
+            case .catSilhouette: iconInset = size * 0.13
+            default: iconInset = size * 0.16
+            }
             let iconRect = tile.insetBy(dx: iconInset, dy: iconInset)
             if style == .catOutline {
                 drawCatOriginalAppRings(rect: iconRect, context: context)
@@ -118,9 +127,9 @@ enum StatusIconRenderer {
         } else {
             faceRect = CGRect(
                 x: rect.minX,
-                y: rect.minY + rect.height * 0.14,
-                width: rect.width * 0.76,
-                height: rect.height * 0.72
+                y: rect.minY + rect.height * 0.12,
+                width: rect.width * 0.78,
+                height: rect.height * 0.76
             )
         }
 
@@ -273,9 +282,9 @@ enum StatusIconRenderer {
     private static func drawCatOriginalBadge(state: StatusVisualState, faceRect: CGRect,
                                              fullRect: CGRect, context: CGContext) {
         let color = state.color
-        let center = CGPoint(x: fullRect.minX + fullRect.width * 0.88,
+        let center = CGPoint(x: fullRect.minX + fullRect.width * 0.90,
                              y: fullRect.minY + fullRect.height * 0.36)
-        let radius = fullRect.width * 0.105
+        let radius = fullRect.width * 0.09
         context.setFillColor(color.cgColor)
         configureStroke(context, color: color, width: max(1.1, fullRect.width * 0.055))
 
