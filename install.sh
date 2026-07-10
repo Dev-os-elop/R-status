@@ -10,6 +10,8 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
     exit 1
 fi
 
+source "$ROOT/scripts/check-toolchain.sh"
+
 for command_name in swift R Rscript codesign; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "오류: '$command_name' 명령을 찾을 수 없습니다." >&2

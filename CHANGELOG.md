@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5 - 2026-07-10
+
+- 설치 전에 macOS SDK와 Swift toolchain이 실제로 동작하는지 확인
+- Command Line Tools가 손상된 경우 명확한 재설치 방법 안내
+- 사용 가능한 전체 Xcode가 있으면 설치 중 자동으로 해당 toolchain 사용
+
 ## 0.3.4 - 2026-07-09
 
 - CPU를 로컬 논리 CPU 전체 용량 기준 0–100%로 정규화
