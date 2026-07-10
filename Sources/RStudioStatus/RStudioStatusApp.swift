@@ -521,6 +521,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             segmentCount: segmentCount,
             details: "\(String(format: "%3d", percent))% · \(currentText)/\(paddedTotal)"
         )
+        progressItem.isEnabled = true
         progressItem.isHidden = false
 
         if let eta = update.etaSeconds, eta.isFinite, eta >= 0 {
@@ -528,15 +529,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         } else {
             setCompactProgressTitle(etaItem, "Remaining: --:--:--")
         }
+        etaItem.isEnabled = true
         etaItem.isHidden = false
     }
 
     private func clearProgress() {
         progressItem.title = ""
         progressItem.attributedTitle = NSAttributedString(string: "")
+        progressItem.isEnabled = false
         progressItem.isHidden = true
         etaItem.title = ""
         etaItem.attributedTitle = NSAttributedString(string: "")
+        etaItem.isEnabled = false
         etaItem.isHidden = true
     }
 
@@ -572,10 +576,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             .font: font,
             .foregroundColor: NSColor.labelColor
         ]
+        let completedAttributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.systemBlue
+        ]
         let result = NSMutableAttributedString(string: "Progress: [", attributes: normalAttributes)
         result.append(NSAttributedString(
             string: String(repeating: "■", count: completed),
-            attributes: normalAttributes
+            attributes: completedAttributes
         ))
         result.append(NSAttributedString(
             string: String(repeating: "■", count: segmentCount - completed),
