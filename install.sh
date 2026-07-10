@@ -4,15 +4,24 @@ set -euo pipefail
 ROOT="${0:A:h}"
 APP_NAME="RStudio Status.app"
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/Resources/Info.plist")"
+ASSET_NAME="RStudioStatus-macos-arm64"
+ASSET_URL="${RSTATUS_ASSET_URL:-https://github.com/Dev-os-elop/R-status/releases/download/v${VERSION}/${ASSET_NAME}}"
+EXPECTED_SHA256="$(tr -d '[:space:]' < "$ROOT/Resources/RStudioStatus-macos-arm64.sha256")"
+TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/rstatus-install.XXXXXX")"
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
     echo "오류: RStudio Status는 macOS에서만 설치할 수 있습니다." >&2
     exit 1
 fi
 
-source "$ROOT/scripts/check-toolchain.sh"
+if [[ "$(uname -m)" != "arm64" && "$(sysctl -in hw.optional.arm64 2>/dev/null || true)" != "1" ]]; then
+    echo "오류: 현재 사전 빌드 앱은 Apple Silicon Mac만 지원합니다." >&2
+    exit 1
+fi
 
-for command_name in swift R Rscript codesign; do
+for command_name in R Rscript codesign curl shasum; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "오류: '$command_name' 명령을 찾을 수 없습니다." >&2
         echo "README의 필수 조건을 확인해 주세요." >&2
@@ -30,8 +39,18 @@ fi
 
 APP_PATH="$APP_DIR/$APP_NAME"
 
-echo "[1/4] macOS 메뉴바 앱 빌드"
-"$ROOT/scripts/build-app.sh"
+echo "[1/4] macOS 메뉴바 앱 다운로드"
+BINARY="$TEMP_DIR/$ASSET_NAME"
+curl --fail --location --retry 3 --progress-bar "$ASSET_URL" --output "$BINARY"
+ACTUAL_SHA256="$(shasum -a 256 "$BINARY" | awk '{print $1}')"
+if [[ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]]; then
+    echo "오류: 다운로드한 앱의 SHA-256이 일치하지 않습니다." >&2
+    echo "예상: $EXPECTED_SHA256" >&2
+    echo "실제: $ACTUAL_SHA256" >&2
+    exit 1
+fi
+chmod +x "$BINARY"
+"$ROOT/scripts/assemble-app.sh" "$BINARY"
 
 echo "[2/4] 앱 설치: $APP_PATH"
 pkill -x RStudioStatus 2>/dev/null || true
@@ -48,7 +67,6 @@ codesign --verify --deep "$APP_PATH"
 
 echo "[3/4] RStudio Addin 설치"
 "$ROOT/scripts/install-r-package.sh"
-VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/Resources/Info.plist")"
 defaults write io.github.ljwook92.rstatus installedAddinVersion -string "$VERSION"
 defaults write io.github.ljwook92.rstatus addinPromptedVersion -string "$VERSION"
 

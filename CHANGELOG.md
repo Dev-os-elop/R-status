@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.6 - 2026-07-10
+
+- 설치 시 GitHub Release의 사전 빌드 Apple Silicon 실행 파일 사용
+- 일반 사용자의 Xcode 및 Command Line Tools 설치 요구사항 제거
+- 다운로드한 실행 파일의 SHA-256 무결성 검증
+- 소스 빌드용 toolchain 검사를 개발 스크립트로 분리
+
 ## 0.3.5 - 2026-07-10
 
 - 설치 전에 macOS SDK와 Swift toolchain이 실제로 동작하는지 확인
