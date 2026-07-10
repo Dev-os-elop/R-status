@@ -39,6 +39,7 @@ final result: passed
 
 - Source visual truth: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/TemporaryItems/NSIRD_screencaptureui_GlwgHQ/Screenshot.png`
 - Implementation screenshot: `/tmp/RStatus-cat-states.png`
+- Menu-with-text preview: `/tmp/RStatus-menu-complete-v054.png` at 260 × 38.
 - Bundle icon preview: `/tmp/RStatus-cat-original-v053.png`
 - Combined comparison evidence: `/tmp/RStatus-cat-qa-comparison.png`
 - Comparison viewport: 1840 × 720, source and implementation shown in the same frame.
@@ -61,5 +62,8 @@ final result: passed
 - Post-fix evidence: `/tmp/RStatus-cat-qa-comparison.png`.
 - P3 in v0.5.2: the Cat Original face had slightly more internal padding than requested.
 - Fix: enlarged the menu-bar face by approximately 8% and reduced cat app-icon insets while preserving status-glyph spacing.
+- P2 in v0.5.3: active-state icons dropped to 19 px beside text and the face rectangle was taller than it was wide.
+- Fix: use 24 px for every menu-bar state, reduce cat image padding to 3%, and change the Cat Original menu face to a wider 0.76:0.72 proportion.
+- Post-fix evidence: `/tmp/RStatus-menu-complete-v054.png` and `/tmp/RStatus-cat-states.png`.
 
 final result: passed

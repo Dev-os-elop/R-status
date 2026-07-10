@@ -773,7 +773,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         if state == .running, AppPreferences.showElapsedTime, let startedAt {
             title += " \(formatElapsed(Date().timeIntervalSince(startedAt)))"
         }
-        statusItem.button?.image = menuBarIcon(size: state == .idle ? 24 : 19)
+        statusItem.button?.image = menuBarIcon(size: 24)
         statusItem.button?.imageScaling = .scaleNone
         if state == .idle {
             statusItem.length = 28
