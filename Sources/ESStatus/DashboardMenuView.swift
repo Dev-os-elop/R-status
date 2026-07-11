@@ -2,6 +2,49 @@ import AppKit
 import ServiceManagement
 
 @MainActor
+private final class DashboardNavigationButton: NSControl {
+    private let iconView = NSImageView()
+    private let titleLabel = NSTextField(labelWithString: "")
+    var isSelected = false { didSet { updateBackground() } }
+
+    init(frame: NSRect, title: String, image: NSImage?) {
+        super.init(frame: frame)
+        wantsLayer = true
+        layer?.cornerRadius = 18
+        iconView.image = image
+        iconView.imageScaling = .scaleProportionallyUpOrDown
+        addSubview(iconView)
+        titleLabel.stringValue = title
+        titleLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        titleLabel.textColor = .secondaryLabelColor
+        titleLabel.alignment = .center
+        addSubview(titleLabel)
+        updateBackground()
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func layout() {
+        super.layout()
+        let bottom = bounds.midY - 26
+        iconView.frame = NSRect(x: bounds.midX - 14, y: bottom + 25, width: 28, height: 28)
+        titleLabel.frame = NSRect(x: 6, y: bottom, width: bounds.width - 12, height: 20)
+    }
+
+    override func mouseDown(with event: NSEvent) { layer?.opacity = 0.78 }
+    override func mouseUp(with event: NSEvent) {
+        layer?.opacity = 1
+        if bounds.contains(convert(event.locationInWindow, from: nil)) { sendAction(action, to: target) }
+    }
+
+    private func updateBackground() {
+        layer?.backgroundColor = isSelected
+            ? NSColor.controlAccentColor.withAlphaComponent(0.20).cgColor
+            : NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
+    }
+}
+
+@MainActor
 final class DashboardMenuView: NSView {
     enum Page { case main, icon, history, settings }
 
@@ -18,7 +61,7 @@ final class DashboardMenuView: NSView {
     private let progressLabel = NSTextField(labelWithString: "")
     private let etaLabel = NSTextField(labelWithString: "")
     private let resetButton = NSButton()
-    private var pageButtons: [Page: NSButton] = [:]
+    private var pageButtons: [Page: DashboardNavigationButton] = [:]
     private var currentPage: Page = .main
     private var iconView: SettingsAppearanceMenuItemView?
     private var historyController: RunHistoryViewController?
@@ -37,7 +80,7 @@ final class DashboardMenuView: NSView {
     private let onClearHistory: () -> Void
     private let version: String
 
-    let panelSize = NSSize(width: 586, height: 546)
+    let panelSize = NSSize(width: 586, height: 470)
 
     init(version: String,
          onReset: @escaping () -> Void,
@@ -87,8 +130,8 @@ final class DashboardMenuView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
-        contentPanel.frame = NSRect(x: 14, y: 14, width: 430, height: 518)
-        navigationPanel.frame = NSRect(x: 458, y: 14, width: 114, height: 518)
+        contentPanel.frame = NSRect(x: 14, y: 14, width: 430, height: 442)
+        navigationPanel.frame = NSRect(x: 458, y: 14, width: 114, height: 442)
         stylePanel(contentPanel, radius: 22)
         addSubview(contentPanel)
         addSubview(navigationPanel)
@@ -100,31 +143,26 @@ final class DashboardMenuView: NSView {
             (nil, "r.square", "R Open"),
             (.settings, "gearshape", "Settings")
         ]
-        let heights: [CGFloat] = [66, 96, 96, 96, 96]
-        var top = navigationPanel.bounds.height - 10
+        let heights: [CGFloat] = [72, 82, 82, 82, 82]
+        var top = navigationPanel.bounds.height
         for (index, entry) in entries.enumerated() {
             let height = heights[index]
             top -= height
-            let button = NSButton(frame: NSRect(x: 8, y: top, width: 98, height: height - 8))
-            button.title = entry.2
-            button.font = .systemFont(ofSize: 13, weight: .medium)
-            button.image = NSImage(systemSymbolName: entry.1, accessibilityDescription: entry.2)
+            var image = NSImage(systemSymbolName: entry.1, accessibilityDescription: entry.2)
             if index == 1 {
-                button.image = StatusIconRenderer.image(style: AppPreferences.iconStyle,
-                                                        state: .running, size: 24)
+                image = StatusIconRenderer.image(style: AppPreferences.iconStyle,
+                                                 state: .running, size: 24)
             }
-            button.imagePosition = .imageAbove
-            button.bezelStyle = .regularSquare
-            button.isBordered = false
-            button.wantsLayer = true
-            button.layer?.cornerRadius = 18
-            button.layer?.backgroundColor = NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
+            let button = DashboardNavigationButton(
+                frame: NSRect(x: 8, y: top + 4, width: 98, height: height - 8),
+                title: entry.2,
+                image: image
+            )
             button.tag = index
             button.target = self
             button.action = #selector(navigate(_:))
             navigationPanel.addSubview(button)
             if let page = entry.0 { pageButtons[page] = button }
-            top -= index == 0 ? 4 : 6
         }
         buildMainPage()
     }
@@ -132,57 +170,57 @@ final class DashboardMenuView: NSView {
     private func buildMainPage() {
         mainPage.frame = contentPanel.bounds
         statusLabel.font = .systemFont(ofSize: 19, weight: .semibold)
-        statusLabel.frame = NSRect(x: 20, y: 462, width: 390, height: 28)
+        statusLabel.frame = NSRect(x: 20, y: 392, width: 390, height: 28)
         mainPage.addSubview(statusLabel)
-        addSeparator(to: mainPage, y: 442)
+        addSeparator(to: mainPage, y: 376)
 
         let header = NSTextField(labelWithString: "R Resource Usage")
         header.font = .systemFont(ofSize: 17, weight: .medium)
-        header.frame = NSRect(x: 20, y: 400, width: 300, height: 26)
+        header.frame = NSRect(x: 20, y: 338, width: 300, height: 26)
         mainPage.addSubview(header)
 
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
             label.font = .systemFont(ofSize: 15, weight: .medium)
             label.textColor = .controlAccentColor
-            label.frame = NSRect(x: 30, y: 360 - CGFloat(index) * 32, width: 370, height: 24)
+            label.frame = NSRect(x: 30, y: 298 - CGFloat(index) * 30, width: 370, height: 24)
             mainPage.addSubview(label)
         }
         detailLabel.font = .systemFont(ofSize: 12)
         detailLabel.textColor = .secondaryLabelColor
-        detailLabel.frame = NSRect(x: 30, y: 230, width: 370, height: 20)
+        detailLabel.frame = NSRect(x: 30, y: 170, width: 370, height: 18)
         mainPage.addSubview(detailLabel)
         elapsedLabel.font = .systemFont(ofSize: 15, weight: .medium)
         elapsedLabel.textColor = .controlAccentColor
-        elapsedLabel.frame = NSRect(x: 30, y: 202, width: 370, height: 22)
+        elapsedLabel.frame = NSRect(x: 30, y: 146, width: 370, height: 22)
         mainPage.addSubview(elapsedLabel)
         progressLabel.font = .systemFont(ofSize: 15, weight: .medium)
-        progressLabel.frame = NSRect(x: 30, y: 174, width: 370, height: 22)
+        progressLabel.frame = NSRect(x: 30, y: 122, width: 370, height: 22)
         mainPage.addSubview(progressLabel)
         etaLabel.font = .systemFont(ofSize: 15, weight: .medium)
         etaLabel.textColor = .controlAccentColor
-        etaLabel.frame = NSRect(x: 30, y: 146, width: 370, height: 22)
+        etaLabel.frame = NSRect(x: 30, y: 98, width: 370, height: 22)
         mainPage.addSubview(etaLabel)
-        addSeparator(to: mainPage, y: 123)
+        addSeparator(to: mainPage, y: 88)
 
         resetButton.title = L10n.text("준비 상태로 돌아가기", "Return to Ready")
         resetButton.font = .systemFont(ofSize: 17, weight: .semibold)
-        resetButton.frame = NSRect(x: 20, y: 62, width: 390, height: 50)
+        resetButton.frame = NSRect(x: 20, y: 43, width: 390, height: 36)
         resetButton.bezelStyle = .rounded
         resetButton.target = self
         resetButton.action = #selector(reset)
         mainPage.addSubview(resetButton)
-        addSeparator(to: mainPage, y: 50)
+        addSeparator(to: mainPage, y: 35)
 
         let quit = NSButton(title: L10n.text("앱 종료", "Quit App"), target: self, action: #selector(quitApp))
         quit.isBordered = false
         quit.alignment = .left
         quit.font = .systemFont(ofSize: 16, weight: .medium)
-        quit.frame = NSRect(x: 20, y: 10, width: 380, height: 30)
+        quit.frame = NSRect(x: 20, y: 3, width: 380, height: 27)
         mainPage.addSubview(quit)
         let quitShortcut = NSTextField(labelWithString: "⌘Q")
         quitShortcut.font = .systemFont(ofSize: 16, weight: .medium)
         quitShortcut.alignment = .right
-        quitShortcut.frame = NSRect(x: 330, y: 15, width: 70, height: 22)
+        quitShortcut.frame = NSRect(x: 330, y: 7, width: 70, height: 22)
         mainPage.addSubview(quitShortcut)
     }
 
@@ -192,7 +230,7 @@ final class DashboardMenuView: NSView {
         root.addSubview(line)
     }
 
-    @objc private func navigate(_ sender: NSButton) {
+    @objc private func navigate(_ sender: DashboardNavigationButton) {
         switch sender.tag {
         case 0: show(.main)
         case 1: show(.icon)
@@ -205,18 +243,14 @@ final class DashboardMenuView: NSView {
     private func show(_ page: Page) {
         currentPage = page
         contentPanel.subviews.forEach { $0.removeFromSuperview() }
-        for (candidate, button) in pageButtons {
-            button.layer?.backgroundColor = candidate == page
-                ? NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor
-                : NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
-        }
+        for (candidate, button) in pageButtons { button.isSelected = candidate == page }
         switch page {
         case .main:
             contentPanel.addSubview(mainPage)
         case .icon:
             let view = SettingsAppearanceMenuItemView(selectedStyle: AppPreferences.iconStyle,
                                                        onSelection: onIconChange)
-            view.frame.origin = NSPoint(x: 0, y: 143)
+            view.frame.origin = NSPoint(x: 0, y: 108)
             iconView = view
             contentPanel.addSubview(view)
         case .history:
@@ -229,13 +263,13 @@ final class DashboardMenuView: NSView {
             historyController = controller
             contentPanel.addSubview(controller.view)
         case .settings:
-            addSectionHeader(L10n.text("기본", "Basic"), y: 474)
+            addSectionHeader(L10n.text("기본", "Basic"), y: 398)
             let language = SettingsLanguageMenuItemView(selectedLanguage: AppPreferences.language,
                                                          onSelection: onLanguageChange)
-            language.frame.origin = NSPoint(x: 0, y: 414)
+            language.frame.origin = NSPoint(x: 0, y: 338)
             languageView = language
             contentPanel.addSubview(language)
-            addSectionHeader(L10n.text("고급", "Advanced"), y: 374)
+            addSectionHeader(L10n.text("고급", "Advanced"), y: 298)
             let advanced = SettingsAdvancedMenuItemView(
                 showElapsedTime: AppPreferences.showElapsedTime,
                 launchAtLogin: SMAppService.mainApp.status == .enabled,
@@ -246,7 +280,7 @@ final class DashboardMenuView: NSView {
                 onNotificationsChange: onNotificationsChange,
                 onCheckForUpdates: onCheckUpdates
             )
-            advanced.frame.origin = NSPoint(x: 0, y: 224)
+            advanced.frame.origin = NSPoint(x: 0, y: 148)
             advancedView = advanced
             contentPanel.addSubview(advanced)
         }

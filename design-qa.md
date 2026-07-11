@@ -2,7 +2,7 @@
 
 - Source visual truth: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/codex-clipboard-3bafd8c5-91d4-4e2f-89ed-f8291a81f358.png`
 - Implementation screenshots: `/tmp/es-dashboard-preview/main.png`, `/tmp/es-dashboard-preview/icon.png`, `/tmp/es-dashboard-preview/history.png`, `/tmp/es-dashboard-preview/settings.png`
-- Viewport: 586 × 546 points, light appearance
+- Viewport: 586 × 470 points, light appearance
 - State: Ready; Main, Icon, empty History, and Settings screens
 
 ## Full-view comparison evidence
@@ -19,6 +19,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Initial P2: the Icon navigation used a generic palette symbol. Fixed by using the user's currently selected ES Status icon.
 - Initial P2: Quit lacked the source's keyboard shortcut label. Fixed by adding `⌘Q` to the right side of the Quit row.
 - Follow-up P1: Main had excessive gaps, navigation cards visually merged, Settings lacked section hierarchy, and progress styling differed from resource metrics. Fixed by compacting the information stack, restoring five independent gray cards, adding Basic/Advanced headings and dividers, and applying the same 15-point medium blue style to elapsed/progress/remaining with blue completed blocks.
+- Follow-up P1: the 546-point implementation still contained excess empty space and native `imageAbove` placed icons too far from their labels. Fixed by reducing the panel to 470 points and replacing navigation buttons with a dedicated control that centers a 28-point icon and label as one 52-point group.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces
