@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.2 - 2026-07-11
+
+- 자동 `for` 루프 계측을 실제 `run_file_with_status()` 실행 경로에 적용
+- 완료 이벤트 순서와 무관하게 실행당 History를 정확히 한 번 저장
+- 기록이 없어도 빈 History 패널을 표시하고 외부 클릭 시에만 닫기
+
 ## 0.13.1 - 2026-07-11
 
 - Run Selection/Document with Status가 명시적 progress 코드가 없는 경우 첫 번째 `for` 루프를 자동 계측

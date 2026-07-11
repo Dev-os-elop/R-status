@@ -5,7 +5,6 @@ utils::globalVariables(c("self", "private"))
     stop("\uc2e4\ud589\ud560 R \ucf54\ub4dc\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.", call. = FALSE)
   }
 
-  code <- .rstatus_add_auto_progress(code)
   path <- tempfile(pattern = "rstudio-status-", fileext = ".R")
   writeLines(enc2utf8(code), path, useBytes = TRUE)
 
@@ -197,9 +196,16 @@ run_file_with_status <- function(path, name = basename(path), cleanup = FALSE) {
   progress_hooks <- .rstatus_install_progress_integrations()
   on.exit(.rstatus_restore_progress_integrations(progress_hooks), add = TRUE)
 
+  original_code <- paste(readLines(path, warn = FALSE, encoding = "UTF-8"),
+                         collapse = "\n")
+  execution_code <- .rstatus_add_auto_progress(original_code)
+  execution_path <- tempfile(pattern = "rstudio-status-execution-", fileext = ".R")
+  writeLines(enc2utf8(execution_code), execution_path, useBytes = TRUE)
+  on.exit(unlink(execution_path), add = TRUE)
+
   rstatus_notify("running", name)
   tryCatch({
-    connection <- file(path, open = "r", encoding = "UTF-8")
+    connection <- file(execution_path, open = "r", encoding = "UTF-8")
     on.exit(close(connection), add = TRUE)
     result <- source(connection, local = .GlobalEnv, echo = FALSE, keep.source = TRUE)
     rstatus_notify("complete", name)
