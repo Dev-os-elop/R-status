@@ -49,6 +49,7 @@ enum AppPreferences {
     private static let languageKey = "appLanguage"
     private static let iconStyleKey = "statusIconStyle"
     static let elapsedTimeKey = "showElapsedTimeInMenuBar"
+    private static let notificationsKey = "macOSNotificationsEnabled"
     private static let legacyDefaults = [
         "io.github.ljwook92.rstatus.cat",
         "io.github.ljwook92.rstatus"
@@ -91,6 +92,14 @@ enum AppPreferences {
             return value.boolValue
         }
         set { UserDefaults.standard.set(newValue, forKey: elapsedTimeKey) }
+    }
+
+    static var notificationsEnabled: Bool {
+        get {
+            guard let value = migratedObject(forKey: notificationsKey) as? NSNumber else { return true }
+            return value.boolValue
+        }
+        set { UserDefaults.standard.set(newValue, forKey: notificationsKey) }
     }
 }
 

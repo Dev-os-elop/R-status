@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 - 2026-07-11
+
+- Settings의 언어·아이콘·Advanced 선택을 메뉴가 닫히지 않는 인터랙티브 패널로 통일
+- Advanced를 실행 시간, 로그인 실행, macOS 알림, 업데이트 확인의 2×2 구성으로 개편
+- macOS 작업 알림을 Settings에서 켜거나 끌 수 있는 옵션 추가
+- Check for Updates를 메인 메뉴에서 Settings로 이동
+- 현재 버전을 메인 메뉴의 R Status Ready 바로 아래에 표시
+
 ## 0.8.0 - 2026-07-11
 
 - Appearance 설정을 테마 목록과 상태 미리보기의 2컬럼 패널로 개편
