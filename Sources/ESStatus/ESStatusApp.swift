@@ -509,7 +509,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         let elapsedItem = NSMenuItem()
         elapsedItem.view = SettingsToggleMenuItemView(
             title: L10n.text("메뉴바에 실행 시간 표시", "Show Elapsed Time in Menu Bar"),
-            isOn: AppPreferences.showElapsedTime
+            isOn: AppPreferences.showElapsedTime,
+            onText: L10n.text("켜짐", "ON"),
+            offText: L10n.text("꺼짐", "OFF")
         ) { [weak self] enabled in
             AppPreferences.showElapsedTime = enabled
             self?.preferencesDidChange()
@@ -519,7 +521,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         let launchItem = NSMenuItem()
         launchItem.view = SettingsToggleMenuItemView(
             title: L10n.text("로그인 시 실행", "Launch at Login"),
-            isOn: SMAppService.mainApp.status == .enabled
+            isOn: SMAppService.mainApp.status == .enabled,
+            onText: L10n.text("켜짐", "ON"),
+            offText: L10n.text("꺼짐", "OFF")
         ) { [weak self] enabled in
             self?.setLaunchAtLogin(enabled)
         }
