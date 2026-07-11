@@ -2,11 +2,17 @@ import Foundation
 
 struct RResourceSnapshot {
     let cpuPercent: Double
+    let memoryPercent: Double
+    let memoryBytes: UInt64
+    let totalMemoryBytes: UInt64
     let processCount: Int
     let workerCount: Int
 
     static let empty = RResourceSnapshot(
         cpuPercent: 0,
+        memoryPercent: 0,
+        memoryBytes: 0,
+        totalMemoryBytes: ProcessInfo.processInfo.physicalMemory,
         processCount: 0,
         workerCount: 0
     )
@@ -16,14 +22,26 @@ private struct ProcessSample {
     let pid: Int
     let parentPID: Int
     let cpuPercent: Double
+    let residentKilobytes: UInt64
     let command: String
 }
 
 enum RResourceMonitor {
     static func sample() -> RResourceSnapshot {
         let allProcesses = processList()
-        let rProcesses = allProcesses.filter { isRProcess($0.command) }
         let parentByPID = Dictionary(uniqueKeysWithValues: allProcesses.map { ($0.pid, $0.parentPID) })
+        let rstudioPIDs = Set(allProcesses.filter { isRStudioSession($0.command) }.map(\.pid))
+        let rProcesses = allProcesses.filter { process in
+            guard isRProcess(process.command) else { return false }
+            if rstudioPIDs.contains(process.pid) { return true }
+            var parent = process.parentPID
+            var visited = Set<Int>()
+            while parent > 1, visited.insert(parent).inserted {
+                if rstudioPIDs.contains(parent) { return true }
+                parent = parentByPID[parent] ?? 0
+            }
+            return false
+        }
         let rPIDs = Set(rProcesses.map(\.pid))
 
         let workerCount = rProcesses.filter { process in
@@ -43,30 +61,42 @@ enum RResourceMonitor {
 
         let perCoreCPUPercent = rProcesses.reduce(0) { $0 + $1.cpuPercent }
         let availableCPUs = max(1, ProcessInfo.processInfo.activeProcessorCount)
+        let memoryBytes = rProcesses.reduce(UInt64(0)) {
+            $0.addingReportingOverflow($1.residentKilobytes * 1024).partialValue
+        }
+        let totalMemoryBytes = ProcessInfo.processInfo.physicalMemory
+        let memoryPercent = totalMemoryBytes > 0
+            ? min(100, Double(memoryBytes) / Double(totalMemoryBytes) * 100)
+            : 0
 
         return RResourceSnapshot(
             cpuPercent: min(100, perCoreCPUPercent / Double(availableCPUs)),
+            memoryPercent: memoryPercent,
+            memoryBytes: memoryBytes,
+            totalMemoryBytes: totalMemoryBytes,
             processCount: rProcesses.count,
             workerCount: workerCount
         )
     }
 
     private static func processList() -> [ProcessSample] {
-        guard let output = run("/bin/ps", arguments: ["-axo", "pid=,ppid=,pcpu=,command="]) else {
+        guard let output = run("/bin/ps", arguments: ["-axo", "pid=,ppid=,pcpu=,rss=,command="]) else {
             return []
         }
 
         return output.split(whereSeparator: \.isNewline).compactMap { line in
-            let fields = line.split(maxSplits: 3, whereSeparator: \.isWhitespace)
-            guard fields.count == 4,
+            let fields = line.split(maxSplits: 4, whereSeparator: \.isWhitespace)
+            guard fields.count == 5,
                   let pid = Int(fields[0]),
                   let parentPID = Int(fields[1]),
-                  let cpuPercent = Double(fields[2]) else { return nil }
+                  let cpuPercent = Double(fields[2]),
+                  let residentKilobytes = UInt64(fields[3]) else { return nil }
             return ProcessSample(
                 pid: pid,
                 parentPID: parentPID,
                 cpuPercent: cpuPercent,
-                command: String(fields[3])
+                residentKilobytes: residentKilobytes,
+                command: String(fields[4])
             )
         }
     }
@@ -75,6 +105,12 @@ enum RResourceMonitor {
         guard let executable = command.split(whereSeparator: \.isWhitespace).first else { return false }
         let name = URL(fileURLWithPath: String(executable)).lastPathComponent.lowercased()
         return name == "r" || name == "rscript" || name.hasPrefix("rsession")
+    }
+
+    private static func isRStudioSession(_ command: String) -> Bool {
+        guard let executable = command.split(whereSeparator: \.isWhitespace).first else { return false }
+        return URL(fileURLWithPath: String(executable))
+            .lastPathComponent.lowercased().hasPrefix("rsession")
     }
 
     private static func run(_ executable: String, arguments: [String]) -> String? {

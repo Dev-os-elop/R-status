@@ -16,7 +16,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 
 - Cat Original·Cat Silhouette을 포함한 선택형 macOS 메뉴바 아이콘
 - 실행 경과 시간 표시
-- 전체 CPU 용량 기준 R 사용률, R 프로세스, 병렬 worker 실시간 표시
+- 전체 CPU 용량 기준 RStudio 사용률, 메모리 비율, R 프로세스, 병렬 worker 실시간 표시
 - 완료·실패·사용자 중단 시 macOS 알림
 - 선택 영역 또는 현재 문서 전체를 실행하는 RStudio Addin
 - 일반 R 코드에서 사용할 수 있는 `rstatus_run()` 함수
@@ -206,13 +206,18 @@ Remaining: 00:04 · step 57
 ```text
 R Resource Usage
 CPU: 100.0%
+Memory: 6.3%
+R: 1.01 GB / 16.0 GB
 Parallel workers: 12
 R processes: 13
 ```
 
-- **CPU**: `R`, `Rscript`, RStudio `rsession`의 코어별 CPU 사용률 합계를 현재 사용 가능한 논리 CPU 수로 나눈 값입니다. 로컬 CPU 전체 용량을 기준으로 0–100%로 표시됩니다.
+- **CPU**: RStudio `rsession`과 그 하위 R worker의 코어별 CPU 사용률 합계를 현재 사용 가능한 논리 CPU 수로 나눈 값입니다. 로컬 CPU 전체 용량을 기준으로 0–100%로 표시됩니다.
+- **Memory**: RStudio `rsession`과 그 하위 worker의 resident memory 합계가 Mac 전체 물리 메모리에서 차지하는 비율입니다. 다음 줄에는 `RStudio 사용량 / 전체 물리 메모리`를 함께 표시합니다.
 - **Parallel workers**: `parallel`, PSOCK 등으로 생성된 병렬 작업용 R 프로세스 수입니다.
 - **R processes**: main R 세션과 병렬 worker를 합친 전체 R 관련 프로세스 수입니다.
+
+터미널이나 다른 앱에서 독립적으로 실행한 `R`/`Rscript` 프로세스와 시스템 전체 메모리 사용량은 이 수치에 포함하지 않습니다.
 
 논리 CPU가 12개인 컴퓨터를 예로 들면 다음과 같습니다.
 
