@@ -1,10 +1,13 @@
 # Changelog
 
+## 0.13.1 - 2026-07-11
+
+- Run Selection/Document with Status가 명시적 progress 코드가 없는 경우 첫 번째 `for` 루프를 자동 계측
+- Addin이 반복 횟수, 진행률, ETA를 실시간 전송하며 선택 코드를 중복 실행하지 않음
+- 과거 실행 기록 기반 시간 예측 제거
+
 ## 0.13.0 - 2026-07-11
 
-- progress/progressr 없이 동일 코드의 이전 완료 기록 중앙값으로 남은 시간 자동 예측
-- Addin이 선택 코드의 MD5 식별자를 상태 이벤트에 포함해 동일 코드 기록 매칭
-- 사전 subprocess 중복 실행 없이 파일·DB 등 코드 부작용 방지
 - Test Notification/Open RStudio 실행 후 hover 상태 즉시 초기화
 - Clear에 파란 hover 표시를 추가하고 패널을 유지한 채 목록만 삭제
 - History를 메인 메뉴 오른쪽 바깥 경계에 배치하고 외부 클릭 시 자동 닫기
