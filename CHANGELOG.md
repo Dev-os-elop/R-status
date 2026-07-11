@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.4 - 2026-07-11
+
+- Return to Ready 클릭 시 아래 Test Notification까지 함께 눌리던 이벤트 전달 문제 수정
+- 마우스를 놓은 시점에만 Ready 복귀를 실행하도록 버튼 이벤트 수명주기 변경
+- 누른 상태의 시각적 피드백과 버튼 밖으로 드래그해 취소하는 동작 추가
+
 ## 0.9.3 - 2026-07-11
 
 - Check for Updates가 ES Status 앱과 RStudio Addin을 항상 같은 버전으로 함께 업데이트

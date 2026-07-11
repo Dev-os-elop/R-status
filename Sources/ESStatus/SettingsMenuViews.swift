@@ -5,6 +5,7 @@ final class ReturnToReadyMenuItemView: NSView {
     private let onReset: () -> Void
     private let viewSize = NSSize(width: 300, height: 40)
     private var isTerminal = false
+    private var isPressed = false
 
     init(onReset: @escaping () -> Void) {
         self.onReset = onReset
@@ -19,6 +20,7 @@ final class ReturnToReadyMenuItemView: NSView {
 
     func setTerminalState(_ isTerminal: Bool) {
         self.isTerminal = isTerminal
+        if !isTerminal { isPressed = false }
         setAccessibilityEnabled(isTerminal)
         toolTip = isTerminal
             ? L10n.text("완료된 상태를 지우고 대기 상태로 돌아갑니다.",
@@ -32,7 +34,16 @@ final class ReturnToReadyMenuItemView: NSView {
         super.draw(dirtyRect)
         let buttonRect = bounds.insetBy(dx: 12, dy: 5)
         let path = NSBezierPath(roundedRect: buttonRect, xRadius: 7, yRadius: 7)
-        (isTerminal ? NSColor.controlAccentColor : NSColor(calibratedWhite: 0.84, alpha: 1)).setFill()
+        let fillColor: NSColor
+        if !isTerminal {
+            fillColor = NSColor(calibratedWhite: 0.84, alpha: 1)
+        } else if isPressed {
+            fillColor = NSColor.controlAccentColor.blended(withFraction: 0.18, of: .black)
+                ?? NSColor.controlAccentColor
+        } else {
+            fillColor = NSColor.controlAccentColor
+        }
+        fillColor.setFill()
         path.fill()
 
         let paragraph = NSMutableParagraphStyle()
@@ -51,8 +62,25 @@ final class ReturnToReadyMenuItemView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard isTerminal else { return }
-        onReset()
+        isPressed = buttonRect.contains(convert(event.locationInWindow, from: nil))
+        needsDisplay = true
     }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard isTerminal else { return }
+        isPressed = buttonRect.contains(convert(event.locationInWindow, from: nil))
+        needsDisplay = true
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard isTerminal else { return }
+        let shouldReset = isPressed && buttonRect.contains(convert(event.locationInWindow, from: nil))
+        isPressed = false
+        needsDisplay = true
+        if shouldReset { onReset() }
+    }
+
+    private var buttonRect: NSRect { bounds.insetBy(dx: 12, dy: 5) }
 }
 
 @MainActor
