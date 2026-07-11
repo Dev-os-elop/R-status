@@ -892,7 +892,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private func showRunHistory(relativeTo anchor: NSView) {
         historyPopover?.close()
         let popover = NSPopover()
-        popover.behavior = .transient
+        popover.behavior = .applicationDefined
         popover.animates = true
         popover.contentViewController = RunHistoryViewController(
             entries: RunHistoryStore.load(),
