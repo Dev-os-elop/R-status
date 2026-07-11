@@ -9,7 +9,6 @@ struct RunHistoryEntry: Codable {
     let elapsedSeconds: TimeInterval
     let peakCPUPercent: Double
     let maxWorkers: Int
-    let codeID: String?
 }
 
 enum RunHistoryStore {
@@ -37,17 +36,6 @@ enum RunHistoryStore {
         UserDefaults.standard.removeObject(forKey: key)
     }
 
-    static func estimatedDuration(for codeID: String) -> TimeInterval? {
-        let durations = load()
-            .filter { $0.status == "complete" && $0.codeID == codeID && $0.elapsedSeconds > 0 }
-            .map(\.elapsedSeconds)
-            .sorted()
-        guard !durations.isEmpty else { return nil }
-        let middle = durations.count / 2
-        return durations.count.isMultiple(of: 2)
-            ? (durations[middle - 1] + durations[middle]) / 2
-            : durations[middle]
-    }
 }
 
 @MainActor

@@ -5,6 +5,7 @@ utils::globalVariables(c("self", "private"))
     stop("\uc2e4\ud589\ud560 R \ucf54\ub4dc\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.", call. = FALSE)
   }
 
+  code <- .rstatus_add_auto_progress(code)
   path <- tempfile(pattern = "rstudio-status-", fileext = ".R")
   writeLines(enc2utf8(code), path, useBytes = TRUE)
 
@@ -27,6 +28,45 @@ utils::globalVariables(c("self", "private"))
   }, delay = 0.1)
 
   invisible(path)
+}
+
+.rstatus_add_auto_progress <- function(code) {
+  # Explicit progress APIs provide more accurate information, so leave those
+  # scripts untouched and let the integrations below report their events.
+  if (grepl("progress_bar\\$new|progressor\\s*\\(|rstatus_progress\\s*\\(", code)) {
+    return(code)
+  }
+
+  expressions <- tryCatch(parse(text = code, keep.source = FALSE),
+                          error = function(e) NULL)
+  if (is.null(expressions)) return(code)
+
+  instrumented <- FALSE
+  rewrite <- function(node) {
+    if (instrumented || !is.call(node)) return(node)
+    if (identical(node[[1L]], as.name("function"))) return(node)
+    if (identical(node[[1L]], as.name("for")) && length(node) == 4L) {
+      instrumented <<- TRUE
+      sequence_wrapper <- call("getFromNamespace", ".rstatus_auto_sequence",
+                               "rstudiostatus")
+      node[[3L]] <- as.call(list(sequence_wrapper, node[[3L]]))
+      body <- node[[4L]]
+      tick <- quote(getFromNamespace(".rstatus_auto_tick", "rstudiostatus")())
+      node[[4L]] <- if (is.call(body) && identical(body[[1L]], as.name("{"))) {
+        as.call(c(list(as.name("{")), as.list(body)[-1L], list(tick)))
+      } else {
+        call("{", body, tick)
+      }
+      return(node)
+    }
+    for (index in seq_along(node)[-1L]) node[[index]] <- rewrite(node[[index]])
+    node
+  }
+
+  transformed <- lapply(as.list(expressions), rewrite)
+  if (!instrumented) return(code)
+  paste(vapply(transformed, function(expr) paste(deparse(expr), collapse = "\n"),
+               character(1L)), collapse = "\n")
 }
 
 .rstatus_install_progress_integrations <- function() {
@@ -150,7 +190,6 @@ utils::globalVariables(c("self", "private"))
 #' @export
 run_file_with_status <- function(path, name = basename(path), cleanup = FALSE) {
   path <- normalizePath(path, mustWork = TRUE)
-  code_id <- unname(tools::md5sum(path))
   if (isTRUE(cleanup)) {
     on.exit(unlink(path), add = TRUE)
   }
@@ -158,18 +197,18 @@ run_file_with_status <- function(path, name = basename(path), cleanup = FALSE) {
   progress_hooks <- .rstatus_install_progress_integrations()
   on.exit(.rstatus_restore_progress_integrations(progress_hooks), add = TRUE)
 
-  rstatus_notify("running", name, code_id = code_id)
+  rstatus_notify("running", name)
   tryCatch({
     connection <- file(path, open = "r", encoding = "UTF-8")
     on.exit(close(connection), add = TRUE)
     result <- source(connection, local = .GlobalEnv, echo = FALSE, keep.source = TRUE)
-    rstatus_notify("complete", name, code_id = code_id)
+    rstatus_notify("complete", name)
     invisible(result$value)
   }, error = function(e) {
-    rstatus_notify("fail", name, conditionMessage(e), code_id = code_id)
+    rstatus_notify("fail", name, conditionMessage(e))
     stop(e)
   }, interrupt = function(e) {
-    rstatus_notify("interrupted", name, "Interrupted by user", code_id = code_id)
+    rstatus_notify("interrupted", name, "Interrupted by user")
     stop(e)
   })
 }
