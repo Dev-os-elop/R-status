@@ -18,6 +18,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Initial P2: the first implementation was 650 points wide and visually looser than the 586-point source. Fixed by reducing the shell to 586 × 546 and reflowing Icon, language, and Advanced settings to a 430-point content column.
 - Initial P2: the Icon navigation used a generic palette symbol. Fixed by using the user's currently selected ES Status icon.
 - Initial P2: Quit lacked the source's keyboard shortcut label. Fixed by adding `⌘Q` to the right side of the Quit row.
+- Follow-up P1: Main had excessive gaps, navigation cards visually merged, Settings lacked section hierarchy, and progress styling differed from resource metrics. Fixed by compacting the information stack, restoring five independent gray cards, adding Basic/Advanced headings and dividers, and applying the same 15-point medium blue style to elapsed/progress/remaining with blue completed blocks.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces
