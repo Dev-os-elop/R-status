@@ -7,6 +7,8 @@ final class LeadingActionMenuItemView: NSView {
     private let keyEquivalent: String
     private let onAction: () -> Void
     private var isPressed = false
+    private var isHovered = false
+    private var hoverTrackingArea: NSTrackingArea?
     private let viewSize = NSSize(width: 300, height: 30)
 
     init(title: String, shortcut: String, keyEquivalent: String,
@@ -23,15 +25,29 @@ final class LeadingActionMenuItemView: NSView {
     required init?(coder: NSCoder) { nil }
     override var intrinsicContentSize: NSSize { viewSize }
 
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverTrackingArea { removeTrackingArea(hoverTrackingArea) }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+        hoverTrackingArea = area
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        if isPressed {
+        let isHighlighted = isHovered || isPressed
+        if isHighlighted {
             NSColor.controlAccentColor.setFill()
             NSBezierPath(roundedRect: bounds.insetBy(dx: 4, dy: 1), xRadius: 5, yRadius: 5).fill()
         }
 
-        let titleColor: NSColor = isPressed ? .white : .labelColor
-        let shortcutColor: NSColor = isPressed ? .white : .tertiaryLabelColor
+        let titleColor: NSColor = isHighlighted ? .white : .labelColor
+        let shortcutColor: NSColor = isHighlighted ? .white : .tertiaryLabelColor
         let font = NSFont.menuFont(ofSize: 0)
         let titleString = NSAttributedString(
             string: title,
@@ -50,6 +66,17 @@ final class LeadingActionMenuItemView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         isPressed = bounds.contains(convert(event.locationInWindow, from: nil))
+        needsDisplay = true
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHovered = true
+        needsDisplay = true
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovered = false
+        isPressed = false
         needsDisplay = true
     }
 

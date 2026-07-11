@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.4 - 2026-07-11
+
+- 메인 상태 아래 버전 행을 제거하고 Settings에만 `v버전` 형식으로 표시
+- Test Notification과 Open RStudio에 마우스를 올리면 파란 행 하이라이트 표시
+- 하이라이트 상태에서 제목과 단축키를 흰색으로 전환
+
 ## 0.11.3 - 2026-07-11
 
 - Test Notification과 Open RStudio를 아이콘 예약 열과 무관하게 왼쪽 정렬
