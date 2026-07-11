@@ -9,6 +9,7 @@ struct RunHistoryEntry: Codable {
     let elapsedSeconds: TimeInterval
     let peakCPUPercent: Double
     let maxWorkers: Int
+    let codeID: String?
 }
 
 enum RunHistoryStore {
@@ -34,6 +35,110 @@ enum RunHistoryStore {
 
     static func clear() {
         UserDefaults.standard.removeObject(forKey: key)
+    }
+
+    static func estimatedDuration(for codeID: String) -> TimeInterval? {
+        let durations = load()
+            .filter { $0.status == "complete" && $0.codeID == codeID && $0.elapsedSeconds > 0 }
+            .map(\.elapsedSeconds)
+            .sorted()
+        guard !durations.isEmpty else { return nil }
+        let middle = durations.count / 2
+        return durations.count.isMultiple(of: 2)
+            ? (durations[middle - 1] + durations[middle]) / 2
+            : durations[middle]
+    }
+}
+
+@MainActor
+final class HistoryClearButtonView: NSView {
+    private let onClear: () -> Void
+    private var isEnabled: Bool
+    private var isHovered = false
+    private var isPressed = false
+    private var hoverTrackingArea: NSTrackingArea?
+
+    init(frame: NSRect, isEnabled: Bool, onClear: @escaping () -> Void) {
+        self.isEnabled = isEnabled
+        self.onClear = onClear
+        super.init(frame: frame)
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(L10n.text("기록 지우기", "Clear"))
+        setAccessibilityEnabled(isEnabled)
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverTrackingArea { removeTrackingArea(hoverTrackingArea) }
+        let area = NSTrackingArea(rect: bounds,
+                                  options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        addTrackingArea(area)
+        hoverTrackingArea = area
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        let highlighted = isEnabled && (isHovered || isPressed)
+        let background = highlighted
+            ? NSColor.controlAccentColor
+            : NSColor(calibratedWhite: 0.88, alpha: 1)
+        background.setFill()
+        NSBezierPath(roundedRect: bounds, xRadius: 7, yRadius: 7).fill()
+
+        let title = NSAttributedString(
+            string: L10n.text("기록 지우기", "Clear"),
+            attributes: [
+                .font: NSFont.menuFont(ofSize: 0),
+                .foregroundColor: highlighted
+                    ? NSColor.white
+                    : (isEnabled ? NSColor.labelColor : NSColor.tertiaryLabelColor)
+            ]
+        )
+        let size = title.size()
+        title.draw(at: NSPoint(x: bounds.midX - size.width / 2,
+                               y: bounds.midY - size.height / 2))
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        guard isEnabled else { return }
+        isHovered = true
+        needsDisplay = true
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovered = false
+        isPressed = false
+        needsDisplay = true
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard isEnabled else { return }
+        isPressed = bounds.contains(convert(event.locationInWindow, from: nil))
+        needsDisplay = true
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard isEnabled else { return }
+        isPressed = bounds.contains(convert(event.locationInWindow, from: nil))
+        needsDisplay = true
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard isEnabled else { return }
+        let shouldClear = isPressed && bounds.contains(convert(event.locationInWindow, from: nil))
+        isPressed = false
+        isHovered = false
+        needsDisplay = true
+        if shouldClear { onClear() }
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        guard isEnabled else { return false }
+        onClear()
+        return true
     }
 }
 
@@ -133,11 +238,12 @@ final class RunHistoryViewController: NSViewController {
             }
         }
 
-        let clearButton = NSButton(title: L10n.text("기록 지우기", "Clear"),
-                                   target: self, action: #selector(clearHistory))
-        clearButton.bezelStyle = .rounded
-        clearButton.isEnabled = !entries.isEmpty
-        clearButton.frame = NSRect(x: 12, y: 10, width: panelWidth - 24, height: 30)
+        let clearButton = HistoryClearButtonView(
+            frame: NSRect(x: 12, y: 10, width: panelWidth - 24, height: 30),
+            isEnabled: !entries.isEmpty
+        ) { [weak self] in
+            self?.clearHistory()
+        }
         view.addSubview(clearButton)
 
         preferredContentSize = NSSize(width: panelWidth, height: panelHeight)
@@ -206,7 +312,7 @@ final class RunHistoryViewController: NSViewController {
         return formatter.string(from: date)
     }
 
-    @objc private func clearHistory() {
+    private func clearHistory() {
         onClear()
         entries = []
         renderContent()

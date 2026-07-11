@@ -6,6 +6,7 @@ rstatus_notify(
   status,
   name = "R task",
   message = NULL,
+  code_id = NULL,
   host = "127.0.0.1",
   port = 47821L
 )
@@ -14,6 +15,7 @@ rstatus_notify(
 \item{status}{One of \code{idle}, \code{running}, \code{complete}, \code{fail}, or \code{interrupted}.}
 \item{name}{A short task name.}
 \item{message}{Optional detail or error message.}
+\item{code_id}{Optional stable identifier for historical duration estimates.}
 \item{host}{Local app host.}
 \item{port}{Local app port.}
 }

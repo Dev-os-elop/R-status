@@ -150,6 +150,7 @@ utils::globalVariables(c("self", "private"))
 #' @export
 run_file_with_status <- function(path, name = basename(path), cleanup = FALSE) {
   path <- normalizePath(path, mustWork = TRUE)
+  code_id <- unname(tools::md5sum(path))
   if (isTRUE(cleanup)) {
     on.exit(unlink(path), add = TRUE)
   }
@@ -157,18 +158,18 @@ run_file_with_status <- function(path, name = basename(path), cleanup = FALSE) {
   progress_hooks <- .rstatus_install_progress_integrations()
   on.exit(.rstatus_restore_progress_integrations(progress_hooks), add = TRUE)
 
-  rstatus_notify("running", name)
+  rstatus_notify("running", name, code_id = code_id)
   tryCatch({
     connection <- file(path, open = "r", encoding = "UTF-8")
     on.exit(close(connection), add = TRUE)
     result <- source(connection, local = .GlobalEnv, echo = FALSE, keep.source = TRUE)
-    rstatus_notify("complete", name)
+    rstatus_notify("complete", name, code_id = code_id)
     invisible(result$value)
   }, error = function(e) {
-    rstatus_notify("fail", name, conditionMessage(e))
+    rstatus_notify("fail", name, conditionMessage(e), code_id = code_id)
     stop(e)
   }, interrupt = function(e) {
-    rstatus_notify("interrupted", name, "Interrupted by user")
+    rstatus_notify("interrupted", name, "Interrupted by user", code_id = code_id)
     stop(e)
   })
 }
