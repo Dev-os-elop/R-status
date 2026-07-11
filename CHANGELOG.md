@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2 - 2026-07-11
+
+- 언어를 선택하는 즉시 현재 열린 Settings 전체 문구를 새 언어로 갱신
+- Basic, Language, Appearance, State Preview, Advanced 및 ON/OFF 문구 실시간 반영
+- 언어 변경 중에도 Settings 메뉴가 닫히지 않는 동작 유지
+
 ## 0.9.1 - 2026-07-11
 
 - Reset Status를 의미가 분명한 `Return to Ready` 버튼으로 변경

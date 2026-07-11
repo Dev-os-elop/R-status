@@ -325,6 +325,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let progressItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let etaItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private weak var advancedSettingsView: SettingsAdvancedMenuItemView?
+    private weak var appearanceSettingsView: SettingsAppearanceMenuItemView?
+    private weak var languageSettingsView: SettingsLanguageMenuItemView?
+    private weak var settingsPanelMenu: NSMenu?
+    private weak var basicSettingsHeader: NSMenuItem?
+    private weak var appearanceSettingsHeader: NSMenuItem?
+    private weak var advancedSettingsHeader: NSMenuItem?
     private weak var returnToReadyView: ReturnToReadyMenuItemView?
     private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
@@ -479,38 +485,47 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func makeSettingsMenu() -> NSMenu {
         let settingsMenu = NSMenu(title: L10n.text("설정", "Settings"))
+        settingsPanelMenu = settingsMenu
 
         let basicHeader = NSMenuItem(title: L10n.text("기본", "Basic"), action: nil, keyEquivalent: "")
         basicHeader.isEnabled = false
+        basicSettingsHeader = basicHeader
         settingsMenu.addItem(basicHeader)
 
         let languageItem = NSMenuItem()
-        languageItem.view = SettingsLanguageMenuItemView(
+        let languageView = SettingsLanguageMenuItemView(
             selectedLanguage: AppPreferences.language
         ) { [weak self] language in
             AppPreferences.language = language
             self?.shouldReconfigureMenuAfterClose = true
+            self?.applySettingsLocalization()
             self?.updateDisplay()
         }
+        languageSettingsView = languageView
+        languageItem.view = languageView
         settingsMenu.addItem(languageItem)
 
         settingsMenu.addItem(.separator())
         let appearanceHeader = NSMenuItem(title: L10n.text("모양", "Appearance"), action: nil, keyEquivalent: "")
         appearanceHeader.isEnabled = false
+        appearanceSettingsHeader = appearanceHeader
         settingsMenu.addItem(appearanceHeader)
 
         let appearanceItem = NSMenuItem()
-        appearanceItem.view = SettingsAppearanceMenuItemView(
+        let appearanceView = SettingsAppearanceMenuItemView(
             selectedStyle: AppPreferences.iconStyle
         ) { [weak self] style in
             AppPreferences.iconStyle = style
             self?.updateDisplay()
         }
+        appearanceSettingsView = appearanceView
+        appearanceItem.view = appearanceView
         settingsMenu.addItem(appearanceItem)
 
         settingsMenu.addItem(.separator())
         let advancedHeader = NSMenuItem(title: L10n.text("고급", "Advanced"), action: nil, keyEquivalent: "")
         advancedHeader.isEnabled = false
+        advancedSettingsHeader = advancedHeader
         settingsMenu.addItem(advancedHeader)
 
         let advancedItem = NSMenuItem()
@@ -537,6 +552,16 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         settingsMenu.addItem(advancedItem)
 
         return settingsMenu
+    }
+
+    private func applySettingsLocalization() {
+        settingsPanelMenu?.title = L10n.text("설정", "Settings")
+        basicSettingsHeader?.title = L10n.text("기본", "Basic")
+        appearanceSettingsHeader?.title = L10n.text("모양", "Appearance")
+        advancedSettingsHeader?.title = L10n.text("고급", "Advanced")
+        languageSettingsView?.applyLocalization()
+        appearanceSettingsView?.applyLocalization()
+        advancedSettingsView?.applyLocalization()
     }
 
     func menuDidClose(_ closedMenu: NSMenu) {
