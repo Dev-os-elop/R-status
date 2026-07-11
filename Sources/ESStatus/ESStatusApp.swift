@@ -332,7 +332,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private weak var appearanceSettingsHeader: NSMenuItem?
     private weak var advancedSettingsHeader: NSMenuItem?
     private weak var returnToReadyView: ReturnToReadyMenuItemView?
-    private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
     private var isInstallingUpdate = false
     private var state: RunState = .idle
@@ -468,15 +467,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
         menu.addItem(.separator())
 
-        let installAddinItem = NSMenuItem(
-            title: L10n.text("RStudio Addin 설치/업데이트…", "Install/Update RStudio Addin…"),
-            action: #selector(installAddinFromMenu), keyEquivalent: ""
-        )
-        installAddinItem.target = self
-        addinInstallItem = installAddinItem
-        menu.addItem(installAddinItem)
-
-        menu.addItem(.separator())
         let quitItem = NSMenuItem(title: L10n.text("ES Status 종료", "Quit ES Status"),
                                   action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
@@ -880,10 +870,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         )
     }
 
-    @objc private func installAddinFromMenu() {
-        installBundledAddin()
-    }
-
     private func installBundledAddin() {
         guard !isInstallingAddin else { return }
         guard let scriptURL = Bundle.main.url(forResource: "install-addin", withExtension: "sh") else {
@@ -892,8 +878,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         }
 
         isInstallingAddin = true
-        addinInstallItem?.title = L10n.text("RStudio Addin 설치 중…", "Installing RStudio Addin…")
-        addinInstallItem?.isEnabled = false
+        setUpdateControl(title: L10n.text("Addin 업데이트 중…", "Updating Addin…"),
+                         enabled: false)
 
         Task.detached(priority: .userInitiated) {
             let result = AddinInstaller.run(scriptURL: scriptURL)
@@ -905,11 +891,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func showAddinInstallationResult(_ result: Result<String, AddinInstallerError>) {
         isInstallingAddin = false
-        addinInstallItem?.title = L10n.text(
-            "RStudio Addin 설치/업데이트…",
-            "Install/Update RStudio Addin…"
-        )
-        addinInstallItem?.isEnabled = true
+        setUpdateControl(title: L10n.text("업데이트 확인…", "Check for Updates…"),
+                         enabled: true)
         switch result {
         case .success:
             UserDefaults.standard.set(currentVersion, forKey: "installedAddinVersion")
@@ -982,8 +965,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         case .updateAvailable(let sourceVersion):
             alert.messageText = L10n.text("업데이트 사용 가능", "Update Available")
             alert.informativeText = L10n.text(
-                "ES Status v\(sourceVersion.version)을 설치할 수 있습니다. 현재 버전은 v\(currentVersion)입니다.",
-                "ES Status v\(sourceVersion.version) is available on GitHub. You are using v\(currentVersion)."
+                "ES Status 앱과 RStudio Addin v\(sourceVersion.version)을 함께 설치합니다. 현재 버전은 v\(currentVersion)입니다.",
+                "ES Status and its RStudio Addin will both be updated to v\(sourceVersion.version). You are using v\(currentVersion)."
             )
             alert.alertStyle = .informational
             alert.addButton(withTitle: L10n.text("다운로드 및 설치", "Download and Install"))
@@ -992,14 +975,23 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                 installUpdate(sourceVersion)
             }
         case .latest:
+            let installedAddinVersion = UserDefaults.standard.string(forKey: "installedAddinVersion")
+            let addinNeedsUpdate = installedAddinVersion != currentVersion
             alert.messageText = L10n.text("최신 버전입니다", "You're up to date")
             alert.informativeText = L10n.text(
-                "ES Status 최신 버전(v\(currentVersion))을 사용 중입니다.",
-                "You're using the latest version of ES Status (v\(currentVersion))."
+                addinNeedsUpdate
+                    ? "ES Status는 최신 버전(v\(currentVersion))입니다. RStudio Addin을 같은 버전으로 자동 업데이트합니다."
+                    : "ES Status 앱과 RStudio Addin 최신 버전(v\(currentVersion))을 사용 중입니다.",
+                addinNeedsUpdate
+                    ? "ES Status is up to date (v\(currentVersion)). The RStudio Addin will now be synchronized automatically."
+                    : "ES Status and its RStudio Addin are both up to date (v\(currentVersion))."
             )
             alert.alertStyle = .informational
             alert.addButton(withTitle: "OK")
             alert.runModal()
+            if addinNeedsUpdate {
+                installBundledAddin()
+            }
         case .failed(let message):
             alert.messageText = L10n.text("업데이트 확인 실패", "Unable to Check for Updates")
             alert.informativeText = message
@@ -1047,7 +1039,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             updateLogURL = launched.logURL
             postNotification(
                 title: "ES Status Update",
-                body: "Installing v\(sourceVersion.version). The app will restart automatically."
+                body: "Installing ES Status and RStudio Addin v\(sourceVersion.version). The app will restart automatically."
             )
             updateInstallTimer?.invalidate()
             let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
