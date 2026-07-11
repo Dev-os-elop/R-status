@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.3 - 2026-07-11
+
+- Check for Updates가 ES Status 앱과 RStudio Addin을 항상 같은 버전으로 함께 업데이트
+- 앱이 최신이어도 Addin이 누락되었거나 이전 버전이면 자동 동기화
+- 중복된 Install/Update RStudio Addin 메뉴 제거
+- 업데이트 안내에 앱과 Addin이 함께 설치된다는 내용을 명확히 표시
+
 ## 0.9.2 - 2026-07-11
 
 - 언어를 선택하는 즉시 현재 열린 Settings 전체 문구를 새 언어로 갱신

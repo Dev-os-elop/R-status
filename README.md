@@ -171,8 +171,8 @@ rstatus_notify("idle", "")
 - RStudio 열기
 - 오른쪽 **Settings** 패널에서 언어·아이콘·실행 시간·로그인 실행 설정
 - 현재 설치 버전 확인
-- **Check for Updates…**로 최신 버전을 확인하고 자동 다운로드·설치
-- **Install/Update RStudio Addin…**으로 Addin 설치 또는 업데이트
+- **Check for Updates…**로 ES Status 앱과 RStudio Addin을 함께 자동 다운로드·설치
+- 앱이 최신이어도 Addin이 누락되었거나 이전 버전이면 같은 버전으로 자동 동기화
 - 앱 종료
 
 업데이트가 없으면 `You're using the latest version.` 팝업이 표시됩니다. 새 버전이 있으면 **Download and Install**을 눌러 태그 ZIP과 검증된 사전 빌드 실행 파일을 내려받고, 앱과 Addin을 설치한 뒤 ES Status를 자동으로 재실행합니다. Xcode는 필요하지 않습니다.
