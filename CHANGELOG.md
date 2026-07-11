@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.2 - 2026-07-11
+
+- R Status Ready 아래 앱 버전을 작은 보조 글씨로 축소
+- Settings의 Check for Updates 버튼 아래에 현재 `v버전` 정보 추가
+
 ## 0.11.1 - 2026-07-11
 
 - CPU 사용률 막대와 최근 1분 라인 차트 제거
