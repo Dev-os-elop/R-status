@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.2 - 2026-07-11
+
+- Addin이 전달한 실제 R 세션 PID를 리소스 추적 기준으로 사용
+- macOS에서 부모가 분리된 PSOCK/future worker를 병렬 bootstrap 명령으로 보완 감지
+- 전체 command 실행 경로로 R·Rscript·rsession을 판별해 macOS 경로 잘림 방지
+
 ## 0.12.1 - 2026-07-11
 
 - History 헤더에 최대 5개 저장 및 오래된 기록 우선 삭제 안내 추가

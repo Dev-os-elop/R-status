@@ -605,8 +605,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             return
         }
         isSamplingResources = true
+        let monitoredRootPID = taskPID.map(Int.init)
         Task.detached(priority: .utility) {
-            let snapshot = RResourceMonitor.sample()
+            let snapshot = RResourceMonitor.sample(rootPID: monitoredRootPID)
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 self.isSamplingResources = false
