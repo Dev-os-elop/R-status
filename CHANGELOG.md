@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.0 - 2026-07-11
+
+- 메뉴를 고정 크기 단일 대시보드로 재설계하고 모든 화면을 같은 연한 배경 안에서 전환
+- 우측 Main, Icon, History, R Open, Settings 내비게이션 추가
+- 기존 Appearance를 Icon 화면으로 이동하고 Test Notification 메뉴 제거
+- History와 Settings의 별도 팝오버를 없애고 좌측 콘텐츠 영역에서 즉시 전환
+
 ## 0.13.2 - 2026-07-11
 
 - 자동 `for` 루프 계측을 실제 `run_file_with_status()` 실행 경로에 적용

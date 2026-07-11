@@ -1,72 +1,37 @@
-# Design QA — Right-side Settings Menu
+# Design QA
 
-## Evidence
+- Source visual truth: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/codex-clipboard-3bafd8c5-91d4-4e2f-89ed-f8291a81f358.png`
+- Implementation screenshots: `/tmp/es-dashboard-preview/main.png`, `/tmp/es-dashboard-preview/icon.png`, `/tmp/es-dashboard-preview/history.png`, `/tmp/es-dashboard-preview/settings.png`
+- Viewport: 586 × 546 points, light appearance
+- State: Ready; Main, Icon, empty History, and Settings screens
 
-- Source reference: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/TemporaryItems/NSIRD_screencaptureui_2ppdht/Screenshot.png`
-- Implementation capture: `/tmp/rstatus-settings-submenu-switches.png`
-- Viewport: 3840 × 2486 desktop capture; the open Settings menu is fully visible and legible.
-- State: ES Status Settings submenu open.
+## Full-view comparison evidence
 
-The source is a structural reference rather than a pixel-identical target. The implementation intentionally uses a native macOS menu instead of copying the gray dashboard card, while retaining the requested right-side grouping and direct controls.
+The fixed outer frame, two rounded light-gray regions, left content/right navigation split, section dividers, blue resource metrics, Return to Ready control, and Quit row follow the supplied mock. The implementation uses native SF Symbols and the selected ES Status icon rather than the mock's emoji/text glyphs.
 
-## Surface comparison
+## Focused comparison evidence
 
-| Surface | Result |
-| --- | --- |
-| Typography | Native San Francisco menu typography is consistent with macOS menu conventions. |
-| Spacing and layout | Settings opens to the right of the existing menu. Basic, Appearance, and Advanced are separated into compact groups with native separators. |
-| Colors and tokens | Native menu vibrancy is preserved. Icon previews use stable state colors: blue running, green complete, red fail, and orange interrupted. |
-| Image quality and assets | All seven menu-bar themes are rendered programmatically at menu-bar resolution. The Cat Original bundle icon remains sharp at standard `.icns` sizes. |
-| Copy and content | Language, seven icon choices, elapsed-time visibility, and launch-at-login controls match the requested settings scope. |
+Icon and Settings were captured separately because their controls are not visible in the Main reference. Icon retains all seven existing choices and the four-state preview in the fixed left region. Settings retains language, elapsed time, login launch, macOS notifications, version, and update controls without overflow. Empty History renders its title, retention rule, empty-state text, and disabled Clear button in the same fixed region.
 
-## Interaction QA
+## Findings and iteration history
 
-- Language opens a nested System Language / 한국어 / English selector.
-- Cat Original, Cat Silhouette, Status Pulse, Progress Blocks, Signal Orbit, Window Check, and Layered S display live previews and persist the selected theme.
-- Appearance selections affect the menu-bar status glyph only; the app and notification identity remains the white Cat Original icon.
-- The bundle icon is registered as `CatOriginal.icns`, and updates replace the entire bundle so stale icon files cannot survive installation.
-- Notification Center receives a new app identity at `io.github.ljwook92.esstatus`; legacy appearance preferences migrate automatically.
-- Show Elapsed Time in Menu Bar uses a native `NSSwitch` and updates the status item immediately.
-- Launch at Login uses a native `NSSwitch` backed by `SMAppService`.
-- Selecting language or appearance rebuilds the menu without opening a separate app window.
+- Initial P2: the first implementation was 650 points wide and visually looser than the 586-point source. Fixed by reducing the shell to 586 × 546 and reflowing Icon, language, and Advanced settings to a 430-point content column.
+- Initial P2: the Icon navigation used a generic palette symbol. Fixed by using the user's currently selected ES Status icon.
+- Initial P2: Quit lacked the source's keyboard shortcut label. Fixed by adding `⌘Q` to the right side of the Quit row.
+- No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
-## Comparison history
+## Required fidelity surfaces
 
-- P2: The first implementation used menu checkmarks for Advanced options, which did not match the supplied switch reference.
-- Fix: Added a purpose-built native menu item view containing `NSSwitch` controls.
-- Evidence: `/tmp/rstatus-settings-submenu-switches.png` shows both Advanced settings as switches in the right-side panel.
+- Typography: native macOS system typography with matched hierarchy and compact labels; no clipping except intentional truncation of the longest language button.
+- Spacing/layout: fixed 586 × 546 frame, 430-point content region, 114-point navigation region, consistent 14-point outer inset and rounded panels.
+- Colors/tokens: neutral light-gray panels, native separators, blue accent metrics and selected-page highlight.
+- Image quality/assets: SF Symbols and the app's existing high-resolution generated status icons; no placeholder assets.
+- Copy/content: Main, Icon, History, R Open, Settings, resource labels, Return to Ready, Quit App, settings, history empty state, and version are present.
 
-final result: passed
+## Interaction verification
 
-## Cat icon extension
-
-- Source visual truth: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/TemporaryItems/NSIRD_screencaptureui_GlwgHQ/Screenshot.png`
-- Implementation screenshot: `/tmp/RStatus-cat-states.png`
-- Menu-with-text preview: `/tmp/RStatus-menu-complete-v054.png` at 260 × 38.
-- Bundle icon preview: `/tmp/RStatus-cat-original-v053.png`
-- Combined comparison evidence: `/tmp/RStatus-cat-qa-comparison.png`
-- Comparison viewport: 1840 × 720, source and implementation shown in the same frame.
-- State: Cat Original idle, running, complete, interrupted, and fail; Cat Silhouette retained as the secondary option.
-- Focused comparison: not required because the combined frame includes enlarged 24 px renders and native 24 px previews for every state.
-
-**Findings**
-
-- No actionable P0/P1/P2 differences remain. Cat Original preserves the source's white face, pink ears and nose, short whiskers, gray forehead mark, state-colored outline, expression changes, and external status glyphs.
-- Fonts and typography: labels are QA-only and do not ship in the icon asset; native menu typography remains unchanged.
-- Spacing and layout rhythm: face-to-glyph proportions remain readable at 24 px without changing status-item height.
-- Colors and visual tokens: graphite idle, cobalt running, emerald complete, amber interrupted, and red fail match the selected visual target.
-- Image quality and asset fidelity: the bundle icon uses the same Cat Original face and blue ring treatment; standard `.icns` sizes were regenerated.
-- Copy and content: Appearance names the selected design Cat Original and keeps Cat Silhouette as a separate option.
-
-**Comparison history**
-
-- P1 in v0.5.1: Cat Silhouette was incorrectly made the official default despite the selected white-cat design.
-- Fix: restored the selected design as Cat Original, changed the default and bundle icon, and retained Cat Silhouette only as an optional theme.
-- Post-fix evidence: `/tmp/RStatus-cat-qa-comparison.png`.
-- P3 in v0.5.2: the Cat Original face had slightly more internal padding than requested.
-- Fix: enlarged the menu-bar face by approximately 8% and reduced cat app-icon insets while preserving status-glyph spacing.
-- P2 in v0.5.3: active-state icons dropped to 19 px beside text and the face rectangle was taller than it was wide.
-- Fix: use 24 px for every menu-bar state, reduce cat image padding to 3%, and change the Cat Original menu face to a wider 0.76:0.72 proportion.
-- Post-fix evidence: `/tmp/RStatus-menu-complete-v054.png` and `/tmp/RStatus-cat-states.png`.
+- Main, Icon, History, and Settings buttons switch content in place without changing the outer size.
+- R Open remains an action and does not replace the current page.
+- Icon selection, settings toggles, update control, History Clear, Return to Ready, and Quit retain their callbacks.
 
 final result: passed
