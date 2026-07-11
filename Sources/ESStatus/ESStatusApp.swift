@@ -314,7 +314,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let server = LocalHTTPServer()
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
-    private let summaryItem = NSMenuItem(title: "RStudio 연결 대기 중", action: nil, keyEquivalent: "")
+    private weak var summaryView: StatusSummaryMenuItemView?
     private let detailItem = NSMenuItem(title: "포트 47821", action: nil, keyEquivalent: "")
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
@@ -349,6 +349,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var updateLogURL: URL?
     private var instanceLockFD: Int32 = -1
     private var shouldReconfigureMenuAfterClose = false
+    private var runPeakCPUPercent = 0.0
+    private var runMaxWorkers = 0
+    private var historyPopover: NSPopover?
 
     private func acquireInstanceLock() -> Bool {
         let lockPath = "/tmp/io.github.ljwook92.rstatus.instance.lock"
@@ -385,7 +388,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         server.onProgress = { [weak self] update in self?.applyProgress(update) }
         do {
             try server.start()
-            summaryItem.title = L10n.text("RStudio 연결 준비됨", "RStudio connection ready")
         } catch {
             state = .fail
             detailMessage = "포트 47821을 열 수 없습니다: \(error.localizedDescription)"
@@ -420,10 +422,17 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         statusItem.button?.imageScaling = .scaleNone
         statusItem.menu = menu
 
-        summaryItem.isEnabled = false
         detailItem.isEnabled = false
         detailItem.isHidden = true
         elapsedItem.isEnabled = false
+        let summaryItem = NSMenuItem()
+        let statusSummaryView = StatusSummaryMenuItemView(
+            title: L10n.text("R 상태 준비됨", "R Status Ready")
+        ) { [weak self] anchor in
+            self?.showRunHistory(relativeTo: anchor)
+        }
+        summaryView = statusSummaryView
+        summaryItem.view = statusSummaryView
         menu.addItem(summaryItem)
         menu.addItem(detailItem)
         menu.addItem(elapsedItem)
@@ -615,6 +624,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         memoryItem.title = String(format: "Memory: %.1f%%", snapshot.memoryPercent)
         workersItem.title = "\(L10n.text("병렬 워커", "Parallel workers")): \(snapshot.workerCount)"
         processesItem.title = "\(L10n.text("R 프로세스", "R processes")): \(snapshot.processCount)"
+        if state == .running {
+            runPeakCPUPercent = max(runPeakCPUPercent, snapshot.cpuPercent)
+            runMaxWorkers = max(runMaxWorkers, snapshot.workerCount)
+        }
     }
 
     private func applyProgress(_ update: ProgressUpdate) {
@@ -732,6 +745,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         self.taskPID = nil
         timer?.invalidate()
         timer = nil
+        recordRunHistory(status: .interrupted)
         state = .interrupted
         detailMessage = "RStudio session ended"
         refreshResourceUsage(forceAfterCurrent: true)
@@ -775,6 +789,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func apply(_ update: StatusUpdate) {
+        let previousState = state
         state = update.status
         if let name = update.name, !name.isEmpty { taskName = name }
         detailMessage = update.message ?? ""
@@ -782,7 +797,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
         if state == .running {
             clearProgress()
-            startedAt = Date()
+            if previousState != .running {
+                startedAt = Date()
+                runPeakCPUPercent = 0
+                runMaxWorkers = 0
+            }
             timer?.invalidate()
             let refreshTimer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
                 Task { @MainActor in self?.updateDisplay() }
@@ -791,6 +810,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             RunLoop.main.add(refreshTimer, forMode: .common)
             startProcessWatchdog()
         } else {
+            if previousState == .running,
+               state == .complete || state == .fail || state == .interrupted {
+                recordRunHistory(status: state)
+            }
             clearProgress()
             timer?.invalidate()
             timer = nil
@@ -825,7 +848,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             state == .complete || state == .fail || state == .interrupted
         )
         let summary = state == .idle ? L10n.text("R 상태 준비됨", "R Status Ready") : stateTitle(state)
-        summaryItem.title = taskName.isEmpty ? summary : "\(summary) · \(taskName)"
+        summaryView?.update(title: taskName.isEmpty ? summary : "\(summary) · \(taskName)")
 
         if !detailMessage.isEmpty {
             detailItem.title = detailMessage
@@ -851,6 +874,32 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         return hours > 0
             ? String(format: "%d:%02d:%02d", hours, minutes, remainder)
             : String(format: "%02d:%02d", minutes, remainder)
+    }
+
+    private func recordRunHistory(status: RunState) {
+        guard let startedAt else { return }
+        RunHistoryStore.add(RunHistoryEntry(
+            id: UUID(),
+            finishedAt: Date(),
+            status: status.rawValue,
+            taskName: taskName,
+            elapsedSeconds: Date().timeIntervalSince(startedAt),
+            peakCPUPercent: runPeakCPUPercent,
+            maxWorkers: runMaxWorkers
+        ))
+    }
+
+    private func showRunHistory(relativeTo anchor: NSView) {
+        historyPopover?.close()
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.animates = true
+        popover.contentViewController = RunHistoryViewController(
+            entries: RunHistoryStore.load(),
+            onClear: { RunHistoryStore.clear() }
+        )
+        historyPopover = popover
+        popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxX)
     }
 
     private func sendNotification() {

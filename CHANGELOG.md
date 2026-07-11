@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0 - 2026-07-11
+
+- R Status Ready 오른쪽에 History 버튼 추가
+- Complete, Fail, Interrupted로 끝난 최근 실행 5개의 시간·최고 CPU·최대 worker 저장
+- History 버튼에서 메뉴 오른쪽 기록 패널 표시
+- 기록 패널 하단 Clear 버튼으로 전체 기록 삭제
+
 ## 0.11.4 - 2026-07-11
 
 - 메인 상태 아래 버전 행을 제거하고 Settings에만 `v버전` 형식으로 표시
