@@ -17,15 +17,19 @@ final class SettingsToggleMenuItemView: NSView {
 
         let label = NSTextField(labelWithString: title)
         label.font = .menuFont(ofSize: 0)
+        label.lineBreakMode = .byTruncatingTail
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.translatesAutoresizingMaskIntoConstraints = false
 
         toggle.state = isOn ? .on : .off
         toggle.target = self
         toggle.action = #selector(toggleChanged)
+        toggle.setContentCompressionResistancePriority(.required, for: .horizontal)
         toggle.translatesAutoresizingMaskIntoConstraints = false
 
         stateLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
         stateLabel.alignment = .right
+        stateLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         stateLabel.translatesAutoresizingMaskIntoConstraints = false
 
         addSubview(label)
@@ -45,6 +49,10 @@ final class SettingsToggleMenuItemView: NSView {
     }
 
     required init?(coder: NSCoder) { nil }
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: 320, height: 40)
+    }
 
     @objc private func toggleChanged() {
         updateStateLabel()
