@@ -46,18 +46,18 @@ final class ReturnToReadyMenuItemView: NSView {
         fillColor.setFill()
         path.fill()
 
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = .center
         let title = NSAttributedString(
             string: L10n.text("준비 상태로 돌아가기", "Return to Ready"),
             attributes: [
                 .font: NSFont.menuFont(ofSize: 0),
-                .foregroundColor: isTerminal ? NSColor.white : NSColor(calibratedWhite: 0.42, alpha: 1),
-                .paragraphStyle: paragraph
+                .foregroundColor: isTerminal ? NSColor.white : NSColor(calibratedWhite: 0.42, alpha: 1)
             ]
         )
-        title.draw(in: NSRect(x: buttonRect.minX, y: buttonRect.minY + 6,
-                              width: buttonRect.width, height: 20))
+        let titleSize = title.size()
+        title.draw(at: NSPoint(
+            x: buttonRect.midX - titleSize.width / 2,
+            y: buttonRect.midY - titleSize.height / 2
+        ))
     }
 
     override func mouseDown(with event: NSEvent) {
