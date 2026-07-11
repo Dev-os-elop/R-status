@@ -319,7 +319,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let detailItem = NSMenuItem(title: "포트 47821", action: nil, keyEquivalent: "")
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
-    private weak var cpuUsageView: CPUUsageMenuItemView?
+    private let cpuItem = NSMenuItem(title: "CPU: —", action: nil, keyEquivalent: "")
     private let memoryItem = NSMenuItem(title: "Memory: —", action: nil, keyEquivalent: "")
     private let workersItem = NSMenuItem(title: "Parallel workers: —", action: nil, keyEquivalent: "")
     private let processesItem = NSMenuItem(title: "R processes: —", action: nil, keyEquivalent: "")
@@ -436,10 +436,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         resourceHeaderItem.title = L10n.text("R 리소스 사용량", "R Resource Usage")
         resourceHeaderItem.isEnabled = false
         menu.addItem(resourceHeaderItem)
-        let cpuItem = NSMenuItem()
-        let cpuView = CPUUsageMenuItemView()
-        cpuUsageView = cpuView
-        cpuItem.view = cpuView
+        cpuItem.isEnabled = false
         menu.addItem(cpuItem)
         memoryItem.isEnabled = false
         menu.addItem(memoryItem)
@@ -607,7 +604,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func updateResourceItems(_ snapshot: RResourceSnapshot) {
-        cpuUsageView?.update(percent: snapshot.cpuPercent)
+        cpuItem.title = String(format: "CPU: %.1f%%", snapshot.cpuPercent)
         memoryItem.title = String(format: "Memory: %.1f%%", snapshot.memoryPercent)
         workersItem.title = "\(L10n.text("병렬 워커", "Parallel workers")): \(snapshot.workerCount)"
         processesItem.title = "\(L10n.text("R 프로세스", "R processes")): \(snapshot.processCount)"

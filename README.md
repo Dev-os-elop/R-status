@@ -211,7 +211,7 @@ Parallel workers: 12
 R processes: 13
 ```
 
-- **CPU**: RStudio `rsession`과 그 하위 R worker의 코어별 CPU 사용률 합계를 현재 사용 가능한 논리 CPU 수로 나눈 값입니다. 왼쪽 막대는 현재 값, 오른쪽 라인 차트는 약 2초 간격으로 수집한 최근 30개 값(약 1분)을 보여줍니다.
+- **CPU**: RStudio `rsession`과 그 하위 R worker의 코어별 CPU 사용률 합계를 현재 사용 가능한 논리 CPU 수로 나눈 값입니다. 로컬 CPU 전체 용량을 기준으로 0–100% 한 줄로 표시됩니다.
 - **Memory**: RStudio `rsession`과 그 하위 worker의 resident memory 합계가 Mac 전체 물리 메모리에서 차지하는 비율입니다. `Memory` 영문 한 줄로만 표시합니다.
 - **Parallel workers**: `parallel`, PSOCK 등으로 생성된 병렬 작업용 R 프로세스 수입니다.
 - **R processes**: main R 세션과 병렬 worker를 합친 전체 R 관련 프로세스 수입니다.
