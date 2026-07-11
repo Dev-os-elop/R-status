@@ -17,6 +17,7 @@ RStudio에서 실행하는 R 코드의 상태를 macOS 메뉴바와 알림으로
 - Cat Original·Cat Silhouette을 포함한 선택형 macOS 메뉴바 아이콘
 - 실행 경과 시간 표시
 - 전체 CPU 용량 기준 RStudio 사용률, 메모리 비율, R 프로세스, 병렬 worker 실시간 표시
+- History 패널에서 최근 실행 5개의 실행 시간, 최고 CPU, 최대 worker 확인 및 전체 삭제
 - 완료·실패·사용자 중단 시 macOS 알림
 - 선택 영역 또는 현재 문서 전체를 실행하는 RStudio Addin
 - 일반 R 코드에서 사용할 수 있는 `rstatus_run()` 함수
