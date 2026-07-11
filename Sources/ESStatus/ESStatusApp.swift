@@ -422,7 +422,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         statusItem.menu = menu
 
         summaryItem.isEnabled = false
-        versionItem.title = "Version \(currentVersion)"
+        versionItem.attributedTitle = NSAttributedString(
+            string: "Version \(currentVersion)",
+            attributes: [
+                .font: NSFont.systemFont(ofSize: 10),
+                .foregroundColor: NSColor.secondaryLabelColor
+            ]
+        )
         versionItem.isEnabled = false
         detailItem.isEnabled = false
         detailItem.isHidden = true
@@ -530,6 +536,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             showElapsedTime: AppPreferences.showElapsedTime,
             launchAtLogin: SMAppService.mainApp.status == .enabled,
             notificationsEnabled: AppPreferences.notificationsEnabled,
+            version: currentVersion,
             onElapsedTimeChange: { [weak self] enabled in
                 AppPreferences.showElapsedTime = enabled
                 self?.updateDisplay()

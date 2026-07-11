@@ -321,6 +321,7 @@ final class SettingsAdvancedMenuItemView: NSView {
     private let panelSize = NSSize(width: 500, height: 132)
 
     init(showElapsedTime: Bool, launchAtLogin: Bool, notificationsEnabled: Bool,
+         version: String,
          onElapsedTimeChange: @escaping (Bool) -> Void,
          onLaunchAtLoginChange: @escaping (Bool) -> Void,
          onNotificationsChange: @escaping (Bool) -> Void,
@@ -366,12 +367,19 @@ final class SettingsAdvancedMenuItemView: NSView {
         updateTile.layer?.borderColor = NSColor.separatorColor.cgColor
         addSubview(updateTile)
 
-        updateButton.frame = NSRect(x: 10, y: 10, width: tileSize.width - 20, height: 38)
+        updateButton.frame = NSRect(x: 10, y: 21, width: tileSize.width - 20, height: 30)
         updateButton.bezelStyle = .roundRect
         updateButton.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
         updateButton.target = self
         updateButton.action = #selector(checkForUpdates)
         updateTile.addSubview(updateButton)
+
+        let versionLabel = NSTextField(labelWithString: "v\(version)")
+        versionLabel.font = .systemFont(ofSize: 10, weight: .regular)
+        versionLabel.textColor = .secondaryLabelColor
+        versionLabel.alignment = .center
+        versionLabel.frame = NSRect(x: 10, y: 4, width: tileSize.width - 20, height: 14)
+        updateTile.addSubview(versionLabel)
         setUpdateState(title: L10n.text("업데이트 확인…", "Check for Updates…"), enabled: true)
     }
 
