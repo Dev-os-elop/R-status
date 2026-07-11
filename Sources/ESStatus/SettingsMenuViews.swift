@@ -1,6 +1,61 @@
 import AppKit
 
 @MainActor
+final class ReturnToReadyMenuItemView: NSView {
+    private let onReset: () -> Void
+    private let viewSize = NSSize(width: 300, height: 40)
+    private var isTerminal = false
+
+    init(onReset: @escaping () -> Void) {
+        self.onReset = onReset
+        super.init(frame: NSRect(origin: .zero, size: viewSize))
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(L10n.text("준비 상태로 돌아가기", "Return to Ready"))
+        setTerminalState(false)
+    }
+
+    required init?(coder: NSCoder) { nil }
+    override var intrinsicContentSize: NSSize { viewSize }
+
+    func setTerminalState(_ isTerminal: Bool) {
+        self.isTerminal = isTerminal
+        setAccessibilityEnabled(isTerminal)
+        toolTip = isTerminal
+            ? L10n.text("완료된 상태를 지우고 대기 상태로 돌아갑니다.",
+                        "Clear the finished status and return to Ready.")
+            : L10n.text("작업이 완료·실패·중단된 후 사용할 수 있습니다.",
+                        "Available after a task completes, fails, or is interrupted.")
+        needsDisplay = true
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        let buttonRect = bounds.insetBy(dx: 12, dy: 5)
+        let path = NSBezierPath(roundedRect: buttonRect, xRadius: 7, yRadius: 7)
+        (isTerminal ? NSColor.controlAccentColor : NSColor(calibratedWhite: 0.84, alpha: 1)).setFill()
+        path.fill()
+
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        let title = NSAttributedString(
+            string: L10n.text("준비 상태로 돌아가기", "Return to Ready"),
+            attributes: [
+                .font: NSFont.menuFont(ofSize: 0),
+                .foregroundColor: isTerminal ? NSColor.white : NSColor(calibratedWhite: 0.42, alpha: 1),
+                .paragraphStyle: paragraph
+            ]
+        )
+        title.draw(in: NSRect(x: buttonRect.minX, y: buttonRect.minY + 6,
+                              width: buttonRect.width, height: 20))
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard isTerminal else { return }
+        onReset()
+    }
+}
+
+@MainActor
 final class SettingsAppearanceMenuItemView: NSView {
     private let onSelection: (StatusIconStyle) -> Void
     private var selectedStyle: StatusIconStyle
