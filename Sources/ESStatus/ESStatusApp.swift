@@ -310,11 +310,12 @@ private final class LocalHTTPServer {
 }
 
 @MainActor
-private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, NSMenuDelegate {
     private let server = LocalHTTPServer()
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private let summaryItem = NSMenuItem(title: "RStudio 연결 대기 중", action: nil, keyEquivalent: "")
+    private let versionItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let detailItem = NSMenuItem(title: "포트 47821", action: nil, keyEquivalent: "")
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
@@ -323,7 +324,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let processesItem = NSMenuItem(title: "R processes: —", action: nil, keyEquivalent: "")
     private let progressItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let etaItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-    private var updateItem: NSMenuItem?
+    private weak var advancedSettingsView: SettingsAdvancedMenuItemView?
     private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
     private var isInstallingUpdate = false
@@ -341,6 +342,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var updateProcess: Process?
     private var updateLogURL: URL?
     private var instanceLockFD: Int32 = -1
+    private var shouldReconfigureMenuAfterClose = false
 
     private func acquireInstanceLock() -> Bool {
         let lockPath = "/tmp/io.github.ljwook92.rstatus.instance.lock"
@@ -386,7 +388,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
         let center = UNUserNotificationCenter.current()
         center.delegate = self
-        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        if AppPreferences.notificationsEnabled {
+            center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        }
 
     }
 
@@ -404,16 +408,20 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func configureMenu() {
         menu.removeAllItems()
+        menu.delegate = self
         statusItem.button?.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         statusItem.button?.toolTip = L10n.text("R 작업 상태", "R task status")
         statusItem.button?.imageScaling = .scaleNone
         statusItem.menu = menu
 
         summaryItem.isEnabled = false
+        versionItem.title = "Version \(currentVersion)"
+        versionItem.isEnabled = false
         detailItem.isEnabled = false
         detailItem.isHidden = true
         elapsedItem.isEnabled = false
         menu.addItem(summaryItem)
+        menu.addItem(versionItem)
         menu.addItem(detailItem)
         menu.addItem(elapsedItem)
         menu.addItem(.separator())
@@ -450,16 +458,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
         menu.addItem(.separator())
 
-        let versionItem = NSMenuItem(title: "Version \(currentVersion)", action: nil, keyEquivalent: "")
-        versionItem.isEnabled = false
-        menu.addItem(versionItem)
-
-        let checkItem = NSMenuItem(title: L10n.text("업데이트 확인…", "Check for Updates…"),
-                                   action: #selector(checkForUpdates), keyEquivalent: "u")
-        checkItem.target = self
-        updateItem = checkItem
-        menu.addItem(checkItem)
-
         let installAddinItem = NSMenuItem(
             title: L10n.text("RStudio Addin 설치/업데이트…", "Install/Update RStudio Addin…"),
             action: #selector(installAddinFromMenu), keyEquivalent: ""
@@ -482,9 +480,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         basicHeader.isEnabled = false
         settingsMenu.addItem(basicHeader)
 
-        let languageItem = NSMenuItem(title: L10n.text("언어", "Language"), action: nil, keyEquivalent: "")
-        languageItem.image = NSImage(systemSymbolName: "globe", accessibilityDescription: languageItem.title)
-        languageItem.submenu = makeLanguageMenu()
+        let languageItem = NSMenuItem()
+        languageItem.view = SettingsLanguageMenuItemView(
+            selectedLanguage: AppPreferences.language
+        ) { [weak self] language in
+            AppPreferences.language = language
+            self?.shouldReconfigureMenuAfterClose = true
+            self?.updateDisplay()
+        }
         settingsMenu.addItem(languageItem)
 
         settingsMenu.addItem(.separator())
@@ -506,43 +509,39 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         advancedHeader.isEnabled = false
         settingsMenu.addItem(advancedHeader)
 
-        let elapsedItem = NSMenuItem()
-        elapsedItem.view = SettingsToggleMenuItemView(
-            title: L10n.text("메뉴바에 실행 시간 표시", "Show Elapsed Time in Menu Bar"),
-            isOn: AppPreferences.showElapsedTime,
-            onText: L10n.text("켜짐", "ON"),
-            offText: L10n.text("꺼짐", "OFF")
-        ) { [weak self] enabled in
-            AppPreferences.showElapsedTime = enabled
-            self?.preferencesDidChange()
-        }
-        settingsMenu.addItem(elapsedItem)
-
-        let launchItem = NSMenuItem()
-        launchItem.view = SettingsToggleMenuItemView(
-            title: L10n.text("로그인 시 실행", "Launch at Login"),
-            isOn: SMAppService.mainApp.status == .enabled,
-            onText: L10n.text("켜짐", "ON"),
-            offText: L10n.text("꺼짐", "OFF")
-        ) { [weak self] enabled in
-            self?.setLaunchAtLogin(enabled)
-        }
-        settingsMenu.addItem(launchItem)
+        let advancedItem = NSMenuItem()
+        let advancedView = SettingsAdvancedMenuItemView(
+            showElapsedTime: AppPreferences.showElapsedTime,
+            launchAtLogin: SMAppService.mainApp.status == .enabled,
+            notificationsEnabled: AppPreferences.notificationsEnabled,
+            onElapsedTimeChange: { [weak self] enabled in
+                AppPreferences.showElapsedTime = enabled
+                self?.updateDisplay()
+            },
+            onLaunchAtLoginChange: { [weak self] enabled in
+                self?.setLaunchAtLogin(enabled)
+            },
+            onNotificationsChange: { [weak self] enabled in
+                self?.setNotificationsEnabled(enabled)
+            },
+            onCheckForUpdates: { [weak self] in
+                self?.checkForUpdates()
+            }
+        )
+        advancedSettingsView = advancedView
+        advancedItem.view = advancedView
+        settingsMenu.addItem(advancedItem)
 
         return settingsMenu
     }
 
-    private func makeLanguageMenu() -> NSMenu {
-        let languageMenu = NSMenu(title: L10n.text("언어", "Language"))
-        for language in AppLanguage.allCases {
-            let item = NSMenuItem(title: language.displayName,
-                                  action: #selector(selectLanguage(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = language.rawValue
-            item.state = language == AppPreferences.language ? .on : .off
-            languageMenu.addItem(item)
+    func menuDidClose(_ closedMenu: NSMenu) {
+        guard closedMenu === menu, shouldReconfigureMenuAfterClose else { return }
+        shouldReconfigureMenuAfterClose = false
+        DispatchQueue.main.async { [weak self] in
+            self?.configureMenu()
+            self?.updateDisplay()
         }
-        return languageMenu
     }
 
     private var currentVersion: String {
@@ -834,6 +833,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func postNotification(title: String, body: String) {
+        guard AppPreferences.notificationsEnabled else { return }
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
@@ -903,8 +903,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             ?? "Dev-os-elop/R-status"
         guard let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest") else { return }
         let installedVersion = currentVersion
-        updateItem?.title = L10n.text("업데이트 확인 중…", "Checking for Updates…")
-        updateItem?.isEnabled = false
+        setUpdateControl(title: L10n.text("업데이트 확인 중…", "Checking for Updates…"),
+                         enabled: false)
 
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.setValue("ESStatus/\(installedVersion)", forHTTPHeaderField: "User-Agent")
@@ -940,8 +940,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func showUpdateResult(_ result: UpdateCheckResult) {
-        updateItem?.title = L10n.text("업데이트 확인…", "Check for Updates…")
-        updateItem?.isEnabled = true
+        setUpdateControl(title: L10n.text("업데이트 확인…", "Check for Updates…"),
+                         enabled: true)
         defer { restorePreviousApplicationFocus() }
         NSApp.activate(ignoringOtherApps: true)
 
@@ -989,8 +989,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private func installUpdate(_ sourceVersion: GitHubSourceVersion) {
         guard !isInstallingUpdate else { return }
         isInstallingUpdate = true
-        updateItem?.title = L10n.text("업데이트 다운로드 중…", "Downloading Update…")
-        updateItem?.isEnabled = false
+        setUpdateControl(title: L10n.text("업데이트 다운로드 중…", "Downloading Update…"),
+                         enabled: false)
 
         Task.detached(priority: .userInitiated) {
             let result: Result<LaunchedUpdate, Error>
@@ -1009,7 +1009,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                                     sourceVersion: GitHubSourceVersion) {
         switch result {
         case .success(let launched):
-            updateItem?.title = L10n.text("업데이트 설치 중…", "Installing Update…")
+            setUpdateControl(title: L10n.text("업데이트 설치 중…", "Installing Update…"),
+                             enabled: false)
             updateProcess = launched.process
             updateLogURL = launched.logURL
             postNotification(
@@ -1043,8 +1044,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func showUpdateInstallFailure(_ message: String) {
         isInstallingUpdate = false
-        updateItem?.title = L10n.text("업데이트 확인…", "Check for Updates…")
-        updateItem?.isEnabled = true
+        setUpdateControl(title: L10n.text("업데이트 확인…", "Check for Updates…"),
+                         enabled: true)
         postNotification(
             title: "ES Status Update Failed",
             body: message.count > 180 ? String(message.prefix(180)) + "…" : message
@@ -1075,11 +1076,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         }
     }
 
-    @objc private func selectLanguage(_ sender: NSMenuItem) {
-        guard let rawValue = sender.representedObject as? String,
-              let language = AppLanguage(rawValue: rawValue) else { return }
-        AppPreferences.language = language
-        preferencesDidChange()
+    private func setUpdateControl(title: String, enabled: Bool) {
+        advancedSettingsView?.setUpdateState(title: title, enabled: enabled)
     }
 
     private func setLaunchAtLogin(_ enabled: Bool) {
@@ -1095,16 +1093,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                 "Launch at login failed: \(error.localizedDescription)"
             )
         }
-        preferencesDidChange()
+        updateDisplay()
     }
 
-    private func preferencesDidChange() {
-        updateApplicationIcon()
-        updateDisplay()
-        DispatchQueue.main.async { [weak self] in
-            self?.configureMenu()
-            self?.updateDisplay()
+    private func setNotificationsEnabled(_ enabled: Bool) {
+        AppPreferences.notificationsEnabled = enabled
+        if enabled {
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
         }
+        updateDisplay()
     }
 
     @objc private func quit() {
