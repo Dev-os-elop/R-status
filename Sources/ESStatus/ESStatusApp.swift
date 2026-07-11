@@ -19,6 +19,12 @@ private struct StatusUpdate: Decodable {
     let name: String?
     let message: String?
     let pid: Int32?
+    let codeID: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case status, name, message, pid
+        case codeID = "codeId"
+    }
 }
 
 private struct ProgressUpdate: Decodable {
@@ -352,6 +358,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var runPeakCPUPercent = 0.0
     private var runMaxWorkers = 0
     private var historyPopover: NSPopover?
+    private var currentCodeID: String?
+    private var predictedDuration: TimeInterval?
 
     private func acquireInstanceLock() -> Bool {
         let lockPath = "/tmp/io.github.ljwook92.rstatus.instance.lock"
@@ -802,6 +810,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                 startedAt = Date()
                 runPeakCPUPercent = 0
                 runMaxWorkers = 0
+                currentCodeID = update.codeID
+                predictedDuration = update.codeID.flatMap(RunHistoryStore.estimatedDuration)
             }
             timer?.invalidate()
             let refreshTimer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -815,6 +825,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                state == .complete || state == .fail || state == .interrupted {
                 recordRunHistory(status: state)
             }
+            predictedDuration = nil
             clearProgress()
             timer?.invalidate()
             timer = nil
@@ -865,6 +876,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         } else {
             elapsedItem.isHidden = true
         }
+        if state == .running, progressItem.isHidden,
+           let predictedDuration, let startedAt {
+            let remaining = max(0, predictedDuration - Date().timeIntervalSince(startedAt))
+            etaItem.title = "\(L10n.text("예상 남은 시간(기록)", "Estimated remaining (history)")): \(formatRemaining(remaining))"
+            etaItem.isHidden = false
+        } else if progressItem.isHidden {
+            etaItem.isHidden = true
+        }
     }
 
     private func formatElapsed(_ interval: TimeInterval) -> String {
@@ -886,21 +905,29 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             taskName: taskName,
             elapsedSeconds: Date().timeIntervalSince(startedAt),
             peakCPUPercent: runPeakCPUPercent,
-            maxWorkers: runMaxWorkers
+            maxWorkers: runMaxWorkers,
+            codeID: currentCodeID
         ))
     }
 
     private func showRunHistory(relativeTo anchor: NSView) {
         historyPopover?.close()
         let popover = NSPopover()
-        popover.behavior = .applicationDefined
+        popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = RunHistoryViewController(
             entries: RunHistoryStore.load(),
             onClear: { RunHistoryStore.clear() }
         )
         historyPopover = popover
-        popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxX)
+        if let menuContentView = anchor.window?.contentView {
+            let anchorRect = anchor.convert(anchor.bounds, to: menuContentView)
+            let menuRightEdge = NSRect(x: menuContentView.bounds.maxX,
+                                       y: anchorRect.midY, width: 1, height: 1)
+            popover.show(relativeTo: menuRightEdge, of: menuContentView, preferredEdge: .maxX)
+        } else {
+            popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxX)
+        }
     }
 
     private func sendNotification() {
@@ -1154,6 +1181,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         taskName = ""
         detailMessage = ""
         startedAt = nil
+        currentCodeID = nil
+        predictedDuration = nil
         clearProgress()
         updateDisplay()
     }

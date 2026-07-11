@@ -15,11 +15,12 @@
 #' @param status One of `idle`, `running`, `complete`, `fail`, or `interrupted`.
 #' @param name A short task name.
 #' @param message Optional detail or error message.
+#' @param code_id Optional stable identifier for historical duration estimates.
 #' @param host Local app host.
 #' @param port Local app port.
 #' @return Invisibly returns `TRUE` when the event was sent, otherwise `FALSE`.
 #' @export
-rstatus_notify <- function(status, name = "R task", message = NULL,
+rstatus_notify <- function(status, name = "R task", message = NULL, code_id = NULL,
                            host = "127.0.0.1", port = 47821L) {
   status <- match.arg(status, c("idle", "running", "complete", "fail", "interrupted"))
   fields <- c(
@@ -29,6 +30,9 @@ rstatus_notify <- function(status, name = "R task", message = NULL,
   )
   if (!is.null(message)) {
     fields <- c(fields, sprintf('"message":"%s"', .rstatus_json_escape(message)))
+  }
+  if (!is.null(code_id) && nzchar(as.character(code_id)[1L])) {
+    fields <- c(fields, sprintf('"codeId":"%s"', .rstatus_json_escape(as.character(code_id)[1L])))
   }
   body <- paste0("{", paste(fields, collapse = ","), "}")
   body_raw <- charToRaw(enc2utf8(body))

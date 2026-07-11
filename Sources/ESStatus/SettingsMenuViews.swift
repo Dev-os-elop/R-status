@@ -108,6 +108,9 @@ final class LeadingActionMenuItemView: NSView {
     }
 
     private func performAction() {
+        isHovered = false
+        isPressed = false
+        needsDisplay = true
         enclosingMenuItem?.menu?.cancelTracking()
         DispatchQueue.main.async { [onAction] in onAction() }
     }
