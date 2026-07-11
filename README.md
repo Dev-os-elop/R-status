@@ -161,16 +161,21 @@ rstatus_notify("idle", "")
 
 ## 메뉴바 메뉴
 
-상태 아이콘 또는 상태 텍스트를 클릭하면 다음 기능을 사용할 수 있습니다.
+상태 아이콘 또는 상태 텍스트를 클릭하면 고정 크기의 단일 대시보드가 열립니다. 우측 버튼을 눌러도 창 크기와 연한 배경은 유지되고 좌측 내용만 변경됩니다.
+
+- **Main**: 현재 상태, R 리소스, 진행률, 준비 상태 복귀, 앱 종료
+- **Icon**: 아이콘 디자인 선택과 Running/Complete/Fail/Interrupted 미리보기
+- **History**: 최근 실행 기록 최대 5개와 Clear
+- **R Open**: RStudio 실행
+- **Settings**: 언어, 실행시간, 로그인 실행, macOS 알림, 업데이트
 
 - 현재 작업 이름과 실행 시간 확인
 - R CPU 사용량 확인
 - R process와 병렬 worker 수 확인
 - `progress`/`progressr` 또는 Addin 자동 루프 계측 시 진행 바·퍼센트·남은 시간 확인
 - 상태 초기화
-- 알림 테스트
-- RStudio 열기
-- 오른쪽 **Settings** 패널에서 언어·아이콘·실행 시간·로그인 실행 설정
+- **R Open**으로 RStudio 열기
+- **Settings**에서 언어·실행 시간·로그인 실행 설정
 - 현재 설치 버전 확인
 - **Check for Updates…**로 ES Status 앱과 RStudio Addin을 함께 자동 다운로드·설치
 - 앱이 최신이어도 Addin이 누락되었거나 이전 버전이면 같은 버전으로 자동 동기화

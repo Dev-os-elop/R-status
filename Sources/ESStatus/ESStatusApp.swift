@@ -315,6 +315,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private weak var summaryView: StatusSummaryMenuItemView?
+    private weak var dashboardView: DashboardMenuView?
     private let detailItem = NSMenuItem(title: "포트 47821", action: nil, keyEquivalent: "")
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
@@ -426,77 +427,32 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         statusItem.button?.imageScaling = .scaleNone
         statusItem.menu = menu
 
-        detailItem.isEnabled = false
-        detailItem.isHidden = true
-        elapsedItem.isEnabled = false
-        let summaryItem = NSMenuItem()
-        let statusSummaryView = StatusSummaryMenuItemView(
-            title: L10n.text("R 상태 준비됨", "R Status Ready")
-        ) { [weak self] anchor in
-            self?.showRunHistory(relativeTo: anchor)
-        }
-        summaryView = statusSummaryView
-        summaryItem.view = statusSummaryView
-        menu.addItem(summaryItem)
-        menu.addItem(detailItem)
-        menu.addItem(elapsedItem)
-        menu.addItem(.separator())
-
-        resourceHeaderItem.title = L10n.text("R 리소스 사용량", "R Resource Usage")
-        resourceHeaderItem.isEnabled = false
-        menu.addItem(resourceHeaderItem)
-        cpuItem.isEnabled = false
-        menu.addItem(cpuItem)
-        memoryItem.isEnabled = false
-        menu.addItem(memoryItem)
-        for item in [workersItem, processesItem, progressItem, etaItem] {
-            item.isEnabled = false
-            menu.addItem(item)
-        }
-        progressItem.isHidden = true
-        etaItem.isHidden = true
-        menu.addItem(.separator())
-
-        let resetItem = NSMenuItem()
-        let resetView = ReturnToReadyMenuItemView { [weak self] in
-            self?.resetStatus()
-        }
-        returnToReadyView = resetView
-        resetItem.view = resetView
-        menu.addItem(resetItem)
-
-        let notificationItem = NSMenuItem()
-        notificationItem.view = LeadingActionMenuItemView(
-            title: L10n.text("알림 테스트", "Test Notification"),
-            shortcut: "⌘N",
-            keyEquivalent: "n"
-        ) { [weak self] in
-            self?.testNotification()
-        }
-        menu.addItem(notificationItem)
-
-        let openItem = NSMenuItem()
-        openItem.view = LeadingActionMenuItemView(
-            title: L10n.text("RStudio 열기", "Open RStudio"),
-            shortcut: "⌘O",
-            keyEquivalent: "o"
-        ) { [weak self] in
-            self?.openRStudio()
-        }
-        menu.addItem(openItem)
-
-        let settingsItem = NSMenuItem(title: L10n.text("설정", "Settings"),
-                                      action: nil, keyEquivalent: "")
-        settingsItem.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: settingsItem.title)
-        settingsItem.submenu = makeSettingsMenu()
-        menu.addItem(settingsItem)
-
-        menu.addItem(.separator())
-
-        let quitItem = NSMenuItem(title: L10n.text("ES Status 종료", "Quit ES Status"),
-                                  action: #selector(quit), keyEquivalent: "q")
-        quitItem.target = self
-        menu.addItem(quitItem)
+        let dashboard = DashboardMenuView(
+            version: currentVersion,
+            onReset: { [weak self] in self?.resetStatus() },
+            onOpenR: { [weak self] in self?.openRStudio() },
+            onQuit: { [weak self] in self?.quit() },
+            onIconChange: { [weak self] style in
+                AppPreferences.iconStyle = style
+                self?.updateDisplay()
+            },
+            onLanguageChange: { [weak self] language in
+                AppPreferences.language = language
+                self?.updateDisplay()
+            },
+            onElapsedChange: { [weak self] enabled in
+                AppPreferences.showElapsedTime = enabled
+                self?.updateDisplay()
+            },
+            onLoginChange: { [weak self] enabled in self?.setLaunchAtLogin(enabled) },
+            onNotificationsChange: { [weak self] enabled in self?.setNotificationsEnabled(enabled) },
+            onCheckUpdates: { [weak self] in self?.checkForUpdates() },
+            onClearHistory: { RunHistoryStore.clear() }
+        )
+        dashboardView = dashboard
+        let item = NSMenuItem()
+        item.view = dashboard
+        menu.addItem(item)
     }
 
     private func makeSettingsMenu() -> NSMenu {
@@ -633,6 +589,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             runPeakCPUPercent = max(runPeakCPUPercent, snapshot.cpuPercent)
             runMaxWorkers = max(runMaxWorkers, snapshot.workerCount)
         }
+        updateDashboard()
     }
 
     private func applyProgress(_ update: ProgressUpdate) {
@@ -669,6 +626,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         }
         etaItem.isEnabled = true
         etaItem.isHidden = false
+        updateDashboard()
     }
 
     private func clearProgress() {
@@ -680,6 +638,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         etaItem.attributedTitle = NSAttributedString(string: "")
         etaItem.isEnabled = false
         etaItem.isHidden = true
+        updateDashboard()
     }
 
     private func formatRemaining(_ interval: TimeInterval) -> String {
@@ -874,6 +833,24 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         } else {
             elapsedItem.isHidden = true
         }
+        updateDashboard()
+    }
+
+    private func updateDashboard() {
+        let summary = state == .idle ? L10n.text("R 상태 준비됨", "R Status Ready") : stateTitle(state)
+        let status = taskName.isEmpty || state == .idle ? summary : "\(summary) · \(taskName)"
+        dashboardView?.update(
+            status: status,
+            detail: detailItem.isHidden ? "" : detailItem.title,
+            elapsed: elapsedItem.isHidden ? "" : elapsedItem.title,
+            cpu: cpuItem.title,
+            memory: memoryItem.title,
+            workers: workersItem.title,
+            processes: processesItem.title,
+            progress: progressItem.isHidden ? "" : progressItem.title,
+            eta: etaItem.isHidden ? "" : etaItem.title,
+            canReset: state == .complete || state == .fail || state == .interrupted
+        )
     }
 
     private func formatElapsed(_ interval: TimeInterval) -> String {
@@ -1210,6 +1187,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func setUpdateControl(title: String, enabled: Bool) {
         advancedSettingsView?.setUpdateState(title: title, enabled: enabled)
+        dashboardView?.setUpdateState(title: title, enabled: enabled)
     }
 
     private func setLaunchAtLogin(_ enabled: Bool) {
