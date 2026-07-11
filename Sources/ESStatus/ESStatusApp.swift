@@ -462,14 +462,24 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         resetItem.view = resetView
         menu.addItem(resetItem)
 
-        let notificationItem = NSMenuItem(title: L10n.text("알림 테스트", "Test Notification"),
-                                          action: #selector(testNotification), keyEquivalent: "n")
-        notificationItem.target = self
+        let notificationItem = NSMenuItem()
+        notificationItem.view = LeadingActionMenuItemView(
+            title: L10n.text("알림 테스트", "Test Notification"),
+            shortcut: "⌘N",
+            keyEquivalent: "n"
+        ) { [weak self] in
+            self?.testNotification()
+        }
         menu.addItem(notificationItem)
 
-        let openItem = NSMenuItem(title: L10n.text("RStudio 열기", "Open RStudio"),
-                                  action: #selector(openRStudio), keyEquivalent: "o")
-        openItem.target = self
+        let openItem = NSMenuItem()
+        openItem.view = LeadingActionMenuItemView(
+            title: L10n.text("RStudio 열기", "Open RStudio"),
+            shortcut: "⌘O",
+            keyEquivalent: "o"
+        ) { [weak self] in
+            self?.openRStudio()
+        }
         menu.addItem(openItem)
 
         let settingsItem = NSMenuItem(title: L10n.text("설정", "Settings"),
