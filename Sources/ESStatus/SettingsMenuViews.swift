@@ -61,6 +61,8 @@ final class SettingsAppearanceMenuItemView: NSView {
     private var selectedStyle: StatusIconStyle
     private var styleButtons: [StatusIconStyle: NSButton] = [:]
     private var previewImages: [StatusVisualState: NSImageView] = [:]
+    private var previewLabels: [StatusVisualState: NSTextField] = [:]
+    private let previewHeader = NSTextField(labelWithString: "")
 
     private let panelSize = NSSize(width: 500, height: 226)
 
@@ -106,11 +108,10 @@ final class SettingsAppearanceMenuItemView: NSView {
         divider.boxType = .separator
         addSubview(divider)
 
-        let header = NSTextField(labelWithString: L10n.text("상태 미리보기", "State Preview"))
-        header.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
-        header.textColor = .secondaryLabelColor
-        header.frame = NSRect(x: 252, y: 196, width: 220, height: 20)
-        addSubview(header)
+        previewHeader.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+        previewHeader.textColor = .secondaryLabelColor
+        previewHeader.frame = NSRect(x: 252, y: 196, width: 220, height: 20)
+        addSubview(previewHeader)
 
         let states: [(StatusVisualState, String)] = [
             (.running, L10n.text("실행 중", "Running")),
@@ -136,7 +137,9 @@ final class SettingsAppearanceMenuItemView: NSView {
             label.alignment = .center
             label.frame = NSRect(x: originX, y: originY + 6, width: 106, height: 20)
             addSubview(label)
+            previewLabels[entry.0] = label
         }
+        applyLocalization()
     }
 
     @objc private func selectStyle(_ sender: NSButton) {
@@ -155,6 +158,14 @@ final class SettingsAppearanceMenuItemView: NSView {
             imageView.image = StatusIconRenderer.image(style: selectedStyle, state: state, size: 30)
         }
     }
+
+    func applyLocalization() {
+        previewHeader.stringValue = L10n.text("상태 미리보기", "State Preview")
+        previewLabels[.running]?.stringValue = L10n.text("실행 중", "Running")
+        previewLabels[.complete]?.stringValue = L10n.text("완료", "Complete")
+        previewLabels[.fail]?.stringValue = L10n.text("실패", "Fail")
+        previewLabels[.interrupted]?.stringValue = L10n.text("중단됨", "Interrupted")
+    }
 }
 
 @MainActor
@@ -162,6 +173,7 @@ final class SettingsLanguageMenuItemView: NSView {
     private let onSelection: (AppLanguage) -> Void
     private var selectedLanguage: AppLanguage
     private var buttons: [AppLanguage: NSButton] = [:]
+    private let titleLabel = NSTextField(labelWithString: "")
     private let panelSize = NSSize(width: 500, height: 44)
 
     init(selectedLanguage: AppLanguage,
@@ -170,10 +182,9 @@ final class SettingsLanguageMenuItemView: NSView {
         self.onSelection = onSelection
         super.init(frame: NSRect(origin: .zero, size: panelSize))
 
-        let title = NSTextField(labelWithString: L10n.text("언어", "Language"))
-        title.font = .menuFont(ofSize: 0)
-        title.frame = NSRect(x: 14, y: 12, width: 100, height: 20)
-        addSubview(title)
+        titleLabel.font = .menuFont(ofSize: 0)
+        titleLabel.frame = NSRect(x: 14, y: 12, width: 100, height: 20)
+        addSubview(titleLabel)
 
         for (index, language) in AppLanguage.allCases.enumerated() {
             let button = NSButton(frame: NSRect(x: 126 + CGFloat(index) * 120,
@@ -186,7 +197,7 @@ final class SettingsLanguageMenuItemView: NSView {
             addSubview(button)
             buttons[language] = button
         }
-        refreshSelection()
+        applyLocalization()
     }
 
     required init?(coder: NSCoder) { nil }
@@ -195,8 +206,8 @@ final class SettingsLanguageMenuItemView: NSView {
     @objc private func selectLanguage(_ sender: NSButton) {
         guard AppLanguage.allCases.indices.contains(sender.tag) else { return }
         selectedLanguage = AppLanguage.allCases[sender.tag]
-        refreshSelection()
         onSelection(selectedLanguage)
+        applyLocalization()
     }
 
     private func refreshSelection() {
@@ -207,15 +218,21 @@ final class SettingsLanguageMenuItemView: NSView {
             button.contentTintColor = language == selectedLanguage ? .controlAccentColor : .labelColor
         }
     }
+
+    func applyLocalization() {
+        titleLabel.stringValue = L10n.text("언어", "Language")
+        refreshSelection()
+    }
 }
 
 @MainActor
 private final class AdvancedToggleTile: NSView {
     private let toggle = NSSwitch()
     private let stateLabel = NSTextField(labelWithString: "")
-    private let onText: String
-    private let offText: String
+    private var onText: String
+    private var offText: String
     private let onChange: (Bool) -> Void
+    private let titleLabel = NSTextField(labelWithString: "")
 
     init(frame: NSRect, title: String, isOn: Bool, onText: String, offText: String,
          onChange: @escaping (Bool) -> Void) {
@@ -228,7 +245,7 @@ private final class AdvancedToggleTile: NSView {
         layer?.borderWidth = 1
         layer?.borderColor = NSColor.separatorColor.cgColor
 
-        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.stringValue = title
         titleLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
         titleLabel.lineBreakMode = .byTruncatingTail
         titleLabel.frame = NSRect(x: 10, y: 33, width: frame.width - 20, height: 18)
@@ -258,11 +275,21 @@ private final class AdvancedToggleTile: NSView {
         stateLabel.stringValue = isOn ? onText : offText
         stateLabel.textColor = isOn ? .controlAccentColor : .secondaryLabelColor
     }
+
+    func applyLocalization(title: String, onText: String, offText: String) {
+        titleLabel.stringValue = title
+        self.onText = onText
+        self.offText = offText
+        updateStateLabel()
+    }
 }
 
 @MainActor
 final class SettingsAdvancedMenuItemView: NSView {
     private let updateButton = NSButton()
+    private var elapsedTile: AdvancedToggleTile!
+    private var loginTile: AdvancedToggleTile!
+    private var notificationsTile: AdvancedToggleTile!
     private let panelSize = NSSize(width: 500, height: 132)
 
     init(showElapsedTime: Bool, launchAtLogin: Bool, notificationsEnabled: Bool,
@@ -282,24 +309,27 @@ final class SettingsAdvancedMenuItemView: NSView {
             NSRect(x: 255, y: 4, width: tileSize.width, height: tileSize.height)
         ]
 
-        addSubview(AdvancedToggleTile(
+        elapsedTile = AdvancedToggleTile(
             frame: frames[0],
             title: L10n.text("메뉴바 실행 시간", "Elapsed Time in Menu Bar"),
             isOn: showElapsedTime, onText: onText, offText: offText,
             onChange: onElapsedTimeChange
-        ))
-        addSubview(AdvancedToggleTile(
+        )
+        addSubview(elapsedTile)
+        loginTile = AdvancedToggleTile(
             frame: frames[1],
             title: L10n.text("로그인 시 실행", "Launch at Login"),
             isOn: launchAtLogin, onText: onText, offText: offText,
             onChange: onLaunchAtLoginChange
-        ))
-        addSubview(AdvancedToggleTile(
+        )
+        addSubview(loginTile)
+        notificationsTile = AdvancedToggleTile(
             frame: frames[2],
             title: L10n.text("macOS 알림", "macOS Notifications"),
             isOn: notificationsEnabled, onText: onText, offText: offText,
             onChange: onNotificationsChange
-        ))
+        )
+        addSubview(notificationsTile)
 
         let updateTile = NSView(frame: frames[3])
         updateTile.wantsLayer = true
@@ -325,6 +355,26 @@ final class SettingsAdvancedMenuItemView: NSView {
     func setUpdateState(title: String, enabled: Bool) {
         updateButton.title = title
         updateButton.isEnabled = enabled
+    }
+
+    func applyLocalization() {
+        let onText = L10n.text("켜짐", "ON")
+        let offText = L10n.text("꺼짐", "OFF")
+        elapsedTile.applyLocalization(
+            title: L10n.text("메뉴바 실행 시간", "Elapsed Time in Menu Bar"),
+            onText: onText, offText: offText
+        )
+        loginTile.applyLocalization(
+            title: L10n.text("로그인 시 실행", "Launch at Login"),
+            onText: onText, offText: offText
+        )
+        notificationsTile.applyLocalization(
+            title: L10n.text("macOS 알림", "macOS Notifications"),
+            onText: onText, offText: offText
+        )
+        if updateButton.isEnabled {
+            updateButton.title = L10n.text("업데이트 확인…", "Check for Updates…")
+        }
     }
 
     @objc private func checkForUpdates() {
