@@ -90,7 +90,6 @@ final class DashboardMenuView: NSView {
         contentPanel.frame = NSRect(x: 14, y: 14, width: 430, height: 518)
         navigationPanel.frame = NSRect(x: 458, y: 14, width: 114, height: 518)
         stylePanel(contentPanel, radius: 22)
-        stylePanel(navigationPanel, radius: 22)
         addSubview(contentPanel)
         addSubview(navigationPanel)
 
@@ -119,6 +118,7 @@ final class DashboardMenuView: NSView {
             button.isBordered = false
             button.wantsLayer = true
             button.layer?.cornerRadius = 18
+            button.layer?.backgroundColor = NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
             button.tag = index
             button.target = self
             button.action = #selector(navigate(_:))
@@ -138,27 +138,29 @@ final class DashboardMenuView: NSView {
 
         let header = NSTextField(labelWithString: "R Resource Usage")
         header.font = .systemFont(ofSize: 17, weight: .medium)
-        header.frame = NSRect(x: 20, y: 392, width: 300, height: 26)
+        header.frame = NSRect(x: 20, y: 400, width: 300, height: 26)
         mainPage.addSubview(header)
 
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
             label.font = .systemFont(ofSize: 15, weight: .medium)
             label.textColor = .controlAccentColor
-            label.frame = NSRect(x: 30, y: 343 - CGFloat(index) * 37, width: 370, height: 24)
+            label.frame = NSRect(x: 30, y: 360 - CGFloat(index) * 32, width: 370, height: 24)
             mainPage.addSubview(label)
         }
         detailLabel.font = .systemFont(ofSize: 12)
         detailLabel.textColor = .secondaryLabelColor
-        detailLabel.frame = NSRect(x: 30, y: 196, width: 370, height: 20)
+        detailLabel.frame = NSRect(x: 30, y: 230, width: 370, height: 20)
         mainPage.addSubview(detailLabel)
-        elapsedLabel.font = .monospacedDigitSystemFont(ofSize: 12, weight: .regular)
-        elapsedLabel.frame = NSRect(x: 30, y: 176, width: 370, height: 18)
+        elapsedLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        elapsedLabel.textColor = .controlAccentColor
+        elapsedLabel.frame = NSRect(x: 30, y: 202, width: 370, height: 22)
         mainPage.addSubview(elapsedLabel)
-        progressLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
-        progressLabel.frame = NSRect(x: 30, y: 155, width: 370, height: 18)
+        progressLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        progressLabel.frame = NSRect(x: 30, y: 174, width: 370, height: 22)
         mainPage.addSubview(progressLabel)
-        etaLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
-        etaLabel.frame = NSRect(x: 30, y: 136, width: 370, height: 18)
+        etaLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        etaLabel.textColor = .controlAccentColor
+        etaLabel.frame = NSRect(x: 30, y: 146, width: 370, height: 22)
         mainPage.addSubview(etaLabel)
         addSeparator(to: mainPage, y: 123)
 
@@ -206,7 +208,7 @@ final class DashboardMenuView: NSView {
         for (candidate, button) in pageButtons {
             button.layer?.backgroundColor = candidate == page
                 ? NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor
-                : NSColor.clear.cgColor
+                : NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
         }
         switch page {
         case .main:
@@ -227,11 +229,13 @@ final class DashboardMenuView: NSView {
             historyController = controller
             contentPanel.addSubview(controller.view)
         case .settings:
+            addSectionHeader(L10n.text("기본", "Basic"), y: 474)
             let language = SettingsLanguageMenuItemView(selectedLanguage: AppPreferences.language,
                                                          onSelection: onLanguageChange)
-            language.frame.origin = NSPoint(x: 0, y: 410)
+            language.frame.origin = NSPoint(x: 0, y: 414)
             languageView = language
             contentPanel.addSubview(language)
+            addSectionHeader(L10n.text("고급", "Advanced"), y: 374)
             let advanced = SettingsAdvancedMenuItemView(
                 showElapsedTime: AppPreferences.showElapsedTime,
                 launchAtLogin: SMAppService.mainApp.status == .enabled,
@@ -242,15 +246,26 @@ final class DashboardMenuView: NSView {
                 onNotificationsChange: onNotificationsChange,
                 onCheckForUpdates: onCheckUpdates
             )
-            advanced.frame.origin = NSPoint(x: 0, y: 260)
+            advanced.frame.origin = NSPoint(x: 0, y: 224)
             advancedView = advanced
             contentPanel.addSubview(advanced)
         }
     }
 
+    private func addSectionHeader(_ title: String, y: CGFloat) {
+        let label = NSTextField(labelWithString: title)
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
+        label.textColor = .secondaryLabelColor
+        label.frame = NSRect(x: 14, y: y, width: 390, height: 20)
+        contentPanel.addSubview(label)
+        let line = NSBox(frame: NSRect(x: 14, y: y - 9, width: 402, height: 1))
+        line.boxType = .separator
+        contentPanel.addSubview(line)
+    }
+
     func update(status: String, detail: String, elapsed: String,
                 cpu: String, memory: String, workers: String, processes: String,
-                progress: String, eta: String, canReset: Bool) {
+                progress: NSAttributedString?, eta: NSAttributedString?, canReset: Bool) {
         statusLabel.stringValue = status
         detailLabel.stringValue = detail
         elapsedLabel.stringValue = elapsed
@@ -258,8 +273,8 @@ final class DashboardMenuView: NSView {
         memoryLabel.stringValue = memory
         workersLabel.stringValue = workers
         processesLabel.stringValue = processes
-        progressLabel.stringValue = progress
-        etaLabel.stringValue = eta
+        progressLabel.attributedStringValue = progress ?? NSAttributedString(string: "")
+        etaLabel.attributedStringValue = eta ?? NSAttributedString(string: "")
         resetButton.isEnabled = canReset
     }
 

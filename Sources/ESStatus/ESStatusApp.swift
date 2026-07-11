@@ -654,15 +654,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private func setCompactProgressTitle(_ item: NSMenuItem, _ title: String) {
         item.attributedTitle = NSAttributedString(
             string: title,
-            attributes: [.font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
+            attributes: [
+                .font: NSFont.systemFont(ofSize: 15, weight: .medium),
+                .foregroundColor: NSColor.controlAccentColor
+            ]
         )
     }
 
     private func setProgressTitle(completed: Int, segmentCount: Int, details: String) {
-        let font = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        let font = NSFont.systemFont(ofSize: 15, weight: .medium)
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: NSColor.labelColor
+            .foregroundColor: NSColor.controlAccentColor
         ]
         let completedAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
@@ -847,8 +850,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             memory: memoryItem.title,
             workers: workersItem.title,
             processes: processesItem.title,
-            progress: progressItem.isHidden ? "" : progressItem.title,
-            eta: etaItem.isHidden ? "" : etaItem.title,
+            progress: progressItem.isHidden ? nil : progressItem.attributedTitle,
+            eta: etaItem.isHidden ? nil : etaItem.attributedTitle,
             canReset: state == .complete || state == .fail || state == .interrupted
         )
     }
