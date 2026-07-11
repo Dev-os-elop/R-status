@@ -320,8 +320,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
     private let cpuItem = NSMenuItem(title: "CPU: —", action: nil, keyEquivalent: "")
-    private let memoryItem = NSMenuItem(title: "Memory: —", action: nil, keyEquivalent: "")
-    private let memoryDetailItem = NSMenuItem(title: "R: — / —", action: nil, keyEquivalent: "")
+    private weak var memoryUsageView: MemoryUsageMenuItemView?
     private let workersItem = NSMenuItem(title: "Parallel workers: —", action: nil, keyEquivalent: "")
     private let processesItem = NSMenuItem(title: "R processes: —", action: nil, keyEquivalent: "")
     private let progressItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
@@ -435,8 +434,16 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         menu.addItem(.separator())
 
         resourceHeaderItem.title = L10n.text("R 리소스 사용량", "R Resource Usage")
-        for item in [resourceHeaderItem, cpuItem, memoryItem, memoryDetailItem,
-                     workersItem, processesItem, progressItem, etaItem] {
+        for item in [resourceHeaderItem, cpuItem] {
+            item.isEnabled = false
+            menu.addItem(item)
+        }
+        let memoryItem = NSMenuItem()
+        let memoryView = MemoryUsageMenuItemView()
+        memoryUsageView = memoryView
+        memoryItem.view = memoryView
+        menu.addItem(memoryItem)
+        for item in [workersItem, processesItem, progressItem, etaItem] {
             item.isEnabled = false
             menu.addItem(item)
         }
@@ -601,21 +608,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func updateResourceItems(_ snapshot: RResourceSnapshot) {
         cpuItem.title = String(format: "CPU: %.1f%%", snapshot.cpuPercent)
-        memoryItem.title = String(format: "%@: %.1f%%", L10n.text("메모리", "Memory"),
-                                  snapshot.memoryPercent)
-        memoryDetailItem.title = "R: \(formatMemory(snapshot.memoryBytes)) / \(formatMemory(snapshot.totalMemoryBytes))"
+        memoryUsageView?.update(
+            title: String(format: "%@: %.1f%%", L10n.text("메모리", "Memory"),
+                          snapshot.memoryPercent),
+            percent: snapshot.memoryPercent
+        )
         workersItem.title = "\(L10n.text("병렬 워커", "Parallel workers")): \(snapshot.workerCount)"
         processesItem.title = "\(L10n.text("R 프로세스", "R processes")): \(snapshot.processCount)"
-    }
-
-    private func formatMemory(_ bytes: UInt64) -> String {
-        let gigabyte = 1024.0 * 1024.0 * 1024.0
-        let megabyte = 1024.0 * 1024.0
-        let value = Double(bytes)
-        if value >= gigabyte {
-            return String(format: value >= 10 * gigabyte ? "%.1f GB" : "%.2f GB", value / gigabyte)
-        }
-        return String(format: "%.0f MB", value / megabyte)
     }
 
     private func applyProgress(_ update: ProgressUpdate) {
