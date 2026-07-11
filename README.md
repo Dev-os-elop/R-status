@@ -229,6 +229,8 @@ R processes: 13
 
 `R processes`에는 main R 세션도 포함되므로 일반적인 PSOCK 병렬 처리에서는 `Parallel workers + 1`로 표시됩니다. CPU 값은 순간 샘플과 운영체제 스케줄링에 따라 조금 달라질 수 있습니다.
 
+실행 중에는 Addin이 전달한 R 세션 PID를 기준으로 worker를 추적하며, macOS가 부모를 분리한 PSOCK/future worker는 병렬 bootstrap 명령을 이용해 보완 감지합니다.
+
 PSOCK cluster처럼 worker의 부모 PID가 분리되는 경우에는 실행 인자에서 `workRSOCK`과 `MASTER` 정보를 함께 확인해 worker를 계산합니다.
 
 병렬 지표를 확인하려면 [`examples/parallel-resource-test-20-seconds.R`](examples/parallel-resource-test-20-seconds.R)을 전체 선택하고 **Addins → Run Selection with Status**로 실행하세요. worker 3개가 약 20초 동안 행렬 연산을 수행하므로 일반적으로 `Parallel workers: 3`, `R processes: 4`가 표시됩니다. CPU는 전체 논리 CPU 용량을 기준으로 계산되므로, 예를 들어 논리 CPU 12개 중 worker 3개가 코어 하나씩 최대 사용하면 약 25%로 표시됩니다.

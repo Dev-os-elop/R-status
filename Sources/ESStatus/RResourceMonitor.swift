@@ -27,27 +27,33 @@ private struct ProcessSample {
 }
 
 enum RResourceMonitor {
-    static func sample() -> RResourceSnapshot {
+    static func sample(rootPID: Int? = nil) -> RResourceSnapshot {
         let allProcesses = processList()
         let parentByPID = Dictionary(uniqueKeysWithValues: allProcesses.map { ($0.pid, $0.parentPID) })
-        let rstudioPIDs = Set(allProcesses.filter { isRStudioSession($0.command) }.map(\.pid))
+        let detectedRStudioPIDs = Set(allProcesses.filter { isRStudioSession($0.command) }.map(\.pid))
+        let rootPIDs: Set<Int>
+        if let rootPID, allProcesses.contains(where: { $0.pid == rootPID }) {
+            rootPIDs = [rootPID]
+        } else {
+            rootPIDs = detectedRStudioPIDs
+        }
         let rProcesses = allProcesses.filter { process in
             guard isRProcess(process.command) else { return false }
-            if rstudioPIDs.contains(process.pid) { return true }
+            if rootPIDs.contains(process.pid) { return true }
             var parent = process.parentPID
             var visited = Set<Int>()
             while parent > 1, visited.insert(parent).inserted {
-                if rstudioPIDs.contains(parent) { return true }
+                if rootPIDs.contains(parent) { return true }
                 parent = parentByPID[parent] ?? 0
             }
-            return false
+            // PSOCK/future workers can be re-parented by macOS before the next
+            // sample. Their command still contains the R parallel bootstrap.
+            return !rootPIDs.isEmpty && isParallelWorkerCommand(process.command)
         }
         let rPIDs = Set(rProcesses.map(\.pid))
 
         let workerCount = rProcesses.filter { process in
-            if process.command.contains("parallel:::.workRSOCK") ||
-                process.command.contains("parallel:::.slaveRSOCK") ||
-                process.command.contains(" MASTER=") {
+            if isParallelWorkerCommand(process.command) {
                 return true
             }
             var parent = process.parentPID
@@ -111,6 +117,13 @@ enum RResourceMonitor {
         guard let executable = command.split(whereSeparator: \.isWhitespace).first else { return false }
         return URL(fileURLWithPath: String(executable))
             .lastPathComponent.lowercased().hasPrefix("rsession")
+    }
+
+    private static func isParallelWorkerCommand(_ command: String) -> Bool {
+        let normalized = command.lowercased()
+        return normalized.contains("parallel:::.workrsock") ||
+            normalized.contains("parallel:::.slaversock") ||
+            normalized.contains(" master=")
     }
 
     private static func run(_ executable: String, arguments: [String]) -> String? {
