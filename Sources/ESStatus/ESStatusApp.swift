@@ -351,7 +351,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private var shouldReconfigureMenuAfterClose = false
     private var runPeakCPUPercent = 0.0
     private var runMaxWorkers = 0
+    private var runHistoryRecorded = false
     private var historyPopover: NSPopover?
+    private var historyLocalClickMonitor: Any?
+    private var historyGlobalClickMonitor: Any?
 
     private func acquireInstanceLock() -> Bool {
         let lockPath = "/tmp/io.github.ljwook92.rstatus.instance.lock"
@@ -408,6 +411,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         processWatchTimer?.invalidate()
         updateInstallTimer?.invalidate()
         server.stop()
+        removeHistoryClickMonitors()
         if instanceLockFD >= 0 {
             Darwin.close(instanceLockFD)
             instanceLockFD = -1
@@ -746,7 +750,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         self.taskPID = nil
         timer?.invalidate()
         timer = nil
-        recordRunHistory(status: .interrupted)
+        if !runHistoryRecorded {
+            recordRunHistory(status: .interrupted)
+            runHistoryRecorded = true
+        }
         state = .interrupted
         detailMessage = "RStudio session ended"
         refreshResourceUsage(forceAfterCurrent: true)
@@ -802,6 +809,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
                 startedAt = Date()
                 runPeakCPUPercent = 0
                 runMaxWorkers = 0
+                runHistoryRecorded = false
             }
             timer?.invalidate()
             let refreshTimer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -811,9 +819,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             RunLoop.main.add(refreshTimer, forMode: .common)
             startProcessWatchdog()
         } else {
-            if previousState == .running,
+            if !runHistoryRecorded, startedAt != nil,
                state == .complete || state == .fail || state == .interrupted {
                 recordRunHistory(status: state)
+                runHistoryRecorded = true
             }
             clearProgress()
             timer?.invalidate()
@@ -891,9 +900,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func showRunHistory(relativeTo anchor: NSView) {
+        removeHistoryClickMonitors()
         historyPopover?.close()
         let popover = NSPopover()
-        popover.behavior = .transient
+        popover.behavior = .applicationDefined
         popover.animates = true
         popover.contentViewController = RunHistoryViewController(
             entries: RunHistoryStore.load(),
@@ -902,12 +912,37 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         historyPopover = popover
         if let menuContentView = anchor.window?.contentView {
             let anchorRect = anchor.convert(anchor.bounds, to: menuContentView)
-            let menuRightEdge = NSRect(x: menuContentView.bounds.maxX,
+            let menuRightEdge = NSRect(x: menuContentView.bounds.maxX - 1,
                                        y: anchorRect.midY, width: 1, height: 1)
             popover.show(relativeTo: menuRightEdge, of: menuContentView, preferredEdge: .maxX)
         } else {
             popover.show(relativeTo: anchor.bounds, of: anchor, preferredEdge: .maxX)
         }
+        DispatchQueue.main.async { [weak self, weak popover] in
+            guard let self, let popover, popover.isShown else { return }
+            self.historyLocalClickMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.leftMouseDown, .rightMouseDown]
+            ) { [weak self, weak popover] event in
+                if event.window !== popover?.contentViewController?.view.window {
+                    popover?.close()
+                    self?.removeHistoryClickMonitors()
+                }
+                return event
+            }
+            self.historyGlobalClickMonitor = NSEvent.addGlobalMonitorForEvents(
+                matching: [.leftMouseDown, .rightMouseDown]
+            ) { [weak self, weak popover] _ in
+                popover?.close()
+                self?.removeHistoryClickMonitors()
+            }
+        }
+    }
+
+    private func removeHistoryClickMonitors() {
+        if let historyLocalClickMonitor { NSEvent.removeMonitor(historyLocalClickMonitor) }
+        if let historyGlobalClickMonitor { NSEvent.removeMonitor(historyGlobalClickMonitor) }
+        historyLocalClickMonitor = nil
+        historyGlobalClickMonitor = nil
     }
 
     private func sendNotification() {
@@ -1161,6 +1196,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         taskName = ""
         detailMessage = ""
         startedAt = nil
+        runHistoryRecorded = false
         clearProgress()
         updateDisplay()
     }
