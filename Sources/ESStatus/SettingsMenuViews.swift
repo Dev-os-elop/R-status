@@ -1,6 +1,92 @@
 import AppKit
 
 @MainActor
+final class LeadingActionMenuItemView: NSView {
+    private let title: String
+    private let shortcut: String
+    private let keyEquivalent: String
+    private let onAction: () -> Void
+    private var isPressed = false
+    private let viewSize = NSSize(width: 300, height: 30)
+
+    init(title: String, shortcut: String, keyEquivalent: String,
+         onAction: @escaping () -> Void) {
+        self.title = title
+        self.shortcut = shortcut
+        self.keyEquivalent = keyEquivalent
+        self.onAction = onAction
+        super.init(frame: NSRect(origin: .zero, size: viewSize))
+        setAccessibilityRole(.button)
+        setAccessibilityLabel(title)
+    }
+
+    required init?(coder: NSCoder) { nil }
+    override var intrinsicContentSize: NSSize { viewSize }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        if isPressed {
+            NSColor.controlAccentColor.setFill()
+            NSBezierPath(roundedRect: bounds.insetBy(dx: 4, dy: 1), xRadius: 5, yRadius: 5).fill()
+        }
+
+        let titleColor: NSColor = isPressed ? .white : .labelColor
+        let shortcutColor: NSColor = isPressed ? .white : .tertiaryLabelColor
+        let font = NSFont.menuFont(ofSize: 0)
+        let titleString = NSAttributedString(
+            string: title,
+            attributes: [.font: font, .foregroundColor: titleColor]
+        )
+        let shortcutString = NSAttributedString(
+            string: shortcut,
+            attributes: [.font: font, .foregroundColor: shortcutColor]
+        )
+        let titleSize = titleString.size()
+        let shortcutSize = shortcutString.size()
+        titleString.draw(at: NSPoint(x: 14, y: bounds.midY - titleSize.height / 2))
+        shortcutString.draw(at: NSPoint(x: bounds.maxX - 14 - shortcutSize.width,
+                                        y: bounds.midY - shortcutSize.height / 2))
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        isPressed = bounds.contains(convert(event.locationInWindow, from: nil))
+        needsDisplay = true
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        isPressed = bounds.contains(convert(event.locationInWindow, from: nil))
+        needsDisplay = true
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        let shouldRun = isPressed && bounds.contains(convert(event.locationInWindow, from: nil))
+        isPressed = false
+        needsDisplay = true
+        guard shouldRun else { return }
+        performAction()
+    }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.modifierFlags.contains(.command),
+              event.charactersIgnoringModifiers?.lowercased() == keyEquivalent else {
+            return false
+        }
+        performAction()
+        return true
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        performAction()
+        return true
+    }
+
+    private func performAction() {
+        enclosingMenuItem?.menu?.cancelTracking()
+        DispatchQueue.main.async { [onAction] in onAction() }
+    }
+}
+
+@MainActor
 final class ReturnToReadyMenuItemView: NSView {
     private let onReset: () -> Void
     private let viewSize = NSSize(width: 300, height: 40)
