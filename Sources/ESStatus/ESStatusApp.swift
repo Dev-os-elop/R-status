@@ -492,14 +492,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         appearanceHeader.isEnabled = false
         settingsMenu.addItem(appearanceHeader)
 
-        for style in StatusIconStyle.allCases {
-            let item = NSMenuItem(title: style.displayName, action: #selector(selectIconStyle(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = style.rawValue
-            item.state = style == AppPreferences.iconStyle ? .on : .off
-            item.image = StatusIconRenderer.image(style: style, state: .running, size: 19)
-            settingsMenu.addItem(item)
+        let appearanceItem = NSMenuItem()
+        appearanceItem.view = SettingsAppearanceMenuItemView(
+            selectedStyle: AppPreferences.iconStyle
+        ) { [weak self] style in
+            AppPreferences.iconStyle = style
+            self?.updateDisplay()
         }
+        settingsMenu.addItem(appearanceItem)
 
         settingsMenu.addItem(.separator())
         let advancedHeader = NSMenuItem(title: L10n.text("고급", "Advanced"), action: nil, keyEquivalent: "")
@@ -1079,13 +1079,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         guard let rawValue = sender.representedObject as? String,
               let language = AppLanguage(rawValue: rawValue) else { return }
         AppPreferences.language = language
-        preferencesDidChange()
-    }
-
-    @objc private func selectIconStyle(_ sender: NSMenuItem) {
-        guard let rawValue = sender.representedObject as? String,
-              let style = StatusIconStyle(rawValue: rawValue) else { return }
-        AppPreferences.iconStyle = style
         preferencesDidChange()
     }
 
