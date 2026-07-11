@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1 - 2026-07-11
+
+- Reset Status를 의미가 분명한 `Return to Ready` 버튼으로 변경
+- Complete, Fail, Interrupted 상태에서만 파란색 버튼으로 활성화
+- Ready 및 Running 상태에서는 회색 비활성 상태와 사용 가능 조건 안내 표시
+
 ## 0.9.0 - 2026-07-11
 
 - Settings의 언어·아이콘·Advanced 선택을 메뉴가 닫히지 않는 인터랙티브 패널로 통일

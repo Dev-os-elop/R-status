@@ -325,6 +325,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let progressItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let etaItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private weak var advancedSettingsView: SettingsAdvancedMenuItemView?
+    private weak var returnToReadyView: ReturnToReadyMenuItemView?
     private var addinInstallItem: NSMenuItem?
     private var isInstallingAddin = false
     private var isInstallingUpdate = false
@@ -435,9 +436,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         etaItem.isHidden = true
         menu.addItem(.separator())
 
-        let resetItem = NSMenuItem(title: L10n.text("상태 초기화", "Reset Status"),
-                                   action: #selector(resetStatus), keyEquivalent: "r")
-        resetItem.target = self
+        let resetItem = NSMenuItem()
+        let resetView = ReturnToReadyMenuItemView { [weak self] in
+            self?.resetStatus()
+        }
+        returnToReadyView = resetView
+        resetItem.view = resetView
         menu.addItem(resetItem)
 
         let notificationItem = NSMenuItem(title: L10n.text("알림 테스트", "Test Notification"),
@@ -787,6 +791,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             statusItem.button?.imagePosition = .imageLeft
             statusItem.button?.title = title
         }
+        returnToReadyView?.setTerminalState(
+            state == .complete || state == .fail || state == .interrupted
+        )
         let summary = state == .idle ? L10n.text("R 상태 준비됨", "R Status Ready") : stateTitle(state)
         summaryItem.title = taskName.isEmpty ? summary : "\(summary) · \(taskName)"
 
