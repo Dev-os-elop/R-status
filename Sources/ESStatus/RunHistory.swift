@@ -189,7 +189,7 @@ final class RunHistoryViewController: NSViewController {
     }
 
     private func renderContent() {
-        let rowHeight: CGFloat = 72
+        let rowHeight: CGFloat = 60
         let listHeight = entries.isEmpty ? 58 : CGFloat(entries.count) * rowHeight
         let panelHeight = 50 + listHeight + 48
         view.subviews.forEach { $0.removeFromSuperview() }
