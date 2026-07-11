@@ -315,7 +315,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private let summaryItem = NSMenuItem(title: "RStudio 연결 대기 중", action: nil, keyEquivalent: "")
-    private let versionItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let detailItem = NSMenuItem(title: "포트 47821", action: nil, keyEquivalent: "")
     private let elapsedItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let resourceHeaderItem = NSMenuItem(title: "R Resource Usage", action: nil, keyEquivalent: "")
@@ -422,19 +421,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         statusItem.menu = menu
 
         summaryItem.isEnabled = false
-        versionItem.attributedTitle = NSAttributedString(
-            string: "Version \(currentVersion)",
-            attributes: [
-                .font: NSFont.systemFont(ofSize: 10),
-                .foregroundColor: NSColor.secondaryLabelColor
-            ]
-        )
-        versionItem.isEnabled = false
         detailItem.isEnabled = false
         detailItem.isHidden = true
         elapsedItem.isEnabled = false
         menu.addItem(summaryItem)
-        menu.addItem(versionItem)
         menu.addItem(detailItem)
         menu.addItem(elapsedItem)
         menu.addItem(.separator())
