@@ -431,7 +431,7 @@ final class DashboardMenuView: NSView {
         workersLabel.stringValue = workers
         processesLabel.stringValue = processes
         progressLabel.attributedStringValue = progress ?? placeholder(L10n.text("진행률: --%", "Progress: --%"))
-        etaLabel.attributedStringValue = eta ?? placeholder(L10n.text("예상 남은 시간: --:--:--", "ETA: --:--:--"))
+        etaLabel.attributedStringValue = eta ?? placeholder(L10n.text("남은 시간: --:--:--", "Remaining: --:--:--"))
         resetButton.isEnabled = canReset
     }
 
