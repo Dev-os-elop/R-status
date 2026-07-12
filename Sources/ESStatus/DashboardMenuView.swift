@@ -194,7 +194,7 @@ final class DashboardMenuView: NSView {
                                                  state: .running, size: 24)
             }
             let button = DashboardNavigationButton(
-                frame: NSRect(x: 6, y: top + 4, width: 76, height: height - 8),
+                frame: NSRect(x: 3, y: top + 4, width: 82, height: height - 8),
                 title: entry.2,
                 image: image
             )
@@ -222,7 +222,7 @@ final class DashboardMenuView: NSView {
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
             label.font = .systemFont(ofSize: 11, weight: .medium)
             label.textColor = .controlAccentColor
-            label.frame = NSRect(x: 30, y: 312 - CGFloat(index) * 30, width: 240, height: 24)
+            label.frame = NSRect(x: 30, y: 312 - CGFloat(index) * 24, width: 240, height: 24)
             mainPage.addSubview(label)
         }
         detailLabel.font = .systemFont(ofSize: 8)
@@ -292,7 +292,7 @@ final class DashboardMenuView: NSView {
         case .main:
             contentPanel.addSubview(mainPage)
         case .icon:
-            addSectionHeader(L10n.text("모양", "Appearance"), y: 398)
+            addSectionHeader(L10n.text("모양", "Appearance"), y: 398, alignment: .center)
             let view = SettingsAppearanceMenuItemView(selectedStyle: AppPreferences.iconStyle,
                                                        onSelection: onIconChange)
             view.frame.origin = NSPoint(x: 0, y: 50)
@@ -348,11 +348,14 @@ final class DashboardMenuView: NSView {
         }
     }
 
-    private func addSectionHeader(_ title: String, y: CGFloat) {
+    private func addSectionHeader(_ title: String,
+                                  y: CGFloat,
+                                  alignment: NSTextAlignment = .left) {
         let label = NSTextField(labelWithString: title)
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabelColor
-        label.frame = NSRect(x: 14, y: y, width: 260, height: 20)
+        label.frame = NSRect(x: 14, y: y, width: 272, height: 20)
+        label.alignment = alignment
         contentPanel.addSubview(label)
         let line = NSBox(frame: NSRect(x: 14, y: y - 9, width: 272, height: 1))
         line.boxType = .separator

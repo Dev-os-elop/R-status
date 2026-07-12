@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.14 - 2026-07-11
+
+- Icon 화면의 Appearance 제목을 300pt 패널 중앙에 정렬
+- Main의 CPU, Memory, Parallel workers, R processes 행 간격을 Elapsed time/Progress와 같은 24pt로 통일
+- 우측 메뉴 카드의 좌우 여백을 6pt에서 3pt로 절반 축소
+
 ## 0.14.13 - 2026-07-11
 
 - 우측 메뉴의 `R Open`을 문법적으로 자연스러운 `Open RStudio`로 변경
