@@ -72,7 +72,7 @@ final class HistoryClearButtonView: NSView {
         let highlighted = isEnabled && (isHovered || isPressed)
         let background = highlighted
             ? NSColor.controlAccentColor
-            : NSColor(calibratedWhite: 0.88, alpha: 1)
+            : NSColor(calibratedWhite: 0.88, alpha: 0.70)
         background.setFill()
         NSBezierPath(roundedRect: bounds, xRadius: 7, yRadius: 7).fill()
 

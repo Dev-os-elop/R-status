@@ -320,7 +320,7 @@ final class SettingsLanguageMenuItemView: NSView {
     private let onSelection: (AppLanguage) -> Void
     private var selectedLanguage: AppLanguage
     private var buttons: [AppLanguage: NSButton] = [:]
-    private let panelSize = NSSize(width: 300, height: 44)
+    private let panelSize = NSSize(width: 300, height: 82)
 
     init(selectedLanguage: AppLanguage,
          onSelection: @escaping (AppLanguage) -> Void) {
@@ -329,13 +329,14 @@ final class SettingsLanguageMenuItemView: NSView {
         super.init(frame: NSRect(origin: .zero, size: panelSize))
 
         let frames = [
-            NSRect(x: 6, y: 7, width: 112, height: 30),
-            NSRect(x: 122, y: 7, width: 78, height: 30),
-            NSRect(x: 204, y: 7, width: 90, height: 30)
+            NSRect(x: 6, y: 45, width: 288, height: 30),
+            NSRect(x: 6, y: 7, width: 141, height: 30),
+            NSRect(x: 153, y: 7, width: 141, height: 30)
         ]
         for (index, language) in AppLanguage.allCases.enumerated() {
             let button = NSButton(frame: frames[index])
             button.bezelStyle = .roundRect
+            button.alphaValue = 0.70
             button.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
             button.tag = index
             button.target = self
@@ -389,6 +390,7 @@ private final class AdvancedToggleTile: NSView {
         layer?.cornerRadius = 8
         layer?.borderWidth = 1
         layer?.borderColor = NSColor.separatorColor.cgColor
+        layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.70).cgColor
 
         titleLabel.stringValue = title
         titleLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
@@ -482,6 +484,7 @@ final class SettingsAdvancedMenuItemView: NSView {
         updateTile.layer?.cornerRadius = 8
         updateTile.layer?.borderWidth = 1
         updateTile.layer?.borderColor = NSColor.separatorColor.cgColor
+        updateTile.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.70).cgColor
         addSubview(updateTile)
 
         updateButton.frame = NSRect(x: 10, y: 21, width: tileSize.width - 20, height: 30)
