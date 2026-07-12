@@ -198,22 +198,26 @@ final class RunHistoryViewController: NSViewController {
         view.subviews.forEach { $0.removeFromSuperview() }
         view.frame = NSRect(x: 0, y: 0, width: panelWidth, height: panelHeight)
 
-        let header = NSTextField(labelWithString: L10n.text("최근 실행 기록", "Recent Run History"))
+        let header = NSTextField(labelWithString: L10n.text("실행 기록", "Run History"))
         header.font = .systemFont(ofSize: 14, weight: .semibold)
-        header.frame = NSRect(x: 16, y: panelHeight - 35, width: 190, height: 20)
+        header.frame = NSRect(x: 16, y: panelHeight - 35, width: 100, height: 20)
         view.addSubview(header)
 
-        let retention = NSTextField(labelWithString: L10n.text(
-            "최대 5개 · 오래된 순 삭제",
-            "Up to 5 · oldest removed first"
-        ))
-        retention.font = .systemFont(ofSize: 10)
-        retention.textColor = .secondaryLabelColor
-        retention.alignment = .right
-        retention.frame = NSRect(x: 16, y: panelHeight - 52, width: panelWidth - 32, height: 18)
-        view.addSubview(retention)
+        let helpButton = NSButton(frame: NSRect(x: 112, y: panelHeight - 36,
+                                                 width: 20, height: 20))
+        helpButton.isBordered = false
+        helpButton.image = NSImage(
+            systemSymbolName: "questionmark.circle",
+            accessibilityDescription: L10n.text("실행 기록 정보", "Run History information")
+        )
+        helpButton.imageScaling = .scaleProportionallyDown
+        helpButton.toolTip = L10n.text(
+            "최대 5개 실행 기록을 저장하며, 초과하면 가장 오래된 기록부터 삭제합니다.",
+            "Up to 5 runs are saved. The oldest run is removed first."
+        )
+        view.addSubview(helpButton)
 
-        let headerSeparator = NSBox(frame: NSRect(x: 16, y: panelHeight - 66,
+        let headerSeparator = NSBox(frame: NSRect(x: 16, y: panelHeight - 50,
                                                    width: panelWidth - 32, height: 1))
         headerSeparator.boxType = .separator
         view.addSubview(headerSeparator)
@@ -229,7 +233,7 @@ final class RunHistoryViewController: NSViewController {
             view.addSubview(empty)
         } else {
             for (index, entry) in entries.enumerated() {
-                let y = panelHeight - 76 - CGFloat(index + 1) * rowHeight
+                let y = panelHeight - 60 - CGFloat(index + 1) * rowHeight
                 addEntry(entry, to: view, frame: NSRect(x: 0, y: y,
                                                         width: panelWidth, height: rowHeight))
             }

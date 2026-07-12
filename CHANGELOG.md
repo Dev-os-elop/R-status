@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.20 - 2026-07-11
+
+- History 제목을 Recent Run History에서 Run History로 변경
+- 최대 5개 보관·오래된 기록 우선 삭제 설명을 제목 옆 원형 ? 아이콘의 hover 도움말로 이동
+- 설명 행을 제거하고 구분선과 실행 기록 목록을 위로 재배치
+- Open RStudio 실행 전 Open/No 확인 팝업 추가
+- No를 선택하면 RStudio를 실행하지 않고, Open을 선택한 경우에만 실행
+
 ## 0.14.19 - 2026-07-11
 
 - Advanced 옵션명을 Elapsed Time, Auto Launch, Notifications, Dark Mode로 간결하게 변경
