@@ -206,45 +206,45 @@ final class DashboardMenuView: NSView {
 
     private func buildMainPage() {
         mainPage.frame = contentPanel.bounds
-        statusLabel.font = .systemFont(ofSize: 19, weight: .semibold)
+        statusLabel.font = .systemFont(ofSize: 17, weight: .semibold)
         statusLabel.frame = NSRect(x: 20, y: 392, width: 260, height: 28)
         mainPage.addSubview(statusLabel)
         addSeparator(to: mainPage, y: 376)
 
-        let header = NSTextField(labelWithString: "R Resource Usage")
-        header.font = .systemFont(ofSize: 14, weight: .medium)
+        let header = NSTextField(labelWithString: L10n.text("리소스 사용량", "Resource Usage"))
+        header.font = .systemFont(ofSize: 12, weight: .medium)
         header.frame = NSRect(x: 20, y: 338, width: 260, height: 26)
         mainPage.addSubview(header)
 
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
-            label.font = .systemFont(ofSize: 15, weight: .medium)
+            label.font = .systemFont(ofSize: 13, weight: .medium)
             label.textColor = .controlAccentColor
             label.frame = NSRect(x: 30, y: 298 - CGFloat(index) * 30, width: 240, height: 24)
             mainPage.addSubview(label)
         }
-        detailLabel.font = .systemFont(ofSize: 12)
+        detailLabel.font = .systemFont(ofSize: 10)
         detailLabel.textColor = .secondaryLabelColor
         detailLabel.frame = NSRect(x: 30, y: 188, width: 240, height: 18)
         mainPage.addSubview(detailLabel)
-        let executionHeader = NSTextField(labelWithString: L10n.text("R 실행 진행 상황", "R Execution Progress"))
-        executionHeader.font = .systemFont(ofSize: 14, weight: .medium)
+        let executionHeader = NSTextField(labelWithString: L10n.text("실행 진행 상황", "Execution Progress"))
+        executionHeader.font = .systemFont(ofSize: 12, weight: .medium)
         executionHeader.frame = NSRect(x: 20, y: 178, width: 260, height: 22)
         mainPage.addSubview(executionHeader)
-        elapsedLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        elapsedLabel.font = .systemFont(ofSize: 13, weight: .medium)
         elapsedLabel.textColor = .controlAccentColor
         elapsedLabel.frame = NSRect(x: 30, y: 154, width: 240, height: 22)
         mainPage.addSubview(elapsedLabel)
-        progressLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        progressLabel.font = .systemFont(ofSize: 13, weight: .medium)
         progressLabel.frame = NSRect(x: 30, y: 130, width: 240, height: 22)
         mainPage.addSubview(progressLabel)
-        etaLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        etaLabel.font = .systemFont(ofSize: 13, weight: .medium)
         etaLabel.textColor = .controlAccentColor
         etaLabel.frame = NSRect(x: 30, y: 106, width: 240, height: 22)
         mainPage.addSubview(etaLabel)
         addSeparator(to: mainPage, y: 96)
 
         resetButton.title = L10n.text("준비 상태로 돌아가기", "Return to Ready")
-        resetButton.font = .systemFont(ofSize: 17, weight: .semibold)
+        resetButton.font = .systemFont(ofSize: 15, weight: .semibold)
         resetButton.frame = NSRect(x: 20, y: 53, width: 260, height: 36)
         resetButton.bezelStyle = .rounded
         resetButton.target = self
@@ -255,11 +255,11 @@ final class DashboardMenuView: NSView {
         let quit = NSButton(title: L10n.text("앱 종료", "Quit App"), target: self, action: #selector(quitApp))
         quit.isBordered = false
         quit.alignment = .left
-        quit.font = .systemFont(ofSize: 16, weight: .medium)
+        quit.font = .systemFont(ofSize: 14, weight: .medium)
         quit.frame = NSRect(x: 20, y: 7, width: 250, height: 27)
         mainPage.addSubview(quit)
         let quitShortcut = NSTextField(labelWithString: "⌘Q")
-        quitShortcut.font = .systemFont(ofSize: 16, weight: .medium)
+        quitShortcut.font = .systemFont(ofSize: 14, weight: .medium)
         quitShortcut.alignment = .right
         quitShortcut.frame = NSRect(x: 200, y: 11, width: 70, height: 22)
         mainPage.addSubview(quitShortcut)
@@ -367,7 +367,7 @@ final class DashboardMenuView: NSView {
 
     private func placeholder(_ text: String) -> NSAttributedString {
         NSAttributedString(string: text, attributes: [
-            .font: NSFont.systemFont(ofSize: 15, weight: .medium),
+            .font: NSFont.systemFont(ofSize: 13, weight: .medium),
             .foregroundColor: NSColor.controlAccentColor
         ])
     }
