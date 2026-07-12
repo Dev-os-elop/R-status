@@ -2,7 +2,7 @@
 
 - Source visual truth: `/var/folders/rh/8_cnyf3d7dx0_08ffwl_mbs80000gn/T/codex-clipboard-3bafd8c5-91d4-4e2f-89ed-f8291a81f358.png`
 - Implementation screenshots: `/tmp/es-dashboard-preview/main.png`, `/tmp/es-dashboard-preview/icon.png`, `/tmp/es-dashboard-preview/history.png`, `/tmp/es-dashboard-preview/settings.png`
-- Viewport: 482 × 470 points, light appearance
+- Viewport: 430 × 470 points, light appearance
 - State: Ready; Main, Icon, empty History, and Settings screens
 
 ## Full-view comparison evidence
@@ -23,6 +23,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Follow-up P2: the left panel remained wider than required and the gap between R processes and Elapsed time was conspicuous. Fixed by validating the full 8-block `100%` progress string at 400 points, shrinking the outer frame to 556 points, and moving the elapsed/progress/remaining group 20 points upward.
 - Follow-up P1: the requested 350-point panel and hover affordance were still missing. Fixed by setting the content panel to exactly 350 points, reducing navigation cards to 78 points, and adding active mouse tracking with a light-blue hover state. The full 8-block `100%` state was rendered without clipping.
 - Follow-up P2: Icon lacked its section title and History vertically centered its whole variable-height panel, causing the title and Clear button to move. Fixed by adding a pinned Appearance header, giving History the full fixed content height, pinning its title/top metadata and Clear button, and moving only the records within the remaining middle region.
+- Follow-up P1: the requested 300-point content panel, 430-point total frame, translucent surfaces, execution section, and persistent progress/ETA rows were missing. Fixed by applying those exact dimensions, using 70%-opaque background colors while keeping text opaque, adding R Execution Progress, and rendering progress/ETA placeholders when no live event exists.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces
