@@ -236,7 +236,7 @@ final class SettingsAppearanceMenuItemView: NSView {
             )
             button.bezelStyle = .inline
             button.isBordered = false
-            button.alignment = .left
+            button.alignment = .center
             button.font = .menuFont(ofSize: 0)
             button.imagePosition = .imageLeading
             button.imageHugsTitle = true
@@ -335,8 +335,9 @@ final class SettingsLanguageMenuItemView: NSView {
         ]
         for (index, language) in AppLanguage.allCases.enumerated() {
             let button = NSButton(frame: frames[index])
-            button.bezelStyle = .roundRect
-            button.alphaValue = 0.70
+            button.isBordered = false
+            button.wantsLayer = true
+            button.layer?.cornerRadius = 7
             button.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
             button.tag = index
             button.target = self
@@ -363,6 +364,9 @@ final class SettingsLanguageMenuItemView: NSView {
                 ? "✓ \(language.displayName)"
                 : language.displayName
             button.contentTintColor = language == selectedLanguage ? .controlAccentColor : .labelColor
+            button.layer?.backgroundColor = language == selectedLanguage
+                ? NSColor.controlAccentColor.withAlphaComponent(0.20).cgColor
+                : NSColor(calibratedWhite: 0.82, alpha: 0.70).cgColor
         }
     }
 
@@ -372,7 +376,13 @@ final class SettingsLanguageMenuItemView: NSView {
 }
 
 @MainActor
-private final class AccentSwitch: NSSwitch {
+private final class AccentSwitch: NSControl {
+    var state: NSControl.StateValue = .off {
+        didSet { needsDisplay = true }
+    }
+
+    override var intrinsicContentSize: NSSize { NSSize(width: 52, height: 28) }
+
     override func draw(_ dirtyRect: NSRect) {
         let trackRect = bounds.insetBy(dx: 1, dy: 4)
         let trackPath = NSBezierPath(roundedRect: trackRect,
@@ -393,6 +403,12 @@ private final class AccentSwitch: NSSwitch {
         NSBezierPath(ovalIn: knobRect).fill()
         NSColor(calibratedWhite: 0, alpha: 0.10).setStroke()
         NSBezierPath(ovalIn: knobRect).stroke()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard isEnabled else { return }
+        state = state == .on ? .off : .on
+        sendAction(action, to: target)
     }
 }
 

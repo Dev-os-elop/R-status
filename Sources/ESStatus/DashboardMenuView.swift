@@ -12,13 +12,12 @@ private final class DashboardNavigationButton: NSControl {
     init(frame: NSRect, title: String, image: NSImage?) {
         super.init(frame: frame)
         wantsLayer = true
-        layer?.cornerRadius = 18
+        layer?.cornerRadius = 15
         iconView.image = image
         iconView.imageScaling = .scaleProportionallyUpOrDown
         addSubview(iconView)
         titleLabel.stringValue = title
-        titleLabel.font = .systemFont(ofSize: title == "Open RStudio" ? 10 : 13,
-                                      weight: .medium)
+        titleLabel.font = .systemFont(ofSize: 10, weight: .medium)
         if title == "Open RStudio" {
             titleLabel.maximumNumberOfLines = 2
             titleLabel.lineBreakMode = .byWordWrapping
@@ -33,13 +32,14 @@ private final class DashboardNavigationButton: NSControl {
 
     override func layout() {
         super.layout()
-        let bottom = bounds.midY - 26
-        iconView.frame = NSRect(x: bounds.midX - 14, y: bottom + 25, width: 28, height: 28)
         let isOpenRStudio = titleLabel.stringValue == "Open RStudio"
+        iconView.frame = NSRect(x: bounds.midX - 11,
+                                y: bounds.midY + 2,
+                                width: 22, height: 22)
         titleLabel.frame = NSRect(x: 6,
-                                  y: isOpenRStudio ? bottom - 5 : bottom,
+                                  y: isOpenRStudio ? 2 : 7,
                                   width: bounds.width - 12,
-                                  height: isOpenRStudio ? 32 : 20)
+                                  height: isOpenRStudio ? 28 : 17)
     }
 
     override func mouseDown(with event: NSEvent) { layer?.opacity = 0.78 }
@@ -94,6 +94,9 @@ final class DashboardMenuView: NSView {
     private let processesLabel = NSTextField(labelWithString: "")
     private let progressLabel = NSTextField(labelWithString: "")
     private let etaLabel = NSTextField(labelWithString: "")
+    private let executionHeader = NSTextField(labelWithString: "")
+    private let executionSeparator = NSBox()
+    private let footerSeparator = NSBox()
     private let resetButton = NSButton()
     private var pageButtons: [Page: DashboardNavigationButton] = [:]
     private var currentPage: Page = .main
@@ -183,7 +186,7 @@ final class DashboardMenuView: NSView {
             (nil, "r.square", "Open RStudio"),
             (.settings, "gearshape", "Settings")
         ]
-        let heights: [CGFloat] = [68, 76, 76, 76, 76]
+        let heights: [CGFloat] = [58, 64, 64, 64, 64]
         var top = navigationPanel.bounds.height
         for (index, entry) in entries.enumerated() {
             let height = heights[index]
@@ -229,31 +232,30 @@ final class DashboardMenuView: NSView {
         detailLabel.textColor = .secondaryLabelColor
         detailLabel.frame = NSRect(x: 30, y: 218, width: 240, height: 18)
         mainPage.addSubview(detailLabel)
-        let executionHeader = NSTextField(labelWithString: L10n.text("실행 진행 상황", "Execution Progress"))
+        executionHeader.stringValue = L10n.text("실행 진행 상황", "Execution Progress")
         executionHeader.font = .systemFont(ofSize: 10, weight: .medium)
-        executionHeader.frame = NSRect(x: 20, y: 196, width: 260, height: 22)
         mainPage.addSubview(executionHeader)
         elapsedLabel.font = .systemFont(ofSize: 11, weight: .medium)
         elapsedLabel.textColor = .controlAccentColor
-        elapsedLabel.frame = NSRect(x: 30, y: 172, width: 240, height: 22)
         mainPage.addSubview(elapsedLabel)
         progressLabel.font = .systemFont(ofSize: 11, weight: .medium)
-        progressLabel.frame = NSRect(x: 30, y: 148, width: 240, height: 22)
         mainPage.addSubview(progressLabel)
         etaLabel.font = .systemFont(ofSize: 11, weight: .medium)
         etaLabel.textColor = .controlAccentColor
-        etaLabel.frame = NSRect(x: 30, y: 124, width: 240, height: 22)
         mainPage.addSubview(etaLabel)
-        addSeparator(to: mainPage, y: 114)
+        executionSeparator.boxType = .separator
+        mainPage.addSubview(executionSeparator)
+        layoutExecutionSection(hasDetail: false)
 
         resetButton.title = L10n.text("준비 상태로 돌아가기", "Return to Ready")
         resetButton.font = .systemFont(ofSize: 13, weight: .semibold)
-        resetButton.frame = NSRect(x: 20, y: 53, width: 260, height: 36)
         resetButton.bezelStyle = .rounded
         resetButton.target = self
         resetButton.action = #selector(reset)
         mainPage.addSubview(resetButton)
-        addSeparator(to: mainPage, y: 43)
+        footerSeparator.boxType = .separator
+        mainPage.addSubview(footerSeparator)
+        layoutExecutionSection(hasDetail: false)
 
         let appName = NSTextField(labelWithString: "ES Status")
         appName.font = .systemFont(ofSize: 10, weight: .semibold)
@@ -274,6 +276,18 @@ final class DashboardMenuView: NSView {
         root.addSubview(line)
     }
 
+    private func layoutExecutionSection(hasDetail: Bool) {
+        let headerY: CGFloat = hasDetail ? 196 : 208
+        executionHeader.frame = NSRect(x: 20, y: headerY, width: 260, height: 22)
+        elapsedLabel.frame = NSRect(x: 30, y: headerY - 24, width: 240, height: 22)
+        progressLabel.frame = NSRect(x: 30, y: headerY - 48, width: 240, height: 22)
+        etaLabel.frame = NSRect(x: 30, y: headerY - 72, width: 240, height: 22)
+        let upperLineY = headerY - 82
+        executionSeparator.frame = NSRect(x: 20, y: upperLineY, width: 260, height: 1)
+        resetButton.frame = NSRect(x: 20, y: upperLineY - 46, width: 260, height: 36)
+        footerSeparator.frame = NSRect(x: 20, y: upperLineY - 56, width: 260, height: 1)
+    }
+
     @objc private func navigate(_ sender: DashboardNavigationButton) {
         switch sender.tag {
         case 0: show(.main)
@@ -292,7 +306,7 @@ final class DashboardMenuView: NSView {
         case .main:
             contentPanel.addSubview(mainPage)
         case .icon:
-            addSectionHeader(L10n.text("모양", "Appearance"), y: 398, alignment: .center)
+            addSectionHeader(L10n.text("모양", "Appearance"), y: 398)
             let view = SettingsAppearanceMenuItemView(selectedStyle: AppPreferences.iconStyle,
                                                        onSelection: onIconChange)
             view.frame.origin = NSPoint(x: 0, y: 50)
@@ -367,6 +381,8 @@ final class DashboardMenuView: NSView {
                 progress: NSAttributedString?, eta: NSAttributedString?, canReset: Bool) {
         statusLabel.stringValue = status
         detailLabel.stringValue = detail
+        detailLabel.isHidden = detail.isEmpty
+        layoutExecutionSection(hasDetail: !detail.isEmpty)
         elapsedLabel.stringValue = elapsed.isEmpty
             ? L10n.text("실행 시간: --:--", "Elapsed time: --:--")
             : elapsed
