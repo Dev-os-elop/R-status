@@ -537,6 +537,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         advancedSettingsView?.applyLocalization()
     }
 
+    func menuWillOpen(_ openingMenu: NSMenu) {
+        guard openingMenu === menu else { return }
+        dashboardView?.resetToMain()
+        updateDashboard()
+    }
+
     func menuDidClose(_ closedMenu: NSMenu) {
         guard closedMenu === menu, shouldReconfigureMenuAfterClose else { return }
         shouldReconfigureMenuAfterClose = false

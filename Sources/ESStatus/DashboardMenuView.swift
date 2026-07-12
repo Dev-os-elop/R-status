@@ -353,6 +353,10 @@ final class DashboardMenuView: NSView {
         advancedView?.setUpdateState(title: title, enabled: enabled)
     }
 
+    func resetToMain() {
+        show(.main)
+    }
+
     private func placeholder(_ text: String) -> NSAttributedString {
         NSAttributedString(string: text, attributes: [
             .font: NSFont.systemFont(ofSize: 15, weight: .medium),
