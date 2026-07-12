@@ -173,10 +173,13 @@ final class StatusSummaryMenuItemView: NSView {
 final class RunHistoryViewController: NSViewController {
     private var entries: [RunHistoryEntry]
     private let onClear: () -> Void
+    private let fixedPanelHeight: CGFloat?
     private let panelWidth: CGFloat = 330
 
-    init(entries: [RunHistoryEntry], onClear: @escaping () -> Void) {
+    init(entries: [RunHistoryEntry], fixedPanelHeight: CGFloat? = nil,
+         onClear: @escaping () -> Void) {
         self.entries = entries
+        self.fixedPanelHeight = fixedPanelHeight
         self.onClear = onClear
         super.init(nibName: nil, bundle: nil)
     }
@@ -191,7 +194,7 @@ final class RunHistoryViewController: NSViewController {
     private func renderContent() {
         let rowHeight: CGFloat = 60
         let listHeight = entries.isEmpty ? 58 : CGFloat(entries.count) * rowHeight
-        let panelHeight = 50 + listHeight + 48
+        let panelHeight = fixedPanelHeight ?? (50 + listHeight + 48)
         view.subviews.forEach { $0.removeFromSuperview() }
         view.frame = NSRect(x: 0, y: 0, width: panelWidth, height: panelHeight)
 
@@ -207,7 +210,7 @@ final class RunHistoryViewController: NSViewController {
         retention.font = .systemFont(ofSize: 10)
         retention.textColor = .secondaryLabelColor
         retention.alignment = .right
-        retention.frame = NSRect(x: 202, y: panelHeight - 34, width: panelWidth - 218, height: 18)
+        retention.frame = NSRect(x: 16, y: panelHeight - 52, width: panelWidth - 32, height: 18)
         view.addSubview(retention)
 
         if entries.isEmpty {
@@ -216,7 +219,8 @@ final class RunHistoryViewController: NSViewController {
             empty.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
             empty.textColor = .secondaryLabelColor
             empty.alignment = .center
-            empty.frame = NSRect(x: 16, y: 52, width: panelWidth - 32, height: 40)
+            let emptyY = fixedPanelHeight == nil ? 52 : panelHeight / 2 - 20
+            empty.frame = NSRect(x: 16, y: emptyY, width: panelWidth - 32, height: 40)
             view.addSubview(empty)
         } else {
             for (index, entry) in entries.enumerated() {

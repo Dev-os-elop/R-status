@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.5 - 2026-07-11
+
+- Icon 화면 상단에 Appearance 헤더와 구분선 추가
+- History 높이를 좌측 패널에 고정해 Recent Run History를 항상 상단에 배치
+- History Clear 버튼을 기록 개수와 관계없이 항상 하단에 배치
+- History 보관 안내를 제목 아래 고정해 좁은 폭에서도 잘리지 않도록 개선
+- Settings Advanced 옵션 구획을 Language 아래쪽으로 이동
+
 ## 0.14.4 - 2026-07-11
 
 - 요청대로 좌측 콘텐츠 패널 폭을 정확히 350pt로 축소
