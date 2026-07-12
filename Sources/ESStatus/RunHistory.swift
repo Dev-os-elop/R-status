@@ -173,7 +173,7 @@ final class StatusSummaryMenuItemView: NSView {
 final class RunHistoryViewController: NSViewController {
     private var entries: [RunHistoryEntry]
     private let onClear: () -> Void
-    private let panelWidth: CGFloat = 380
+    private let panelWidth: CGFloat = 330
 
     init(entries: [RunHistoryEntry], onClear: @escaping () -> Void) {
         self.entries = entries
