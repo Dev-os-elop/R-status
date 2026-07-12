@@ -8,13 +8,13 @@ extension NSAppearance {
 
     var esPanelColor: NSColor {
         esIsDark
-            ? NSColor(calibratedWhite: 0.14, alpha: 0.88)
+            ? NSColor(calibratedWhite: 0.14, alpha: 0.70)
             : NSColor(calibratedWhite: 0.90, alpha: 0.70)
     }
 
     var esTileColor: NSColor {
         esIsDark
-            ? NSColor(calibratedWhite: 0.22, alpha: 0.88)
+            ? NSColor(calibratedWhite: 0.22, alpha: 0.70)
             : NSColor.controlBackgroundColor.withAlphaComponent(0.70)
     }
 }

@@ -169,7 +169,7 @@ final class DashboardMenuView: NSView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         window?.isOpaque = false
-        window?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70)
+        window?.backgroundColor = .clear
     }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
@@ -188,7 +188,7 @@ final class DashboardMenuView: NSView {
 
     private func buildShell() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70).cgColor
+        layer?.backgroundColor = NSColor.clear.cgColor
 
         contentPanel.frame = NSRect(x: 14, y: 14, width: 300, height: 412)
         navigationPanel.frame = NSRect(x: 328, y: 14, width: 88, height: 412)
@@ -442,8 +442,8 @@ final class DashboardMenuView: NSView {
 
     func refreshAppearance() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            window?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70)
-            layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70).cgColor
+            window?.backgroundColor = .clear
+            layer?.backgroundColor = NSColor.clear.cgColor
             contentPanel.layer?.backgroundColor = effectiveAppearance.esPanelColor.cgColor
             settingsUpdateTile.layer?.backgroundColor = effectiveAppearance.esTileColor.cgColor
             settingsUpdateTile.layer?.borderColor = NSColor.separatorColor.cgColor
