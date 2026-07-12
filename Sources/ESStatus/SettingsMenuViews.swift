@@ -255,7 +255,7 @@ final class SettingsAppearanceMenuItemView: NSView {
         divider.boxType = .separator
         addSubview(divider)
 
-        previewHeader.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+        previewHeader.font = .systemFont(ofSize: 14, weight: .semibold)
         previewHeader.textColor = .secondaryLabelColor
         previewHeader.frame = NSRect(x: 14, y: 126, width: 272, height: 20)
         addSubview(previewHeader)
