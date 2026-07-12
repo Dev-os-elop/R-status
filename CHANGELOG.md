@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.10 - 2026-07-11
+
+- Main 섹션명을 R Resource Usage/R Execution Progress에서 Resource Usage/Execution Progress로 단순화
+- Main 상태 제목을 19pt에서 17pt로 축소
+- Main 섹션 제목을 14pt에서 12pt로 축소
+- 리소스·Elapsed·Progress·ETA 값을 15pt에서 13pt로 축소
+- Return to Ready·Quit App·단축키 글자도 각각 2pt 축소
+
 ## 0.14.9 - 2026-07-11
 
 - System Language를 Language 1행 전체 폭으로 배치
