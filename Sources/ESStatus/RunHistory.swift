@@ -200,6 +200,7 @@ final class RunHistoryViewController: NSViewController {
 
         let header = NSTextField(labelWithString: L10n.text("실행 기록", "Run History"))
         header.font = .systemFont(ofSize: 14, weight: .semibold)
+        header.textColor = .secondaryLabelColor
         header.frame = NSRect(x: 16, y: panelHeight - 35, width: 100, height: 20)
         view.addSubview(header)
 
