@@ -174,7 +174,7 @@ final class RunHistoryViewController: NSViewController {
     private var entries: [RunHistoryEntry]
     private let onClear: () -> Void
     private let fixedPanelHeight: CGFloat?
-    private let panelWidth: CGFloat = 330
+    private let panelWidth: CGFloat = 280
 
     init(entries: [RunHistoryEntry], fixedPanelHeight: CGFloat? = nil,
          onClear: @escaping () -> Void) {

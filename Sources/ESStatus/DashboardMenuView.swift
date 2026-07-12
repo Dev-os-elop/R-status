@@ -65,7 +65,7 @@ private final class DashboardNavigationButton: NSControl {
             ? NSColor.controlAccentColor.withAlphaComponent(0.20).cgColor
             : isHovered
                 ? NSColor.controlAccentColor.withAlphaComponent(0.12).cgColor
-                : NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
+                : NSColor(calibratedWhite: 0.82, alpha: 0.70).cgColor
     }
 }
 
@@ -105,7 +105,7 @@ final class DashboardMenuView: NSView {
     private let onClearHistory: () -> Void
     private let version: String
 
-    let panelSize = NSSize(width: 482, height: 470)
+    let panelSize = NSSize(width: 430, height: 470)
 
     init(version: String,
          onReset: @escaping () -> Void,
@@ -137,6 +137,12 @@ final class DashboardMenuView: NSView {
     required init?(coder: NSCoder) { nil }
     override var intrinsicContentSize: NSSize { panelSize }
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.isOpaque = false
+        window?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70)
+    }
+
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if event.modifierFlags.contains(.command), event.charactersIgnoringModifiers == "q" {
             onQuit()
@@ -147,16 +153,16 @@ final class DashboardMenuView: NSView {
 
     private func stylePanel(_ view: NSView, radius: CGFloat) {
         view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor(calibratedWhite: 0.90, alpha: 1).cgColor
+        view.layer?.backgroundColor = NSColor(calibratedWhite: 0.90, alpha: 0.70).cgColor
         view.layer?.cornerRadius = radius
     }
 
     private func buildShell() {
         wantsLayer = true
-        layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70).cgColor
 
-        contentPanel.frame = NSRect(x: 14, y: 14, width: 350, height: 442)
-        navigationPanel.frame = NSRect(x: 378, y: 14, width: 90, height: 442)
+        contentPanel.frame = NSRect(x: 14, y: 14, width: 300, height: 442)
+        navigationPanel.frame = NSRect(x: 328, y: 14, width: 88, height: 442)
         stylePanel(contentPanel, radius: 22)
         addSubview(contentPanel)
         addSubview(navigationPanel)
@@ -179,7 +185,7 @@ final class DashboardMenuView: NSView {
                                                  state: .running, size: 24)
             }
             let button = DashboardNavigationButton(
-                frame: NSRect(x: 6, y: top + 4, width: 78, height: height - 8),
+                frame: NSRect(x: 6, y: top + 4, width: 76, height: height - 8),
                 title: entry.2,
                 image: image
             )
@@ -195,41 +201,45 @@ final class DashboardMenuView: NSView {
     private func buildMainPage() {
         mainPage.frame = contentPanel.bounds
         statusLabel.font = .systemFont(ofSize: 19, weight: .semibold)
-        statusLabel.frame = NSRect(x: 20, y: 392, width: 310, height: 28)
+        statusLabel.frame = NSRect(x: 20, y: 392, width: 260, height: 28)
         mainPage.addSubview(statusLabel)
         addSeparator(to: mainPage, y: 376)
 
         let header = NSTextField(labelWithString: "R Resource Usage")
         header.font = .systemFont(ofSize: 17, weight: .medium)
-        header.frame = NSRect(x: 20, y: 338, width: 300, height: 26)
+        header.frame = NSRect(x: 20, y: 338, width: 260, height: 26)
         mainPage.addSubview(header)
 
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
             label.font = .systemFont(ofSize: 15, weight: .medium)
             label.textColor = .controlAccentColor
-            label.frame = NSRect(x: 30, y: 298 - CGFloat(index) * 30, width: 290, height: 24)
+            label.frame = NSRect(x: 30, y: 298 - CGFloat(index) * 30, width: 240, height: 24)
             mainPage.addSubview(label)
         }
         detailLabel.font = .systemFont(ofSize: 12)
         detailLabel.textColor = .secondaryLabelColor
-        detailLabel.frame = NSRect(x: 30, y: 188, width: 290, height: 18)
+        detailLabel.frame = NSRect(x: 30, y: 188, width: 240, height: 18)
         mainPage.addSubview(detailLabel)
+        let executionHeader = NSTextField(labelWithString: L10n.text("R 실행 진행 상황", "R Execution Progress"))
+        executionHeader.font = .systemFont(ofSize: 14, weight: .medium)
+        executionHeader.frame = NSRect(x: 20, y: 178, width: 260, height: 22)
+        mainPage.addSubview(executionHeader)
         elapsedLabel.font = .systemFont(ofSize: 15, weight: .medium)
         elapsedLabel.textColor = .controlAccentColor
-        elapsedLabel.frame = NSRect(x: 30, y: 166, width: 290, height: 22)
+        elapsedLabel.frame = NSRect(x: 30, y: 154, width: 240, height: 22)
         mainPage.addSubview(elapsedLabel)
         progressLabel.font = .systemFont(ofSize: 15, weight: .medium)
-        progressLabel.frame = NSRect(x: 30, y: 142, width: 290, height: 22)
+        progressLabel.frame = NSRect(x: 30, y: 130, width: 240, height: 22)
         mainPage.addSubview(progressLabel)
         etaLabel.font = .systemFont(ofSize: 15, weight: .medium)
         etaLabel.textColor = .controlAccentColor
-        etaLabel.frame = NSRect(x: 30, y: 118, width: 290, height: 22)
+        etaLabel.frame = NSRect(x: 30, y: 106, width: 240, height: 22)
         mainPage.addSubview(etaLabel)
-        addSeparator(to: mainPage, y: 106)
+        addSeparator(to: mainPage, y: 96)
 
         resetButton.title = L10n.text("준비 상태로 돌아가기", "Return to Ready")
         resetButton.font = .systemFont(ofSize: 17, weight: .semibold)
-        resetButton.frame = NSRect(x: 20, y: 53, width: 310, height: 36)
+        resetButton.frame = NSRect(x: 20, y: 53, width: 260, height: 36)
         resetButton.bezelStyle = .rounded
         resetButton.target = self
         resetButton.action = #selector(reset)
@@ -240,17 +250,17 @@ final class DashboardMenuView: NSView {
         quit.isBordered = false
         quit.alignment = .left
         quit.font = .systemFont(ofSize: 16, weight: .medium)
-        quit.frame = NSRect(x: 20, y: 7, width: 300, height: 27)
+        quit.frame = NSRect(x: 20, y: 7, width: 250, height: 27)
         mainPage.addSubview(quit)
         let quitShortcut = NSTextField(labelWithString: "⌘Q")
         quitShortcut.font = .systemFont(ofSize: 16, weight: .medium)
         quitShortcut.alignment = .right
-        quitShortcut.frame = NSRect(x: 250, y: 11, width: 70, height: 22)
+        quitShortcut.frame = NSRect(x: 200, y: 11, width: 70, height: 22)
         mainPage.addSubview(quitShortcut)
     }
 
     private func addSeparator(to root: NSView, y: CGFloat) {
-        let line = NSBox(frame: NSRect(x: 20, y: y, width: 310, height: 1))
+        let line = NSBox(frame: NSRect(x: 20, y: y, width: 260, height: 1))
         line.boxType = .separator
         root.addSubview(line)
     }
@@ -317,9 +327,9 @@ final class DashboardMenuView: NSView {
         let label = NSTextField(labelWithString: title)
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabelColor
-        label.frame = NSRect(x: 14, y: y, width: 310, height: 20)
+        label.frame = NSRect(x: 14, y: y, width: 260, height: 20)
         contentPanel.addSubview(label)
-        let line = NSBox(frame: NSRect(x: 14, y: y - 9, width: 322, height: 1))
+        let line = NSBox(frame: NSRect(x: 14, y: y - 9, width: 272, height: 1))
         line.boxType = .separator
         contentPanel.addSubview(line)
     }
@@ -334,13 +344,20 @@ final class DashboardMenuView: NSView {
         memoryLabel.stringValue = memory
         workersLabel.stringValue = workers
         processesLabel.stringValue = processes
-        progressLabel.attributedStringValue = progress ?? NSAttributedString(string: "")
-        etaLabel.attributedStringValue = eta ?? NSAttributedString(string: "")
+        progressLabel.attributedStringValue = progress ?? placeholder(L10n.text("진행률: --%", "Progress: --%"))
+        etaLabel.attributedStringValue = eta ?? placeholder(L10n.text("예상 남은 시간: --:--:--", "ETA: --:--:--"))
         resetButton.isEnabled = canReset
     }
 
     func setUpdateState(title: String, enabled: Bool) {
         advancedView?.setUpdateState(title: title, enabled: enabled)
+    }
+
+    private func placeholder(_ text: String) -> NSAttributedString {
+        NSAttributedString(string: text, attributes: [
+            .font: NSFont.systemFont(ofSize: 15, weight: .medium),
+            .foregroundColor: NSColor.controlAccentColor
+        ])
     }
 
     @objc private func reset() { onReset() }

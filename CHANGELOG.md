@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.6 - 2026-07-11
+
+- 좌측 콘텐츠 패널을 정확히 300pt, 전체 고정 메뉴 폭을 430pt로 축소
+- 창·좌측 패널·우측 카드 배경에 30% 투명도 적용
+- R Resource Usage 아래에 R Execution Progress 섹션 추가
+- Elapsed time, Progress, ETA를 실행 진행 섹션으로 묶어 재배치
+- 진행 이벤트가 없어도 Progress와 ETA 기본 행을 항상 표시
+- Icon/Settings/History를 300pt 콘텐츠 폭에 맞춰 재배치
+
 ## 0.14.5 - 2026-07-11
 
 - Icon 화면 상단에 Appearance 헤더와 구분선 추가
