@@ -383,6 +383,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             return
         }
         NSApp.setActivationPolicy(.accessory)
+        NSApp.appearance = NSAppearance(
+            named: AppPreferences.darkModeEnabled ? .darkAqua : .aqua
+        )
         updateApplicationIcon()
         configureMenu()
         updateDisplay()
@@ -446,6 +449,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             },
             onLoginChange: { [weak self] enabled in self?.setLaunchAtLogin(enabled) },
             onNotificationsChange: { [weak self] enabled in self?.setNotificationsEnabled(enabled) },
+            onDarkModeChange: { [weak self] enabled in self?.setDarkModeEnabled(enabled) },
             onCheckUpdates: { [weak self] in self?.checkForUpdates() },
             onClearHistory: { RunHistoryStore.clear() }
         )
@@ -505,7 +509,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             showElapsedTime: AppPreferences.showElapsedTime,
             launchAtLogin: SMAppService.mainApp.status == .enabled,
             notificationsEnabled: AppPreferences.notificationsEnabled,
-            version: currentVersion,
+            darkModeEnabled: AppPreferences.darkModeEnabled,
             onElapsedTimeChange: { [weak self] enabled in
                 AppPreferences.showElapsedTime = enabled
                 self?.updateDisplay()
@@ -516,8 +520,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             onNotificationsChange: { [weak self] enabled in
                 self?.setNotificationsEnabled(enabled)
             },
-            onCheckForUpdates: { [weak self] in
-                self?.checkForUpdates()
+            onDarkModeChange: { [weak self] enabled in
+                self?.setDarkModeEnabled(enabled)
             }
         )
         advancedSettingsView = advancedView
@@ -1195,7 +1199,6 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     private func setUpdateControl(title: String, enabled: Bool) {
-        advancedSettingsView?.setUpdateState(title: title, enabled: enabled)
         dashboardView?.setUpdateState(title: title, enabled: enabled)
     }
 
@@ -1221,6 +1224,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
         }
         updateDisplay()
+    }
+
+    private func setDarkModeEnabled(_ enabled: Bool) {
+        AppPreferences.darkModeEnabled = enabled
+        NSApp.appearance = NSAppearance(named: enabled ? .darkAqua : .aqua)
+        DispatchQueue.main.async { [weak self] in
+            self?.dashboardView?.refreshAppearance()
+            self?.advancedSettingsView?.refreshAppearance()
+            self?.languageSettingsView?.refreshAppearance()
+            self?.menu.update()
+            self?.updateDisplay()
+        }
     }
 
     @objc private func quit() {
