@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.23 - 2026-07-11
+
+- 다크모드 appearance를 앱, 메뉴, 대시보드, 메뉴 윈도우 및 확인 알림 전체에 명시적으로 적용
+- 다크모드에서 Main·Icon·History·Settings 전체 글자와 패널 색상이 함께 전환되도록 수정
+- 언어 옵션 버튼을 Advanced 타일과 동일한 밝기의 surface 색상으로 변경
+- Run History의 ? 아이콘을 제목 바로 옆에 배치하고 클릭 시 보관 규칙 설명창 표시
+- Appearance, Run History, Language 제목의 좌측 및 상단 위치 통일
+
 ## 0.14.22 - 2026-07-11
 
 - Status Preview 제목을 Appearance와 동일한 14pt semibold로 변경

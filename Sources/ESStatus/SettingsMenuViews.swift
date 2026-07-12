@@ -366,7 +366,7 @@ final class SettingsLanguageMenuItemView: NSView {
             button.contentTintColor = language == selectedLanguage ? .controlAccentColor : .labelColor
             button.layer?.backgroundColor = language == selectedLanguage
                 ? NSColor.controlAccentColor.withAlphaComponent(0.20).cgColor
-                : effectiveAppearance.esPanelColor.cgColor
+                : effectiveAppearance.esTileColor.cgColor
         }
     }
 

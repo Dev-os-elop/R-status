@@ -201,25 +201,30 @@ final class RunHistoryViewController: NSViewController {
         let header = NSTextField(labelWithString: L10n.text("실행 기록", "Run History"))
         header.font = .systemFont(ofSize: 14, weight: .semibold)
         header.textColor = .secondaryLabelColor
-        header.frame = NSRect(x: 16, y: panelHeight - 35, width: 100, height: 20)
+        header.sizeToFit()
+        header.frame.origin = NSPoint(x: 4, y: panelHeight - 34)
+        header.frame.size.height = 20
         view.addSubview(header)
 
-        let helpButton = NSButton(frame: NSRect(x: 112, y: panelHeight - 36,
-                                                 width: 20, height: 20))
+        let helpButton = NSButton(frame: NSRect(x: header.frame.maxX + 4,
+                                                 y: panelHeight - 34,
+                                                 width: 18, height: 18))
         helpButton.isBordered = false
         helpButton.image = NSImage(
             systemSymbolName: "questionmark.circle",
             accessibilityDescription: L10n.text("실행 기록 정보", "Run History information")
         )
         helpButton.imageScaling = .scaleProportionallyDown
+        helpButton.target = self
+        helpButton.action = #selector(showRetentionInfo)
         helpButton.toolTip = L10n.text(
             "최대 5개 실행 기록을 저장하며, 초과하면 가장 오래된 기록부터 삭제합니다.",
             "Up to 5 runs are saved. The oldest run is removed first."
         )
         view.addSubview(helpButton)
 
-        let headerSeparator = NSBox(frame: NSRect(x: 16, y: panelHeight - 50,
-                                                   width: panelWidth - 32, height: 1))
+        let headerSeparator = NSBox(frame: NSRect(x: 4, y: panelHeight - 50,
+                                                   width: panelWidth - 8, height: 1))
         headerSeparator.boxType = .separator
         view.addSubview(headerSeparator)
 
@@ -249,6 +254,20 @@ final class RunHistoryViewController: NSViewController {
         view.addSubview(clearButton)
 
         preferredContentSize = NSSize(width: panelWidth, height: panelHeight)
+    }
+
+    @objc private func showRetentionInfo() {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.window.appearance = NSApp.appearance
+        alert.alertStyle = .informational
+        alert.messageText = L10n.text("실행 기록 보관", "Run History Retention")
+        alert.informativeText = L10n.text(
+            "최대 5개 실행 기록을 저장하며, 초과하면 가장 오래된 기록부터 삭제합니다.",
+            "Up to 5 runs are saved. The oldest run is removed first."
+        )
+        alert.addButton(withTitle: L10n.text("확인", "OK"))
+        alert.runModal()
     }
 
     private func addEntry(_ entry: RunHistoryEntry, to root: NSView, frame: NSRect) {

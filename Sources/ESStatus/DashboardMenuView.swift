@@ -324,7 +324,7 @@ final class DashboardMenuView: NSView {
         case .main:
             contentPanel.addSubview(mainPage)
         case .icon:
-            addSectionHeader(L10n.text("모양", "Appearance"), y: 368)
+            addSectionHeader(L10n.text("모양", "Appearance"), y: 378)
             let view = SettingsAppearanceMenuItemView(selectedStyle: AppPreferences.iconStyle,
                                                        onSelection: onIconChange)
             view.frame.origin = NSPoint(x: 0, y: 20)
