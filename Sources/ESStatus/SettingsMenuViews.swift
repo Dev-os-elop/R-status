@@ -208,7 +208,7 @@ final class SettingsAppearanceMenuItemView: NSView {
     private var previewLabels: [StatusVisualState: NSTextField] = [:]
     private let previewHeader = NSTextField(labelWithString: "")
 
-    private let panelSize = NSSize(width: 300, height: 226)
+    private let panelSize = NSSize(width: 300, height: 330)
 
     init(selectedStyle: StatusIconStyle,
          onSelection: @escaping (StatusIconStyle) -> Void) {
@@ -225,11 +225,14 @@ final class SettingsAppearanceMenuItemView: NSView {
     override var intrinsicContentSize: NSSize { panelSize }
 
     private func buildStyleColumn() {
-        let rowHeight: CGFloat = 30
+        let rowHeight: CGFloat = 34
         for (index, style) in StatusIconStyle.allCases.enumerated() {
+            let column = index % 2
+            let row = index / 2
             let button = NSButton(
-                frame: NSRect(x: 10, y: panelSize.height - 32 - CGFloat(index) * rowHeight,
-                              width: 125, height: 28)
+                frame: NSRect(x: 6 + CGFloat(column) * 147,
+                              y: 294 - CGFloat(row) * rowHeight,
+                              width: 141, height: 30)
             )
             button.bezelStyle = .inline
             button.isBordered = false
@@ -248,13 +251,13 @@ final class SettingsAppearanceMenuItemView: NSView {
     }
 
     private func buildPreviewColumn() {
-        let divider = NSBox(frame: NSRect(x: 140, y: 10, width: 1, height: 206))
+        let divider = NSBox(frame: NSRect(x: 12, y: 154, width: 276, height: 1))
         divider.boxType = .separator
         addSubview(divider)
 
         previewHeader.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
         previewHeader.textColor = .secondaryLabelColor
-        previewHeader.frame = NSRect(x: 150, y: 196, width: 140, height: 20)
+        previewHeader.frame = NSRect(x: 14, y: 126, width: 272, height: 20)
         addSubview(previewHeader)
 
         let states: [(StatusVisualState, String)] = [
@@ -267,10 +270,10 @@ final class SettingsAppearanceMenuItemView: NSView {
         for (index, entry) in states.enumerated() {
             let column = index % 2
             let row = index / 2
-            let originX = 150 + CGFloat(column) * 70
-            let originY = 104 - CGFloat(row) * 88
+            let originX = 10 + CGFloat(column) * 145
+            let originY = 64 - CGFloat(row) * 60
 
-            let imageView = NSImageView(frame: NSRect(x: originX + 36, y: originY + 30,
+            let imageView = NSImageView(frame: NSRect(x: originX + 50, y: originY + 25,
                                                        width: 34, height: 34))
             imageView.imageScaling = .scaleNone
             addSubview(imageView)
@@ -279,7 +282,7 @@ final class SettingsAppearanceMenuItemView: NSView {
             let label = NSTextField(labelWithString: entry.1)
             label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
             label.alignment = .center
-            label.frame = NSRect(x: originX, y: originY + 6, width: 66, height: 20)
+            label.frame = NSRect(x: originX, y: originY + 3, width: 135, height: 20)
             addSubview(label)
             previewLabels[entry.0] = label
         }
@@ -317,7 +320,6 @@ final class SettingsLanguageMenuItemView: NSView {
     private let onSelection: (AppLanguage) -> Void
     private var selectedLanguage: AppLanguage
     private var buttons: [AppLanguage: NSButton] = [:]
-    private let titleLabel = NSTextField(labelWithString: "")
     private let panelSize = NSSize(width: 300, height: 44)
 
     init(selectedLanguage: AppLanguage,
@@ -326,13 +328,13 @@ final class SettingsLanguageMenuItemView: NSView {
         self.onSelection = onSelection
         super.init(frame: NSRect(origin: .zero, size: panelSize))
 
-        titleLabel.font = .menuFont(ofSize: 0)
-        titleLabel.frame = NSRect(x: 14, y: 12, width: 76, height: 20)
-        addSubview(titleLabel)
-
+        let frames = [
+            NSRect(x: 6, y: 7, width: 112, height: 30),
+            NSRect(x: 122, y: 7, width: 78, height: 30),
+            NSRect(x: 204, y: 7, width: 90, height: 30)
+        ]
         for (index, language) in AppLanguage.allCases.enumerated() {
-            let button = NSButton(frame: NSRect(x: 68 + CGFloat(index) * 76,
-                                                y: 7, width: 70, height: 30))
+            let button = NSButton(frame: frames[index])
             button.bezelStyle = .roundRect
             button.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
             button.tag = index
@@ -364,7 +366,6 @@ final class SettingsLanguageMenuItemView: NSView {
     }
 
     func applyLocalization() {
-        titleLabel.stringValue = L10n.text("언어", "Language")
         refreshSelection()
     }
 }

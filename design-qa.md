@@ -24,6 +24,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Follow-up P1: the requested 350-point panel and hover affordance were still missing. Fixed by setting the content panel to exactly 350 points, reducing navigation cards to 78 points, and adding active mouse tracking with a light-blue hover state. The full 8-block `100%` state was rendered without clipping.
 - Follow-up P2: Icon lacked its section title and History vertically centered its whole variable-height panel, causing the title and Clear button to move. Fixed by adding a pinned Appearance header, giving History the full fixed content height, pinning its title/top metadata and Clear button, and moving only the records within the remaining middle region.
 - Follow-up P1: the requested 300-point content panel, 430-point total frame, translucent surfaces, execution section, and persistent progress/ETA rows were missing. Fixed by applying those exact dimensions, using 70%-opaque background colors while keeping text opaque, adding R Execution Progress, and rendering progress/ETA placeholders when no live event exists.
+- Follow-up P1: Icon still used a cramped side-by-side selector/preview layout and Settings repeated Language below Basic. Fixed by laying Appearance choices in two columns, adding a horizontal divider and 2×2 Status Preview below, renaming the Settings section to Language, and leaving only the three language buttons beneath it.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces
