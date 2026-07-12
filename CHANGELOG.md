@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.19 - 2026-07-11
+
+- Advanced 옵션명을 Elapsed Time, Auto Launch, Notifications, Dark Mode로 간결하게 변경
+- 기존 Check for Updates 타일 자리에 Dark Mode ON/OFF 스위치 추가
+- Check for Updates와 버전을 Advanced 아래, Quit App 바로 위의 전체 폭 영역으로 이동
+- Dark Mode 설정을 저장하고 다음 실행에도 유지
+- 다크모드에서 패널·타일·글자·보조 글자·선택 상태가 자동으로 밝고 읽기 쉬운 색상으로 전환
+- 라이트/다크 전환 시 현재 설정 화면을 닫지 않고 즉시 전체 메뉴 appearance 갱신
+
 ## 0.14.18 - 2026-07-11
 
 - Advanced ON/OFF 스위치 손잡이를 0.20초 ease-in-out으로 부드럽게 이동

@@ -366,12 +366,17 @@ final class SettingsLanguageMenuItemView: NSView {
             button.contentTintColor = language == selectedLanguage ? .controlAccentColor : .labelColor
             button.layer?.backgroundColor = language == selectedLanguage
                 ? NSColor.controlAccentColor.withAlphaComponent(0.20).cgColor
-                : NSColor(calibratedWhite: 0.82, alpha: 0.70).cgColor
+                : effectiveAppearance.esPanelColor.cgColor
         }
     }
 
     func applyLocalization() {
         refreshSelection()
+    }
+
+    func refreshAppearance() {
+        refreshSelection()
+        needsDisplay = true
     }
 }
 
@@ -462,6 +467,10 @@ private final class AccentSwitch: NSControl {
         state = state == .on ? .off : .on
         sendAction(action, to: target)
     }
+
+    func refreshAppearance() {
+        updateLayers(animated: false)
+    }
 }
 
 @MainActor
@@ -483,7 +492,7 @@ private final class AdvancedToggleTile: NSView {
         layer?.cornerRadius = 8
         layer?.borderWidth = 1
         layer?.borderColor = NSColor.separatorColor.cgColor
-        layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.70).cgColor
+        layer?.backgroundColor = effectiveAppearance.esTileColor.cgColor
 
         titleLabel.stringValue = title
         titleLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
@@ -522,23 +531,31 @@ private final class AdvancedToggleTile: NSView {
         self.offText = offText
         updateStateLabel()
     }
+
+    func refreshAppearance() {
+        layer?.backgroundColor = effectiveAppearance.esTileColor.cgColor
+        layer?.borderColor = NSColor.separatorColor.cgColor
+        titleLabel.textColor = .labelColor
+        updateStateLabel()
+        toggle.refreshAppearance()
+        needsDisplay = true
+    }
 }
 
 @MainActor
 final class SettingsAdvancedMenuItemView: NSView {
-    private let updateButton = NSButton()
     private var elapsedTile: AdvancedToggleTile!
     private var loginTile: AdvancedToggleTile!
     private var notificationsTile: AdvancedToggleTile!
+    private var darkModeTile: AdvancedToggleTile!
     private let panelSize = NSSize(width: 300, height: 132)
 
     init(showElapsedTime: Bool, launchAtLogin: Bool, notificationsEnabled: Bool,
-         version: String,
+         darkModeEnabled: Bool,
          onElapsedTimeChange: @escaping (Bool) -> Void,
          onLaunchAtLoginChange: @escaping (Bool) -> Void,
          onNotificationsChange: @escaping (Bool) -> Void,
-         onCheckForUpdates: @escaping () -> Void) {
-        self.onCheckForUpdates = onCheckForUpdates
+         onDarkModeChange: @escaping (Bool) -> Void) {
         super.init(frame: NSRect(origin: .zero, size: panelSize))
         let onText = L10n.text("켜짐", "ON")
         let offText = L10n.text("꺼짐", "OFF")
@@ -552,82 +569,63 @@ final class SettingsAdvancedMenuItemView: NSView {
 
         elapsedTile = AdvancedToggleTile(
             frame: frames[0],
-            title: L10n.text("메뉴바 실행 시간", "Elapsed Time in Menu Bar"),
+            title: L10n.text("실행 시간", "Elapsed Time"),
             isOn: showElapsedTime, onText: onText, offText: offText,
             onChange: onElapsedTimeChange
         )
         addSubview(elapsedTile)
         loginTile = AdvancedToggleTile(
             frame: frames[1],
-            title: L10n.text("로그인 시 실행", "Launch at Login"),
+            title: L10n.text("자동 실행", "Auto Launch"),
             isOn: launchAtLogin, onText: onText, offText: offText,
             onChange: onLaunchAtLoginChange
         )
         addSubview(loginTile)
         notificationsTile = AdvancedToggleTile(
             frame: frames[2],
-            title: L10n.text("macOS 알림", "macOS Notifications"),
+            title: L10n.text("알림", "Notifications"),
             isOn: notificationsEnabled, onText: onText, offText: offText,
             onChange: onNotificationsChange
         )
         addSubview(notificationsTile)
-
-        let updateTile = NSView(frame: frames[3])
-        updateTile.wantsLayer = true
-        updateTile.layer?.cornerRadius = 8
-        updateTile.layer?.borderWidth = 1
-        updateTile.layer?.borderColor = NSColor.separatorColor.cgColor
-        updateTile.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.70).cgColor
-        addSubview(updateTile)
-
-        updateButton.frame = NSRect(x: 10, y: 21, width: tileSize.width - 20, height: 30)
-        updateButton.bezelStyle = .roundRect
-        updateButton.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
-        updateButton.target = self
-        updateButton.action = #selector(checkForUpdates)
-        updateTile.addSubview(updateButton)
-
-        let versionLabel = NSTextField(labelWithString: "v\(version)")
-        versionLabel.font = .systemFont(ofSize: 10, weight: .regular)
-        versionLabel.textColor = .secondaryLabelColor
-        versionLabel.alignment = .center
-        versionLabel.frame = NSRect(x: 10, y: 4, width: tileSize.width - 20, height: 14)
-        updateTile.addSubview(versionLabel)
-        setUpdateState(title: L10n.text("업데이트 확인…", "Check for Updates…"), enabled: true)
+        darkModeTile = AdvancedToggleTile(
+            frame: frames[3],
+            title: L10n.text("다크 모드", "Dark Mode"),
+            isOn: darkModeEnabled, onText: onText, offText: offText,
+            onChange: onDarkModeChange
+        )
+        addSubview(darkModeTile)
     }
-
-    private let onCheckForUpdates: () -> Void
 
     required init?(coder: NSCoder) { nil }
     override var intrinsicContentSize: NSSize { panelSize }
-
-    func setUpdateState(title: String, enabled: Bool) {
-        updateButton.title = title
-        updateButton.isEnabled = enabled
-    }
 
     func applyLocalization() {
         let onText = L10n.text("켜짐", "ON")
         let offText = L10n.text("꺼짐", "OFF")
         elapsedTile.applyLocalization(
-            title: L10n.text("메뉴바 실행 시간", "Elapsed Time in Menu Bar"),
+            title: L10n.text("실행 시간", "Elapsed Time"),
             onText: onText, offText: offText
         )
         loginTile.applyLocalization(
-            title: L10n.text("로그인 시 실행", "Launch at Login"),
+            title: L10n.text("자동 실행", "Auto Launch"),
             onText: onText, offText: offText
         )
         notificationsTile.applyLocalization(
-            title: L10n.text("macOS 알림", "macOS Notifications"),
+            title: L10n.text("알림", "Notifications"),
             onText: onText, offText: offText
         )
-        if updateButton.isEnabled {
-            updateButton.title = L10n.text("업데이트 확인…", "Check for Updates…")
-        }
+        darkModeTile.applyLocalization(
+            title: L10n.text("다크 모드", "Dark Mode"),
+            onText: onText, offText: offText
+        )
     }
 
-    @objc private func checkForUpdates() {
-        onCheckForUpdates()
+    func refreshAppearance() {
+        [elapsedTile, loginTile, notificationsTile, darkModeTile].forEach {
+            $0?.refreshAppearance()
+        }
+        needsDisplay = true
     }
 }
 

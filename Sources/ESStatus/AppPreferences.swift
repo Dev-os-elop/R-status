@@ -1,4 +1,23 @@
+import AppKit
 import Foundation
+
+extension NSAppearance {
+    var esIsDark: Bool {
+        bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+    }
+
+    var esPanelColor: NSColor {
+        esIsDark
+            ? NSColor(calibratedWhite: 0.14, alpha: 0.88)
+            : NSColor(calibratedWhite: 0.90, alpha: 0.70)
+    }
+
+    var esTileColor: NSColor {
+        esIsDark
+            ? NSColor(calibratedWhite: 0.22, alpha: 0.88)
+            : NSColor.controlBackgroundColor.withAlphaComponent(0.70)
+    }
+}
 
 enum AppLanguage: String, CaseIterable {
     case system
@@ -50,6 +69,7 @@ enum AppPreferences {
     private static let iconStyleKey = "statusIconStyle"
     static let elapsedTimeKey = "showElapsedTimeInMenuBar"
     private static let notificationsKey = "macOSNotificationsEnabled"
+    private static let darkModeKey = "darkModeEnabled"
     private static let legacyDefaults = [
         "io.github.ljwook92.rstatus.cat",
         "io.github.ljwook92.rstatus"
@@ -100,6 +120,14 @@ enum AppPreferences {
             return value.boolValue
         }
         set { UserDefaults.standard.set(newValue, forKey: notificationsKey) }
+    }
+
+    static var darkModeEnabled: Bool {
+        get {
+            guard let value = migratedObject(forKey: darkModeKey) as? NSNumber else { return false }
+            return value.boolValue
+        }
+        set { UserDefaults.standard.set(newValue, forKey: darkModeKey) }
     }
 }
 

@@ -78,7 +78,13 @@ private final class DashboardNavigationButton: NSControl {
             ? NSColor.controlAccentColor.withAlphaComponent(0.20).cgColor
             : isHovered
                 ? NSColor.controlAccentColor.withAlphaComponent(0.12).cgColor
-                : NSColor(calibratedWhite: 0.82, alpha: 0.70).cgColor
+                : effectiveAppearance.esPanelColor.cgColor
+    }
+
+    func refreshAppearance() {
+        updateBackground()
+        iconView.needsDisplay = true
+        titleLabel.needsDisplay = true
     }
 }
 
@@ -103,11 +109,15 @@ final class DashboardMenuView: NSView {
     private let footerSeparator = NSBox()
     private let resetButton = NSButton()
     private var pageButtons: [Page: DashboardNavigationButton] = [:]
+    private var navigationButtons: [DashboardNavigationButton] = []
     private var currentPage: Page = .main
     private var iconView: SettingsAppearanceMenuItemView?
     private var historyController: RunHistoryViewController?
     private var languageView: SettingsLanguageMenuItemView?
     private var advancedView: SettingsAdvancedMenuItemView?
+    private let settingsUpdateTile = NSView()
+    private let settingsUpdateButton = NSButton()
+    private let settingsVersionLabel = NSTextField(labelWithString: "")
 
     private let onReset: () -> Void
     private let onOpenR: () -> Void
@@ -117,6 +127,7 @@ final class DashboardMenuView: NSView {
     private let onElapsedChange: (Bool) -> Void
     private let onLoginChange: (Bool) -> Void
     private let onNotificationsChange: (Bool) -> Void
+    private let onDarkModeChange: (Bool) -> Void
     private let onCheckUpdates: () -> Void
     private let onClearHistory: () -> Void
     private let version: String
@@ -132,6 +143,7 @@ final class DashboardMenuView: NSView {
          onElapsedChange: @escaping (Bool) -> Void,
          onLoginChange: @escaping (Bool) -> Void,
          onNotificationsChange: @escaping (Bool) -> Void,
+         onDarkModeChange: @escaping (Bool) -> Void,
          onCheckUpdates: @escaping () -> Void,
          onClearHistory: @escaping () -> Void) {
         self.version = version
@@ -143,6 +155,7 @@ final class DashboardMenuView: NSView {
         self.onElapsedChange = onElapsedChange
         self.onLoginChange = onLoginChange
         self.onNotificationsChange = onNotificationsChange
+        self.onDarkModeChange = onDarkModeChange
         self.onCheckUpdates = onCheckUpdates
         self.onClearHistory = onClearHistory
         super.init(frame: NSRect(origin: .zero, size: panelSize))
@@ -169,7 +182,7 @@ final class DashboardMenuView: NSView {
 
     private func stylePanel(_ view: NSView, radius: CGFloat) {
         view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor(calibratedWhite: 0.90, alpha: 0.70).cgColor
+        view.layer?.backgroundColor = effectiveAppearance.esPanelColor.cgColor
         view.layer?.cornerRadius = radius
     }
 
@@ -209,6 +222,7 @@ final class DashboardMenuView: NSView {
             button.target = self
             button.action = #selector(navigate(_:))
             navigationPanel.addSubview(button)
+            navigationButtons.append(button)
             if let page = entry.0 { pageButtons[page] = button }
         }
         buildMainPage()
@@ -333,21 +347,43 @@ final class DashboardMenuView: NSView {
             language.frame.origin = NSPoint(x: 0, y: 280)
             languageView = language
             contentPanel.addSubview(language)
-            addSectionHeader(L10n.text("고급", "Advanced"), y: 230)
+            addSectionHeader(L10n.text("고급", "Advanced"), y: 250)
             let advanced = SettingsAdvancedMenuItemView(
                 showElapsedTime: AppPreferences.showElapsedTime,
                 launchAtLogin: SMAppService.mainApp.status == .enabled,
                 notificationsEnabled: AppPreferences.notificationsEnabled,
-                version: version,
+                darkModeEnabled: AppPreferences.darkModeEnabled,
                 onElapsedTimeChange: onElapsedChange,
                 onLaunchAtLoginChange: onLoginChange,
                 onNotificationsChange: onNotificationsChange,
-                onCheckForUpdates: onCheckUpdates
+                onDarkModeChange: onDarkModeChange
             )
-            advanced.frame.origin = NSPoint(x: 0, y: 80)
+            advanced.frame.origin = NSPoint(x: 0, y: 100)
             advancedView = advanced
             contentPanel.addSubview(advanced)
-            let separator = NSBox(frame: NSRect(x: 14, y: 66, width: 272, height: 1))
+
+            settingsUpdateTile.frame = NSRect(x: 10, y: 54, width: 280, height: 40)
+            settingsUpdateTile.wantsLayer = true
+            settingsUpdateTile.layer?.cornerRadius = 8
+            settingsUpdateTile.layer?.borderWidth = 1
+            settingsUpdateTile.layer?.borderColor = NSColor.separatorColor.cgColor
+            settingsUpdateTile.layer?.backgroundColor = effectiveAppearance.esTileColor.cgColor
+            settingsUpdateButton.frame = NSRect(x: 10, y: 12, width: 260, height: 26)
+            settingsUpdateButton.bezelStyle = .roundRect
+            settingsUpdateButton.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
+            settingsUpdateButton.target = self
+            settingsUpdateButton.action = #selector(checkUpdates)
+            settingsUpdateTile.addSubview(settingsUpdateButton)
+            settingsVersionLabel.stringValue = "v\(version)"
+            settingsVersionLabel.font = .systemFont(ofSize: 9)
+            settingsVersionLabel.textColor = .secondaryLabelColor
+            settingsVersionLabel.alignment = .center
+            settingsVersionLabel.frame = NSRect(x: 10, y: 0, width: 260, height: 12)
+            settingsUpdateTile.addSubview(settingsVersionLabel)
+            settingsUpdateButton.title = L10n.text("업데이트 확인…", "Check for Updates…")
+            contentPanel.addSubview(settingsUpdateTile)
+
+            let separator = NSBox(frame: NSRect(x: 14, y: 48, width: 272, height: 1))
             separator.boxType = .separator
             contentPanel.addSubview(separator)
             let quitButton = NSButton(
@@ -360,7 +396,7 @@ final class DashboardMenuView: NSView {
             quitButton.imagePosition = .imageLeading
             quitButton.font = .systemFont(ofSize: 12, weight: .medium)
             quitButton.bezelStyle = .rounded
-            quitButton.frame = NSRect(x: 10, y: 7, width: 280, height: 46)
+            quitButton.frame = NSRect(x: 10, y: 7, width: 280, height: 34)
             quitButton.alphaValue = 0.70
             contentPanel.addSubview(quitButton)
         }
@@ -400,7 +436,23 @@ final class DashboardMenuView: NSView {
     }
 
     func setUpdateState(title: String, enabled: Bool) {
-        advancedView?.setUpdateState(title: title, enabled: enabled)
+        settingsUpdateButton.title = title
+        settingsUpdateButton.isEnabled = enabled
+    }
+
+    func refreshAppearance() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            window?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70)
+            layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70).cgColor
+            contentPanel.layer?.backgroundColor = effectiveAppearance.esPanelColor.cgColor
+            settingsUpdateTile.layer?.backgroundColor = effectiveAppearance.esTileColor.cgColor
+            settingsUpdateTile.layer?.borderColor = NSColor.separatorColor.cgColor
+            navigationButtons.forEach { $0.refreshAppearance() }
+            languageView?.refreshAppearance()
+            advancedView?.refreshAppearance()
+        }
+        needsDisplay = true
+        displayIfNeeded()
     }
 
     func resetToMain() {
@@ -416,4 +468,5 @@ final class DashboardMenuView: NSView {
 
     @objc private func reset() { onReset() }
     @objc private func quitApp() { onQuit() }
+    @objc private func checkUpdates() { onCheckUpdates() }
 }
