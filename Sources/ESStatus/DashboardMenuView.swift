@@ -273,18 +273,20 @@ final class DashboardMenuView: NSView {
         case .main:
             contentPanel.addSubview(mainPage)
         case .icon:
+            addSectionHeader(L10n.text("모양", "Appearance"), y: 398)
             let view = SettingsAppearanceMenuItemView(selectedStyle: AppPreferences.iconStyle,
                                                        onSelection: onIconChange)
-            view.frame.origin = NSPoint(x: 0, y: 108)
+            view.frame.origin = NSPoint(x: 0, y: 150)
             iconView = view
             contentPanel.addSubview(view)
         case .history:
-            let controller = RunHistoryViewController(entries: RunHistoryStore.load(), onClear: onClearHistory)
-            controller.loadView()
-            controller.view.frame.origin = NSPoint(
-                x: 10,
-                y: max(10, (contentPanel.bounds.height - controller.view.frame.height) / 2)
+            let controller = RunHistoryViewController(
+                entries: RunHistoryStore.load(),
+                fixedPanelHeight: contentPanel.bounds.height,
+                onClear: onClearHistory
             )
+            controller.loadView()
+            controller.view.frame.origin = NSPoint(x: 10, y: 0)
             historyController = controller
             contentPanel.addSubview(controller.view)
         case .settings:
@@ -294,7 +296,7 @@ final class DashboardMenuView: NSView {
             language.frame.origin = NSPoint(x: 0, y: 338)
             languageView = language
             contentPanel.addSubview(language)
-            addSectionHeader(L10n.text("고급", "Advanced"), y: 298)
+            addSectionHeader(L10n.text("고급", "Advanced"), y: 270)
             let advanced = SettingsAdvancedMenuItemView(
                 showElapsedTime: AppPreferences.showElapsedTime,
                 launchAtLogin: SMAppService.mainApp.status == .enabled,
@@ -305,7 +307,7 @@ final class DashboardMenuView: NSView {
                 onNotificationsChange: onNotificationsChange,
                 onCheckForUpdates: onCheckUpdates
             )
-            advanced.frame.origin = NSPoint(x: 0, y: 148)
+            advanced.frame.origin = NSPoint(x: 0, y: 120)
             advancedView = advanced
             contentPanel.addSubview(advanced)
         }
