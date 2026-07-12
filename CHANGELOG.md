@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.8 - 2026-07-11
+
+- Icon Appearance 선택지를 2열 4행으로 재배치
+- Appearance 아래 가로 구분선과 Status Preview 구획 추가
+- Running/Complete/Fail/Interrupted 예시를 Status Preview 아래 2×2로 배치
+- Settings 상단 Basic을 Language로 변경
+- 중복 Language 라벨을 제거하고 System Language/한국어/English 버튼만 표시
+- 300pt 폭에서도 System Language가 잘리지 않도록 언어 버튼별 폭 최적화
+
 ## 0.14.7 - 2026-07-11
 
 - 메뉴를 닫았다가 다시 열 때 이전 Icon/History/Settings 탭을 유지하지 않고 항상 Main으로 초기화

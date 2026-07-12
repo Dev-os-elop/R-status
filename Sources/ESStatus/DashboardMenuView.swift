@@ -286,7 +286,7 @@ final class DashboardMenuView: NSView {
             addSectionHeader(L10n.text("모양", "Appearance"), y: 398)
             let view = SettingsAppearanceMenuItemView(selectedStyle: AppPreferences.iconStyle,
                                                        onSelection: onIconChange)
-            view.frame.origin = NSPoint(x: 0, y: 150)
+            view.frame.origin = NSPoint(x: 0, y: 50)
             iconView = view
             contentPanel.addSubview(view)
         case .history:
@@ -300,7 +300,7 @@ final class DashboardMenuView: NSView {
             historyController = controller
             contentPanel.addSubview(controller.view)
         case .settings:
-            addSectionHeader(L10n.text("기본", "Basic"), y: 398)
+            addSectionHeader(L10n.text("언어", "Language"), y: 398)
             let language = SettingsLanguageMenuItemView(selectedLanguage: AppPreferences.language,
                                                          onSelection: onLanguageChange)
             language.frame.origin = NSPoint(x: 0, y: 338)
