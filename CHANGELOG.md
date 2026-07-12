@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.14.21 - 2026-07-11
+
+- 실행 전 기본 남은 시간 표시를 ETA에서 Remaining으로 변경
+- 실행 전·진행 중 모두 영어는 Remaining, 한국어는 남은 시간으로 통일
+
 ## 0.14.20 - 2026-07-11
 
 - History 제목을 Recent Run History에서 Run History로 변경

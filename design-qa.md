@@ -35,6 +35,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Follow-up P2: custom Advanced switches still snapped instantly between states. Fixed by moving track and knob rendering to Core Animation layers with synchronized 0.20-second ease-in-out position/color transitions that continue from the presentation state during rapid toggles.
 - Follow-up P1: Advanced labels were verbose, update occupied a 2×2 option slot, and no persisted dark appearance existed. Fixed by shortening the four option labels, replacing the fourth tile with a persisted Dark Mode switch, moving update/version to a full-width row above Quit, and defining verified light/dark semantic surfaces with immediately refreshed readable label colors.
 - Follow-up P2: History repeated its retention policy as persistent secondary text and Open RStudio launched without confirmation. Fixed by renaming the section Run History, moving retention details into a question-mark hover tooltip, reclaiming the subtitle space for records, and gating launch behind an explicit Open/No alert.
+- Follow-up P3: the idle progress placeholder said ETA while live progress said Remaining. Fixed by using Remaining/남은 시간 consistently before and during execution.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces
