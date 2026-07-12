@@ -29,6 +29,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Follow-up P1: native ON switches rendered gray when the menu window was inactive and the Resource Usage title-to-first-value gap differed from Execution Progress. Fixed with a custom accent switch renderer and matching 2-point title/value spacing in both Main sections.
 - Follow-up P1: the Open RStudio action clipped in the narrow navigation card, History lacked a boundary below its header, and Quit/branding occupied the wrong surfaces. Fixed by wrapping Open RStudio onto two lines, adding a pinned History divider, moving Quit into a dedicated Settings control, and pinning ES Status/version to opposite sides of Main's footer.
 - Follow-up P2: Appearance was left-aligned, resource rows used 30-point spacing while execution rows used 24 points, and navigation cards retained excessive horizontal inset. Fixed by centering Appearance across the full 272-point header width, standardizing all value rows to 24-point spacing, and halving card side insets from 6 to 3 points.
+- Follow-up P2: compacting the resource rows left an oversized gap before Execution Progress. Fixed by moving the complete execution block and its lower divider upward by 18 points while preserving the 24-point internal row rhythm and removing the latent detail/header overlap.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces

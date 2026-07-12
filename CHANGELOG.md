@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.15 - 2026-07-11
+
+- 리소스 행 압축 후 커졌던 R processes와 Execution Progress 사이의 간격을 18pt 축소
+- Execution Progress, Elapsed time, Progress, ETA와 하단 구분선을 함께 이동해 내부 간격 유지
+- 상세 상태 문구와 Execution Progress 제목이 겹치지 않도록 상세 문구 위치 조정
+
 ## 0.14.14 - 2026-07-11
 
 - Icon 화면의 Appearance 제목을 300pt 패널 중앙에 정렬

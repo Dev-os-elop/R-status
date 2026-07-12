@@ -227,24 +227,24 @@ final class DashboardMenuView: NSView {
         }
         detailLabel.font = .systemFont(ofSize: 8)
         detailLabel.textColor = .secondaryLabelColor
-        detailLabel.frame = NSRect(x: 30, y: 188, width: 240, height: 18)
+        detailLabel.frame = NSRect(x: 30, y: 218, width: 240, height: 18)
         mainPage.addSubview(detailLabel)
         let executionHeader = NSTextField(labelWithString: L10n.text("실행 진행 상황", "Execution Progress"))
         executionHeader.font = .systemFont(ofSize: 10, weight: .medium)
-        executionHeader.frame = NSRect(x: 20, y: 178, width: 260, height: 22)
+        executionHeader.frame = NSRect(x: 20, y: 196, width: 260, height: 22)
         mainPage.addSubview(executionHeader)
         elapsedLabel.font = .systemFont(ofSize: 11, weight: .medium)
         elapsedLabel.textColor = .controlAccentColor
-        elapsedLabel.frame = NSRect(x: 30, y: 154, width: 240, height: 22)
+        elapsedLabel.frame = NSRect(x: 30, y: 172, width: 240, height: 22)
         mainPage.addSubview(elapsedLabel)
         progressLabel.font = .systemFont(ofSize: 11, weight: .medium)
-        progressLabel.frame = NSRect(x: 30, y: 130, width: 240, height: 22)
+        progressLabel.frame = NSRect(x: 30, y: 148, width: 240, height: 22)
         mainPage.addSubview(progressLabel)
         etaLabel.font = .systemFont(ofSize: 11, weight: .medium)
         etaLabel.textColor = .controlAccentColor
-        etaLabel.frame = NSRect(x: 30, y: 106, width: 240, height: 22)
+        etaLabel.frame = NSRect(x: 30, y: 124, width: 240, height: 22)
         mainPage.addSubview(etaLabel)
-        addSeparator(to: mainPage, y: 96)
+        addSeparator(to: mainPage, y: 114)
 
         resetButton.title = L10n.text("준비 상태로 돌아가기", "Return to Ready")
         resetButton.font = .systemFont(ofSize: 13, weight: .semibold)
