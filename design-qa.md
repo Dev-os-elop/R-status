@@ -37,6 +37,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Follow-up P2: History repeated its retention policy as persistent secondary text and Open RStudio launched without confirmation. Fixed by renaming the section Run History, moving retention details into a question-mark hover tooltip, reclaiming the subtitle space for records, and gating launch behind an explicit Open/No alert.
 - Follow-up P3: the idle progress placeholder said ETA while live progress said Remaining. Fixed by using Remaining/남은 시간 consistently before and during execution.
 - Follow-up P3: Status Preview and Run History did not share the Appearance section-title typography. Fixed by applying the same 14-point semibold secondary-label style to all three headings.
+- Follow-up P1: dark appearance reached only some manually colored tiles, language buttons were darker than Advanced, the History help icon was detached and hover-only, and top headings used inconsistent coordinates. Fixed by explicitly propagating appearance through the app/menu/window/dashboard/alerts, matching language and Advanced surfaces, adding clickable help beside the measured title width, and aligning Appearance, Run History, and Language to one origin.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces

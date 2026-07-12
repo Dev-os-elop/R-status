@@ -424,6 +424,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func configureMenu() {
         menu.removeAllItems()
+        menu.appearance = NSApp.appearance
         menu.delegate = self
         statusItem.button?.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         statusItem.button?.toolTip = L10n.text("R 작업 상태", "R task status")
@@ -1058,6 +1059,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         NSApp.activate(ignoringOtherApps: true)
 
         let alert = NSAlert()
+        alert.window.appearance = NSApp.appearance
         switch result {
         case .updateAvailable(let sourceVersion):
             alert.messageText = L10n.text("업데이트 사용 가능", "Update Available")
@@ -1194,6 +1196,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     @objc private func openRStudio() {
         NSApp.activate(ignoringOtherApps: true)
         let confirmation = NSAlert()
+        confirmation.window.appearance = NSApp.appearance
         confirmation.alertStyle = .informational
         confirmation.messageText = "Open RStudio?"
         confirmation.informativeText = L10n.text(
@@ -1240,8 +1243,15 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
 
     private func setDarkModeEnabled(_ enabled: Bool) {
         AppPreferences.darkModeEnabled = enabled
-        NSApp.appearance = NSAppearance(named: enabled ? .darkAqua : .aqua)
+        let appearance = NSAppearance(named: enabled ? .darkAqua : .aqua)
+        NSApp.appearance = appearance
+        menu.appearance = appearance
+        dashboardView?.appearance = appearance
+        dashboardView?.window?.appearance = appearance
         DispatchQueue.main.async { [weak self] in
+            self?.menu.appearance = appearance
+            self?.dashboardView?.appearance = appearance
+            self?.dashboardView?.window?.appearance = appearance
             self?.dashboardView?.refreshAppearance()
             self?.advancedSettingsView?.refreshAppearance()
             self?.languageSettingsView?.refreshAppearance()
