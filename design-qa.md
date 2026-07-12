@@ -40,6 +40,7 @@ Icon and Settings were captured separately because their controls are not visibl
 - Follow-up P1: dark appearance reached only some manually colored tiles, language buttons were darker than Advanced, the History help icon was detached and hover-only, and top headings used inconsistent coordinates. Fixed by explicitly propagating appearance through the app/menu/window/dashboard/alerts, matching language and Advanced surfaces, adding clickable help beside the measured title width, and aligning Appearance, Run History, and Language to one origin.
 - Follow-up P2: clicking Run History help opened a full modal alert instead of lightweight contextual help. Fixed by replacing it with an animated transient popover anchored directly to the question-mark button.
 - Follow-up P1: window, root, and panel alpha layers compounded to roughly 97% opacity, making transparency visually absent. Fixed by clearing the window/root surfaces and applying 70% opacity only once to the visible content and navigation surfaces in both appearances.
+- Follow-up P2: the transparent shell retained 14-point outer and inter-panel margins that made the menu window feel oversized. Fixed by halving all three margins to 7 points and reducing the shell from 430×440 to 409×426 while preserving panel/card dimensions.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces
