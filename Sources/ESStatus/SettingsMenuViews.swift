@@ -372,8 +372,33 @@ final class SettingsLanguageMenuItemView: NSView {
 }
 
 @MainActor
+private final class AccentSwitch: NSSwitch {
+    override func draw(_ dirtyRect: NSRect) {
+        let trackRect = bounds.insetBy(dx: 1, dy: 4)
+        let trackPath = NSBezierPath(roundedRect: trackRect,
+                                     xRadius: trackRect.height / 2,
+                                     yRadius: trackRect.height / 2)
+        (state == .on
+            ? NSColor.controlAccentColor
+            : NSColor(calibratedWhite: 0.78, alpha: 0.70)).setFill()
+        trackPath.fill()
+
+        let knobSize = trackRect.height - 4
+        let knobX = state == .on
+            ? trackRect.maxX - knobSize - 2
+            : trackRect.minX + 2
+        let knobRect = NSRect(x: knobX, y: trackRect.minY + 2,
+                              width: knobSize, height: knobSize)
+        NSColor.white.setFill()
+        NSBezierPath(ovalIn: knobRect).fill()
+        NSColor(calibratedWhite: 0, alpha: 0.10).setStroke()
+        NSBezierPath(ovalIn: knobRect).stroke()
+    }
+}
+
+@MainActor
 private final class AdvancedToggleTile: NSView {
-    private let toggle = NSSwitch()
+    private let toggle = AccentSwitch()
     private let stateLabel = NSTextField(labelWithString: "")
     private var onText: String
     private var offText: String

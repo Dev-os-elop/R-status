@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.11 - 2026-07-11
+
+- ON 상태 스위치 트랙을 창 활성 여부와 관계없이 고정 accent blue로 렌더링
+- OFF 상태 스위치는 기존 반투명 회색 유지
+- Resource Usage 제목과 CPU 사이 간격을 Execution Progress/Elapsed time과 동일한 약 2pt로 통일
+
 ## 0.14.10 - 2026-07-11
 
 - Main 섹션명을 R Resource Usage/R Execution Progress에서 Resource Usage/Execution Progress로 단순화

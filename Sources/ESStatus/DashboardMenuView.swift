@@ -219,7 +219,7 @@ final class DashboardMenuView: NSView {
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
             label.font = .systemFont(ofSize: 13, weight: .medium)
             label.textColor = .controlAccentColor
-            label.frame = NSRect(x: 30, y: 298 - CGFloat(index) * 30, width: 240, height: 24)
+            label.frame = NSRect(x: 30, y: 312 - CGFloat(index) * 30, width: 240, height: 24)
             mainPage.addSubview(label)
         }
         detailLabel.font = .systemFont(ofSize: 10)
