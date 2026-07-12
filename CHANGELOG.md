@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.12 - 2026-07-11
+
+- Appearance 아이콘 이름을 기존 명칭 대신 Style 1~Style 7로 단순화
+- Main 상태 제목을 17pt에서 15pt로 추가 축소
+- Main 섹션 제목을 12pt에서 10pt로 추가 축소
+- 리소스·Elapsed·Progress·ETA를 13pt에서 11pt로 추가 축소
+- Return to Ready·Quit App·단축키도 다시 2pt 축소
+- 우측 Settings 카드와 버전 사이에 ES Status 앱 이름 추가
+
 ## 0.14.11 - 2026-07-11
 
 - ON 상태 스위치 트랙을 창 활성 여부와 관계없이 고정 accent blue로 렌더링

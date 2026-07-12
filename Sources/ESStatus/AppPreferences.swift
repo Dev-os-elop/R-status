@@ -34,13 +34,13 @@ enum StatusIconStyle: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .catOutline: return "Cat Original"
-        case .catSilhouette: return "Cat Silhouette"
-        case .statusPulse: return "Status Pulse"
-        case .progressBlocks: return "Progress Blocks"
-        case .signalOrbit: return "Signal Orbit"
-        case .windowCheck: return "Window Check"
-        case .layeredS: return "Layered S"
+        case .catOutline: return "Style 1"
+        case .catSilhouette: return "Style 2"
+        case .statusPulse: return "Style 3"
+        case .progressBlocks: return "Style 4"
+        case .signalOrbit: return "Style 5"
+        case .windowCheck: return "Style 6"
+        case .layeredS: return "Style 7"
         }
     }
 }
