@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.16 - 2026-07-11
+
+- Appearance 제목을 왼쪽 정렬로 복원하고 Style 1~7 선택 항목을 각 열 중앙에 정렬
+- 우측 메뉴의 모든 글자를 10pt, 아이콘을 22pt로 통일하고 카드 높이 축소
+- 선택된 언어 버튼을 파란색 배경 하이라이트로 표시
+- R processes와 Execution Progress 사이 실제 간격을 10pt로 축소
+- Return to Ready 버튼과 위·아래 구분선 간격을 각각 10pt로 통일
+- NSSwitch 내부 렌더링을 대체하는 커스텀 컨트롤로 ON 트랙을 확실한 파란색으로 표시
+
 ## 0.14.15 - 2026-07-11
 
 - 리소스 행 압축 후 커졌던 R processes와 Execution Progress 사이의 간격을 18pt 축소
