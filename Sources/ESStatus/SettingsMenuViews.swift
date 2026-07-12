@@ -377,32 +377,84 @@ final class SettingsLanguageMenuItemView: NSView {
 
 @MainActor
 private final class AccentSwitch: NSControl {
+    private let trackLayer = CALayer()
+    private let knobLayer = CALayer()
+
     var state: NSControl.StateValue = .off {
-        didSet { needsDisplay = true }
+        didSet {
+            guard oldValue != state else { return }
+            updateLayers(animated: window != nil)
+        }
     }
 
     override var intrinsicContentSize: NSSize { NSSize(width: 52, height: 28) }
 
-    override func draw(_ dirtyRect: NSRect) {
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        configureLayers()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configureLayers()
+    }
+
+    private func configureLayers() {
+        wantsLayer = true
+        trackLayer.masksToBounds = true
+        knobLayer.backgroundColor = NSColor.white.cgColor
+        knobLayer.shadowColor = NSColor.black.cgColor
+        knobLayer.shadowOpacity = 0.12
+        knobLayer.shadowRadius = 1
+        knobLayer.shadowOffset = CGSize(width: 0, height: -0.5)
+        layer?.addSublayer(trackLayer)
+        layer?.addSublayer(knobLayer)
+    }
+
+    override func layout() {
+        super.layout()
+        updateLayers(animated: false)
+    }
+
+    private func updateLayers(animated: Bool) {
         let trackRect = bounds.insetBy(dx: 1, dy: 4)
-        let trackPath = NSBezierPath(roundedRect: trackRect,
-                                     xRadius: trackRect.height / 2,
-                                     yRadius: trackRect.height / 2)
-        (state == .on
+        let trackColor = (state == .on
             ? NSColor.controlAccentColor
-            : NSColor(calibratedWhite: 0.78, alpha: 0.70)).setFill()
-        trackPath.fill()
+            : NSColor(calibratedWhite: 0.78, alpha: 0.70)).cgColor
 
         let knobSize = trackRect.height - 4
-        let knobX = state == .on
-            ? trackRect.maxX - knobSize - 2
-            : trackRect.minX + 2
-        let knobRect = NSRect(x: knobX, y: trackRect.minY + 2,
-                              width: knobSize, height: knobSize)
-        NSColor.white.setFill()
-        NSBezierPath(ovalIn: knobRect).fill()
-        NSColor(calibratedWhite: 0, alpha: 0.10).setStroke()
-        NSBezierPath(ovalIn: knobRect).stroke()
+        let knobCenterX = state == .on
+            ? trackRect.maxX - knobSize / 2 - 2
+            : trackRect.minX + knobSize / 2 + 2
+        let knobPosition = CGPoint(x: knobCenterX, y: trackRect.midY)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        trackLayer.frame = trackRect
+        trackLayer.cornerRadius = trackRect.height / 2
+        knobLayer.bounds = CGRect(x: 0, y: 0, width: knobSize, height: knobSize)
+        knobLayer.cornerRadius = knobSize / 2
+
+        if animated {
+            let timing = CAMediaTimingFunction(name: .easeInEaseOut)
+            let positionAnimation = CABasicAnimation(keyPath: "position")
+            positionAnimation.fromValue = knobLayer.presentation()?.position ?? knobLayer.position
+            positionAnimation.toValue = knobPosition
+            positionAnimation.duration = 0.20
+            positionAnimation.timingFunction = timing
+            knobLayer.add(positionAnimation, forKey: "switchPosition")
+
+            let colorAnimation = CABasicAnimation(keyPath: "backgroundColor")
+            colorAnimation.fromValue = trackLayer.presentation()?.backgroundColor ?? trackLayer.backgroundColor
+            colorAnimation.toValue = trackColor
+            colorAnimation.duration = 0.20
+            colorAnimation.timingFunction = timing
+            trackLayer.add(colorAnimation, forKey: "switchColor")
+        }
+
+        knobLayer.position = knobPosition
+        trackLayer.backgroundColor = trackColor
+        CATransaction.commit()
     }
 
     override func mouseDown(with event: NSEvent) {
