@@ -33,13 +33,17 @@ private final class DashboardNavigationButton: NSControl {
     override func layout() {
         super.layout()
         let isOpenRStudio = titleLabel.stringValue == "Open RStudio"
+        let labelHeight: CGFloat = isOpenRStudio ? 28 : 17
+        let gap: CGFloat = isOpenRStudio ? 2 : 3
+        let groupHeight = labelHeight + gap + 22
+        let groupY = (bounds.height - groupHeight) / 2
         iconView.frame = NSRect(x: bounds.midX - 11,
-                                y: bounds.midY + 2,
+                                y: groupY + labelHeight + gap,
                                 width: 22, height: 22)
         titleLabel.frame = NSRect(x: 6,
-                                  y: isOpenRStudio ? 2 : 7,
+                                  y: groupY,
                                   width: bounds.width - 12,
-                                  height: isOpenRStudio ? 28 : 17)
+                                  height: labelHeight)
     }
 
     override func mouseDown(with event: NSEvent) { layer?.opacity = 0.78 }
@@ -117,7 +121,7 @@ final class DashboardMenuView: NSView {
     private let onClearHistory: () -> Void
     private let version: String
 
-    let panelSize = NSSize(width: 430, height: 470)
+    let panelSize = NSSize(width: 430, height: 440)
 
     init(version: String,
          onReset: @escaping () -> Void,
@@ -173,8 +177,8 @@ final class DashboardMenuView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.70).cgColor
 
-        contentPanel.frame = NSRect(x: 14, y: 14, width: 300, height: 442)
-        navigationPanel.frame = NSRect(x: 328, y: 14, width: 88, height: 442)
+        contentPanel.frame = NSRect(x: 14, y: 14, width: 300, height: 412)
+        navigationPanel.frame = NSRect(x: 328, y: 14, width: 88, height: 412)
         stylePanel(contentPanel, radius: 22)
         addSubview(contentPanel)
         addSubview(navigationPanel)
@@ -213,24 +217,24 @@ final class DashboardMenuView: NSView {
     private func buildMainPage() {
         mainPage.frame = contentPanel.bounds
         statusLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-        statusLabel.frame = NSRect(x: 20, y: 392, width: 260, height: 28)
+        statusLabel.frame = NSRect(x: 20, y: 362, width: 260, height: 28)
         mainPage.addSubview(statusLabel)
-        addSeparator(to: mainPage, y: 376)
+        addSeparator(to: mainPage, y: 346)
 
         let header = NSTextField(labelWithString: L10n.text("리소스 사용량", "Resource Usage"))
         header.font = .systemFont(ofSize: 10, weight: .medium)
-        header.frame = NSRect(x: 20, y: 338, width: 260, height: 26)
+        header.frame = NSRect(x: 20, y: 308, width: 260, height: 26)
         mainPage.addSubview(header)
 
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
             label.font = .systemFont(ofSize: 11, weight: .medium)
             label.textColor = .controlAccentColor
-            label.frame = NSRect(x: 30, y: 312 - CGFloat(index) * 24, width: 240, height: 24)
+            label.frame = NSRect(x: 30, y: 282 - CGFloat(index) * 24, width: 240, height: 24)
             mainPage.addSubview(label)
         }
         detailLabel.font = .systemFont(ofSize: 8)
         detailLabel.textColor = .secondaryLabelColor
-        detailLabel.frame = NSRect(x: 30, y: 218, width: 240, height: 18)
+        detailLabel.frame = NSRect(x: 30, y: 188, width: 240, height: 18)
         mainPage.addSubview(detailLabel)
         executionHeader.stringValue = L10n.text("실행 진행 상황", "Execution Progress")
         executionHeader.font = .systemFont(ofSize: 10, weight: .medium)
@@ -277,7 +281,7 @@ final class DashboardMenuView: NSView {
     }
 
     private func layoutExecutionSection(hasDetail: Bool) {
-        let headerY: CGFloat = hasDetail ? 196 : 208
+        let headerY: CGFloat = hasDetail ? 166 : 178
         executionHeader.frame = NSRect(x: 20, y: headerY, width: 260, height: 22)
         elapsedLabel.frame = NSRect(x: 30, y: headerY - 24, width: 240, height: 22)
         progressLabel.frame = NSRect(x: 30, y: headerY - 48, width: 240, height: 22)
@@ -306,10 +310,10 @@ final class DashboardMenuView: NSView {
         case .main:
             contentPanel.addSubview(mainPage)
         case .icon:
-            addSectionHeader(L10n.text("모양", "Appearance"), y: 398)
+            addSectionHeader(L10n.text("모양", "Appearance"), y: 368)
             let view = SettingsAppearanceMenuItemView(selectedStyle: AppPreferences.iconStyle,
                                                        onSelection: onIconChange)
-            view.frame.origin = NSPoint(x: 0, y: 50)
+            view.frame.origin = NSPoint(x: 0, y: 20)
             iconView = view
             contentPanel.addSubview(view)
         case .history:
@@ -323,13 +327,13 @@ final class DashboardMenuView: NSView {
             historyController = controller
             contentPanel.addSubview(controller.view)
         case .settings:
-            addSectionHeader(L10n.text("언어", "Language"), y: 398)
+            addSectionHeader(L10n.text("언어", "Language"), y: 378)
             let language = SettingsLanguageMenuItemView(selectedLanguage: AppPreferences.language,
                                                          onSelection: onLanguageChange)
-            language.frame.origin = NSPoint(x: 0, y: 300)
+            language.frame.origin = NSPoint(x: 0, y: 280)
             languageView = language
             contentPanel.addSubview(language)
-            addSectionHeader(L10n.text("고급", "Advanced"), y: 250)
+            addSectionHeader(L10n.text("고급", "Advanced"), y: 230)
             let advanced = SettingsAdvancedMenuItemView(
                 showElapsedTime: AppPreferences.showElapsedTime,
                 launchAtLogin: SMAppService.mainApp.status == .enabled,
@@ -340,10 +344,10 @@ final class DashboardMenuView: NSView {
                 onNotificationsChange: onNotificationsChange,
                 onCheckForUpdates: onCheckUpdates
             )
-            advanced.frame.origin = NSPoint(x: 0, y: 100)
+            advanced.frame.origin = NSPoint(x: 0, y: 80)
             advancedView = advanced
             contentPanel.addSubview(advanced)
-            let separator = NSBox(frame: NSRect(x: 14, y: 86, width: 272, height: 1))
+            let separator = NSBox(frame: NSRect(x: 14, y: 66, width: 272, height: 1))
             separator.boxType = .separator
             contentPanel.addSubview(separator)
             let quitButton = NSButton(
@@ -356,7 +360,7 @@ final class DashboardMenuView: NSView {
             quitButton.imagePosition = .imageLeading
             quitButton.font = .systemFont(ofSize: 12, weight: .medium)
             quitButton.bezelStyle = .rounded
-            quitButton.frame = NSRect(x: 10, y: 27, width: 280, height: 46)
+            quitButton.frame = NSRect(x: 10, y: 7, width: 280, height: 46)
             quitButton.alphaValue = 0.70
             contentPanel.addSubview(quitButton)
         }
