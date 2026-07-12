@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.13 - 2026-07-11
+
+- 우측 메뉴의 `R Open`을 문법적으로 자연스러운 `Open RStudio`로 변경
+- History 제목 영역 아래 구분선을 추가하고 실행 기록을 구분선 아래부터 표시
+- Main의 Quit App을 제거하고 Settings의 Advanced 아래에 전원 아이콘이 있는 종료 버튼으로 이동
+- 우측 메뉴 아래의 앱 이름과 버전을 Main 하단 좌측/우측으로 이동
+
 ## 0.14.12 - 2026-07-11
 
 - Appearance 아이콘 이름을 기존 명칭 대신 Style 1~Style 7로 단순화

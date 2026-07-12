@@ -17,7 +17,12 @@ private final class DashboardNavigationButton: NSControl {
         iconView.imageScaling = .scaleProportionallyUpOrDown
         addSubview(iconView)
         titleLabel.stringValue = title
-        titleLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        titleLabel.font = .systemFont(ofSize: title == "Open RStudio" ? 10 : 13,
+                                      weight: .medium)
+        if title == "Open RStudio" {
+            titleLabel.maximumNumberOfLines = 2
+            titleLabel.lineBreakMode = .byWordWrapping
+        }
         titleLabel.textColor = .secondaryLabelColor
         titleLabel.alignment = .center
         addSubview(titleLabel)
@@ -30,7 +35,11 @@ private final class DashboardNavigationButton: NSControl {
         super.layout()
         let bottom = bounds.midY - 26
         iconView.frame = NSRect(x: bounds.midX - 14, y: bottom + 25, width: 28, height: 28)
-        titleLabel.frame = NSRect(x: 6, y: bottom, width: bounds.width - 12, height: 20)
+        let isOpenRStudio = titleLabel.stringValue == "Open RStudio"
+        titleLabel.frame = NSRect(x: 6,
+                                  y: isOpenRStudio ? bottom - 5 : bottom,
+                                  width: bounds.width - 12,
+                                  height: isOpenRStudio ? 32 : 20)
     }
 
     override func mouseDown(with event: NSEvent) { layer?.opacity = 0.78 }
@@ -171,7 +180,7 @@ final class DashboardMenuView: NSView {
             (.main, "house", "Main"),
             (.icon, "paintpalette", "Icon"),
             (.history, "clock.arrow.circlepath", "History"),
-            (nil, "r.square", "R Open"),
+            (nil, "r.square", "Open RStudio"),
             (.settings, "gearshape", "Settings")
         ]
         let heights: [CGFloat] = [68, 76, 76, 76, 76]
@@ -195,18 +204,6 @@ final class DashboardMenuView: NSView {
             navigationPanel.addSubview(button)
             if let page = entry.0 { pageButtons[page] = button }
         }
-        let appNameLabel = NSTextField(labelWithString: "ES Status")
-        appNameLabel.font = .systemFont(ofSize: 9, weight: .semibold)
-        appNameLabel.textColor = .secondaryLabelColor
-        appNameLabel.alignment = .center
-        appNameLabel.frame = NSRect(x: 4, y: 42, width: 80, height: 15)
-        navigationPanel.addSubview(appNameLabel)
-        let versionLabel = NSTextField(labelWithString: "v\(version)")
-        versionLabel.font = .systemFont(ofSize: 8, weight: .regular)
-        versionLabel.textColor = .secondaryLabelColor
-        versionLabel.alignment = .center
-        versionLabel.frame = NSRect(x: 4, y: 25, width: 80, height: 14)
-        navigationPanel.addSubview(versionLabel)
         buildMainPage()
     }
 
@@ -258,17 +255,17 @@ final class DashboardMenuView: NSView {
         mainPage.addSubview(resetButton)
         addSeparator(to: mainPage, y: 43)
 
-        let quit = NSButton(title: L10n.text("앱 종료", "Quit App"), target: self, action: #selector(quitApp))
-        quit.isBordered = false
-        quit.alignment = .left
-        quit.font = .systemFont(ofSize: 12, weight: .medium)
-        quit.frame = NSRect(x: 20, y: 7, width: 250, height: 27)
-        mainPage.addSubview(quit)
-        let quitShortcut = NSTextField(labelWithString: "⌘Q")
-        quitShortcut.font = .systemFont(ofSize: 12, weight: .medium)
-        quitShortcut.alignment = .right
-        quitShortcut.frame = NSRect(x: 200, y: 11, width: 70, height: 22)
-        mainPage.addSubview(quitShortcut)
+        let appName = NSTextField(labelWithString: "ES Status")
+        appName.font = .systemFont(ofSize: 10, weight: .semibold)
+        appName.textColor = .secondaryLabelColor
+        appName.frame = NSRect(x: 20, y: 10, width: 120, height: 18)
+        mainPage.addSubview(appName)
+        let versionText = NSTextField(labelWithString: "v\(version)")
+        versionText.font = .systemFont(ofSize: 9, weight: .regular)
+        versionText.textColor = .secondaryLabelColor
+        versionText.alignment = .right
+        versionText.frame = NSRect(x: 160, y: 10, width: 120, height: 18)
+        mainPage.addSubview(versionText)
     }
 
     private func addSeparator(to root: NSView, y: CGFloat) {
@@ -332,6 +329,22 @@ final class DashboardMenuView: NSView {
             advanced.frame.origin = NSPoint(x: 0, y: 100)
             advancedView = advanced
             contentPanel.addSubview(advanced)
+            let separator = NSBox(frame: NSRect(x: 14, y: 86, width: 272, height: 1))
+            separator.boxType = .separator
+            contentPanel.addSubview(separator)
+            let quitButton = NSButton(
+                title: L10n.text("앱 종료", "Quit App"),
+                target: self,
+                action: #selector(quitApp)
+            )
+            quitButton.image = NSImage(systemSymbolName: "power",
+                                       accessibilityDescription: quitButton.title)
+            quitButton.imagePosition = .imageLeading
+            quitButton.font = .systemFont(ofSize: 12, weight: .medium)
+            quitButton.bezelStyle = .rounded
+            quitButton.frame = NSRect(x: 10, y: 27, width: 280, height: 46)
+            quitButton.alphaValue = 0.70
+            contentPanel.addSubview(quitButton)
         }
     }
 

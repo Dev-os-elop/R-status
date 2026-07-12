@@ -213,6 +213,11 @@ final class RunHistoryViewController: NSViewController {
         retention.frame = NSRect(x: 16, y: panelHeight - 52, width: panelWidth - 32, height: 18)
         view.addSubview(retention)
 
+        let headerSeparator = NSBox(frame: NSRect(x: 16, y: panelHeight - 66,
+                                                   width: panelWidth - 32, height: 1))
+        headerSeparator.boxType = .separator
+        view.addSubview(headerSeparator)
+
         if entries.isEmpty {
             let empty = NSTextField(labelWithString: L10n.text("저장된 실행 기록이 없습니다.",
                                                                "No run history yet."))
@@ -224,7 +229,7 @@ final class RunHistoryViewController: NSViewController {
             view.addSubview(empty)
         } else {
             for (index, entry) in entries.enumerated() {
-                let y = panelHeight - 50 - CGFloat(index + 1) * rowHeight
+                let y = panelHeight - 76 - CGFloat(index + 1) * rowHeight
                 addEntry(entry, to: view, frame: NSRect(x: 0, y: y,
                                                         width: panelWidth, height: rowHeight))
             }
