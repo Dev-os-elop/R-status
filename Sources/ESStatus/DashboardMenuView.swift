@@ -174,7 +174,7 @@ final class DashboardMenuView: NSView {
             (nil, "r.square", "R Open"),
             (.settings, "gearshape", "Settings")
         ]
-        let heights: [CGFloat] = [72, 82, 82, 82, 82]
+        let heights: [CGFloat] = [68, 76, 76, 76, 76]
         var top = navigationPanel.bounds.height
         for (index, entry) in entries.enumerated() {
             let height = heights[index]
@@ -195,6 +195,12 @@ final class DashboardMenuView: NSView {
             navigationPanel.addSubview(button)
             if let page = entry.0 { pageButtons[page] = button }
         }
+        let versionLabel = NSTextField(labelWithString: "v\(version)")
+        versionLabel.font = .systemFont(ofSize: 9, weight: .regular)
+        versionLabel.textColor = .secondaryLabelColor
+        versionLabel.alignment = .center
+        versionLabel.frame = NSRect(x: 4, y: 24, width: 80, height: 15)
+        navigationPanel.addSubview(versionLabel)
         buildMainPage()
     }
 
@@ -206,7 +212,7 @@ final class DashboardMenuView: NSView {
         addSeparator(to: mainPage, y: 376)
 
         let header = NSTextField(labelWithString: "R Resource Usage")
-        header.font = .systemFont(ofSize: 17, weight: .medium)
+        header.font = .systemFont(ofSize: 14, weight: .medium)
         header.frame = NSRect(x: 20, y: 338, width: 260, height: 26)
         mainPage.addSubview(header)
 
@@ -303,10 +309,10 @@ final class DashboardMenuView: NSView {
             addSectionHeader(L10n.text("언어", "Language"), y: 398)
             let language = SettingsLanguageMenuItemView(selectedLanguage: AppPreferences.language,
                                                          onSelection: onLanguageChange)
-            language.frame.origin = NSPoint(x: 0, y: 338)
+            language.frame.origin = NSPoint(x: 0, y: 300)
             languageView = language
             contentPanel.addSubview(language)
-            addSectionHeader(L10n.text("고급", "Advanced"), y: 270)
+            addSectionHeader(L10n.text("고급", "Advanced"), y: 250)
             let advanced = SettingsAdvancedMenuItemView(
                 showElapsedTime: AppPreferences.showElapsedTime,
                 launchAtLogin: SMAppService.mainApp.status == .enabled,
@@ -317,7 +323,7 @@ final class DashboardMenuView: NSView {
                 onNotificationsChange: onNotificationsChange,
                 onCheckForUpdates: onCheckUpdates
             )
-            advanced.frame.origin = NSPoint(x: 0, y: 120)
+            advanced.frame.origin = NSPoint(x: 0, y: 100)
             advancedView = advanced
             contentPanel.addSubview(advanced)
         }
@@ -339,7 +345,9 @@ final class DashboardMenuView: NSView {
                 progress: NSAttributedString?, eta: NSAttributedString?, canReset: Bool) {
         statusLabel.stringValue = status
         detailLabel.stringValue = detail
-        elapsedLabel.stringValue = elapsed
+        elapsedLabel.stringValue = elapsed.isEmpty
+            ? L10n.text("실행 시간: --:--", "Elapsed time: --:--")
+            : elapsed
         cpuLabel.stringValue = cpu
         memoryLabel.stringValue = memory
         workersLabel.stringValue = workers

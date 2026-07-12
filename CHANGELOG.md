@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.9 - 2026-07-11
+
+- System Language를 Language 1행 전체 폭으로 배치
+- 한국어/English를 Language 2행 1열/2열로 배치
+- Main에서 실행 전에도 Elapsed time 기본 행을 항상 표시
+- R Resource Usage를 R Execution Progress와 같은 14pt medium 타입으로 통일
+- 우측 Settings 카드 아래에 현재 앱 버전 고정 표시
+- 언어 버튼과 Advanced 옵션 카드 배경에도 30% 투명도 적용
+
 ## 0.14.8 - 2026-07-11
 
 - Icon Appearance 선택지를 2열 4행으로 재배치
