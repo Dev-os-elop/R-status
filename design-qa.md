@@ -27,20 +27,21 @@ Icon and Settings were captured separately because their controls are not visibl
 - Follow-up P1: Icon still used a cramped side-by-side selector/preview layout and Settings repeated Language below Basic. Fixed by laying Appearance choices in two columns, adding a horizontal divider and 2×2 Status Preview below, renaming the Settings section to Language, and leaving only the three language buttons beneath it.
 - Follow-up P2: language buttons needed a 1×2 spanning layout, Elapsed time was not persistent, resource/progress heading typography differed, and version was not visible below Settings. Fixed by using a full-width first language row, two half-width second-row buttons, persistent elapsed placeholder, matching 14-point headings, and a pinned navigation version label; language and Advanced tile backgrounds now use 70%-opaque surfaces.
 - Follow-up P1: native ON switches rendered gray when the menu window was inactive and the Resource Usage title-to-first-value gap differed from Execution Progress. Fixed with a custom accent switch renderer and matching 2-point title/value spacing in both Main sections.
+- Follow-up P1: the Open RStudio action clipped in the narrow navigation card, History lacked a boundary below its header, and Quit/branding occupied the wrong surfaces. Fixed by wrapping Open RStudio onto two lines, adding a pinned History divider, moving Quit into a dedicated Settings control, and pinning ES Status/version to opposite sides of Main's footer.
 - No remaining P0, P1, or P2 visual or interaction issues in the captured states.
 
 ## Required fidelity surfaces
 
 - Typography: native macOS system typography with matched hierarchy and compact labels; no clipping except intentional truncation of the longest language button.
-- Spacing/layout: fixed 586 × 546 frame, 430-point content region, 114-point navigation region, consistent 14-point outer inset and rounded panels.
+- Spacing/layout: fixed 430 × 470 frame, 300-point content region, 88-point navigation region, consistent 14-point outer inset and rounded panels.
 - Colors/tokens: neutral light-gray panels, native separators, blue accent metrics and selected-page highlight.
 - Image quality/assets: SF Symbols and the app's existing high-resolution generated status icons; no placeholder assets.
-- Copy/content: Main, Icon, History, R Open, Settings, resource labels, Return to Ready, Quit App, settings, history empty state, and version are present.
+- Copy/content: Main, Icon, History, Open RStudio, Settings, resource labels, Return to Ready, Settings Quit App, history empty state, ES Status, and version are present.
 
 ## Interaction verification
 
 - Main, Icon, History, and Settings buttons switch content in place without changing the outer size.
-- R Open remains an action and does not replace the current page.
+- Open RStudio remains an action and does not replace the current page.
 - Icon selection, settings toggles, update control, History Clear, Return to Ready, and Quit retain their callbacks.
 
 final result: passed
