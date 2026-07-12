@@ -6,6 +6,8 @@ private final class DashboardNavigationButton: NSControl {
     private let iconView = NSImageView()
     private let titleLabel = NSTextField(labelWithString: "")
     var isSelected = false { didSet { updateBackground() } }
+    private var isHovered = false
+    private var trackingAreaRef: NSTrackingArea?
 
     init(frame: NSRect, title: String, image: NSImage?) {
         super.init(frame: frame)
@@ -37,10 +39,33 @@ private final class DashboardNavigationButton: NSControl {
         if bounds.contains(convert(event.locationInWindow, from: nil)) { sendAction(action, to: target) }
     }
 
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let trackingAreaRef { removeTrackingArea(trackingAreaRef) }
+        let area = NSTrackingArea(rect: bounds,
+                                  options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        addTrackingArea(area)
+        trackingAreaRef = area
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHovered = true
+        updateBackground()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovered = false
+        layer?.opacity = 1
+        updateBackground()
+    }
+
     private func updateBackground() {
         layer?.backgroundColor = isSelected
             ? NSColor.controlAccentColor.withAlphaComponent(0.20).cgColor
-            : NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
+            : isHovered
+                ? NSColor.controlAccentColor.withAlphaComponent(0.12).cgColor
+                : NSColor(calibratedWhite: 0.82, alpha: 1).cgColor
     }
 }
 
@@ -80,7 +105,7 @@ final class DashboardMenuView: NSView {
     private let onClearHistory: () -> Void
     private let version: String
 
-    let panelSize = NSSize(width: 556, height: 470)
+    let panelSize = NSSize(width: 482, height: 470)
 
     init(version: String,
          onReset: @escaping () -> Void,
@@ -130,8 +155,8 @@ final class DashboardMenuView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
-        contentPanel.frame = NSRect(x: 14, y: 14, width: 400, height: 442)
-        navigationPanel.frame = NSRect(x: 428, y: 14, width: 114, height: 442)
+        contentPanel.frame = NSRect(x: 14, y: 14, width: 350, height: 442)
+        navigationPanel.frame = NSRect(x: 378, y: 14, width: 90, height: 442)
         stylePanel(contentPanel, radius: 22)
         addSubview(contentPanel)
         addSubview(navigationPanel)
@@ -154,7 +179,7 @@ final class DashboardMenuView: NSView {
                                                  state: .running, size: 24)
             }
             let button = DashboardNavigationButton(
-                frame: NSRect(x: 8, y: top + 4, width: 98, height: height - 8),
+                frame: NSRect(x: 6, y: top + 4, width: 78, height: height - 8),
                 title: entry.2,
                 image: image
             )
@@ -170,7 +195,7 @@ final class DashboardMenuView: NSView {
     private func buildMainPage() {
         mainPage.frame = contentPanel.bounds
         statusLabel.font = .systemFont(ofSize: 19, weight: .semibold)
-        statusLabel.frame = NSRect(x: 20, y: 392, width: 360, height: 28)
+        statusLabel.frame = NSRect(x: 20, y: 392, width: 310, height: 28)
         mainPage.addSubview(statusLabel)
         addSeparator(to: mainPage, y: 376)
 
@@ -182,29 +207,29 @@ final class DashboardMenuView: NSView {
         for (index, label) in [cpuLabel, memoryLabel, workersLabel, processesLabel].enumerated() {
             label.font = .systemFont(ofSize: 15, weight: .medium)
             label.textColor = .controlAccentColor
-            label.frame = NSRect(x: 30, y: 298 - CGFloat(index) * 30, width: 340, height: 24)
+            label.frame = NSRect(x: 30, y: 298 - CGFloat(index) * 30, width: 290, height: 24)
             mainPage.addSubview(label)
         }
         detailLabel.font = .systemFont(ofSize: 12)
         detailLabel.textColor = .secondaryLabelColor
-        detailLabel.frame = NSRect(x: 30, y: 188, width: 340, height: 18)
+        detailLabel.frame = NSRect(x: 30, y: 188, width: 290, height: 18)
         mainPage.addSubview(detailLabel)
         elapsedLabel.font = .systemFont(ofSize: 15, weight: .medium)
         elapsedLabel.textColor = .controlAccentColor
-        elapsedLabel.frame = NSRect(x: 30, y: 166, width: 340, height: 22)
+        elapsedLabel.frame = NSRect(x: 30, y: 166, width: 290, height: 22)
         mainPage.addSubview(elapsedLabel)
         progressLabel.font = .systemFont(ofSize: 15, weight: .medium)
-        progressLabel.frame = NSRect(x: 30, y: 142, width: 340, height: 22)
+        progressLabel.frame = NSRect(x: 30, y: 142, width: 290, height: 22)
         mainPage.addSubview(progressLabel)
         etaLabel.font = .systemFont(ofSize: 15, weight: .medium)
         etaLabel.textColor = .controlAccentColor
-        etaLabel.frame = NSRect(x: 30, y: 118, width: 340, height: 22)
+        etaLabel.frame = NSRect(x: 30, y: 118, width: 290, height: 22)
         mainPage.addSubview(etaLabel)
         addSeparator(to: mainPage, y: 106)
 
         resetButton.title = L10n.text("준비 상태로 돌아가기", "Return to Ready")
         resetButton.font = .systemFont(ofSize: 17, weight: .semibold)
-        resetButton.frame = NSRect(x: 20, y: 53, width: 360, height: 36)
+        resetButton.frame = NSRect(x: 20, y: 53, width: 310, height: 36)
         resetButton.bezelStyle = .rounded
         resetButton.target = self
         resetButton.action = #selector(reset)
@@ -215,17 +240,17 @@ final class DashboardMenuView: NSView {
         quit.isBordered = false
         quit.alignment = .left
         quit.font = .systemFont(ofSize: 16, weight: .medium)
-        quit.frame = NSRect(x: 20, y: 7, width: 350, height: 27)
+        quit.frame = NSRect(x: 20, y: 7, width: 300, height: 27)
         mainPage.addSubview(quit)
         let quitShortcut = NSTextField(labelWithString: "⌘Q")
         quitShortcut.font = .systemFont(ofSize: 16, weight: .medium)
         quitShortcut.alignment = .right
-        quitShortcut.frame = NSRect(x: 300, y: 11, width: 70, height: 22)
+        quitShortcut.frame = NSRect(x: 250, y: 11, width: 70, height: 22)
         mainPage.addSubview(quitShortcut)
     }
 
     private func addSeparator(to root: NSView, y: CGFloat) {
-        let line = NSBox(frame: NSRect(x: 20, y: y, width: 360, height: 1))
+        let line = NSBox(frame: NSRect(x: 20, y: y, width: 310, height: 1))
         line.boxType = .separator
         root.addSubview(line)
     }
@@ -290,9 +315,9 @@ final class DashboardMenuView: NSView {
         let label = NSTextField(labelWithString: title)
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabelColor
-        label.frame = NSRect(x: 14, y: y, width: 360, height: 20)
+        label.frame = NSRect(x: 14, y: y, width: 310, height: 20)
         contentPanel.addSubview(label)
-        let line = NSBox(frame: NSRect(x: 14, y: y - 9, width: 372, height: 1))
+        let line = NSBox(frame: NSRect(x: 14, y: y - 9, width: 322, height: 1))
         line.boxType = .separator
         contentPanel.addSubview(line)
     }

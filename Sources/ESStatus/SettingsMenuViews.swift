@@ -208,7 +208,7 @@ final class SettingsAppearanceMenuItemView: NSView {
     private var previewLabels: [StatusVisualState: NSTextField] = [:]
     private let previewHeader = NSTextField(labelWithString: "")
 
-    private let panelSize = NSSize(width: 400, height: 226)
+    private let panelSize = NSSize(width: 350, height: 226)
 
     init(selectedStyle: StatusIconStyle,
          onSelection: @escaping (StatusIconStyle) -> Void) {
@@ -229,7 +229,7 @@ final class SettingsAppearanceMenuItemView: NSView {
         for (index, style) in StatusIconStyle.allCases.enumerated() {
             let button = NSButton(
                 frame: NSRect(x: 10, y: panelSize.height - 32 - CGFloat(index) * rowHeight,
-                              width: 175, height: 28)
+                              width: 150, height: 28)
             )
             button.bezelStyle = .inline
             button.isBordered = false
@@ -248,13 +248,13 @@ final class SettingsAppearanceMenuItemView: NSView {
     }
 
     private func buildPreviewColumn() {
-        let divider = NSBox(frame: NSRect(x: 190, y: 10, width: 1, height: 206))
+        let divider = NSBox(frame: NSRect(x: 165, y: 10, width: 1, height: 206))
         divider.boxType = .separator
         addSubview(divider)
 
         previewHeader.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
         previewHeader.textColor = .secondaryLabelColor
-        previewHeader.frame = NSRect(x: 202, y: 196, width: 186, height: 20)
+        previewHeader.frame = NSRect(x: 176, y: 196, width: 164, height: 20)
         addSubview(previewHeader)
 
         let states: [(StatusVisualState, String)] = [
@@ -267,7 +267,7 @@ final class SettingsAppearanceMenuItemView: NSView {
         for (index, entry) in states.enumerated() {
             let column = index % 2
             let row = index / 2
-            let originX = 202 + CGFloat(column) * 94
+            let originX = 176 + CGFloat(column) * 82
             let originY = 104 - CGFloat(row) * 88
 
             let imageView = NSImageView(frame: NSRect(x: originX + 36, y: originY + 30,
@@ -279,7 +279,7 @@ final class SettingsAppearanceMenuItemView: NSView {
             let label = NSTextField(labelWithString: entry.1)
             label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
             label.alignment = .center
-            label.frame = NSRect(x: originX, y: originY + 6, width: 88, height: 20)
+            label.frame = NSRect(x: originX, y: originY + 6, width: 78, height: 20)
             addSubview(label)
             previewLabels[entry.0] = label
         }
@@ -318,7 +318,7 @@ final class SettingsLanguageMenuItemView: NSView {
     private var selectedLanguage: AppLanguage
     private var buttons: [AppLanguage: NSButton] = [:]
     private let titleLabel = NSTextField(labelWithString: "")
-    private let panelSize = NSSize(width: 400, height: 44)
+    private let panelSize = NSSize(width: 350, height: 44)
 
     init(selectedLanguage: AppLanguage,
          onSelection: @escaping (AppLanguage) -> Void) {
@@ -331,8 +331,8 @@ final class SettingsLanguageMenuItemView: NSView {
         addSubview(titleLabel)
 
         for (index, language) in AppLanguage.allCases.enumerated() {
-            let button = NSButton(frame: NSRect(x: 88 + CGFloat(index) * 100,
-                                                y: 7, width: 94, height: 30))
+            let button = NSButton(frame: NSRect(x: 78 + CGFloat(index) * 88,
+                                                y: 7, width: 82, height: 30))
             button.bezelStyle = .roundRect
             button.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
             button.tag = index
@@ -434,7 +434,7 @@ final class SettingsAdvancedMenuItemView: NSView {
     private var elapsedTile: AdvancedToggleTile!
     private var loginTile: AdvancedToggleTile!
     private var notificationsTile: AdvancedToggleTile!
-    private let panelSize = NSSize(width: 400, height: 132)
+    private let panelSize = NSSize(width: 350, height: 132)
 
     init(showElapsedTime: Bool, launchAtLogin: Bool, notificationsEnabled: Bool,
          version: String,
@@ -446,12 +446,12 @@ final class SettingsAdvancedMenuItemView: NSView {
         super.init(frame: NSRect(origin: .zero, size: panelSize))
         let onText = L10n.text("켜짐", "ON")
         let offText = L10n.text("꺼짐", "OFF")
-        let tileSize = NSSize(width: 185, height: 58)
+        let tileSize = NSSize(width: 160, height: 58)
         let frames = [
             NSRect(x: 10, y: 68, width: tileSize.width, height: tileSize.height),
-            NSRect(x: 205, y: 68, width: tileSize.width, height: tileSize.height),
+            NSRect(x: 180, y: 68, width: tileSize.width, height: tileSize.height),
             NSRect(x: 10, y: 4, width: tileSize.width, height: tileSize.height),
-            NSRect(x: 205, y: 4, width: tileSize.width, height: tileSize.height)
+            NSRect(x: 180, y: 4, width: tileSize.width, height: tileSize.height)
         ]
 
         elapsedTile = AdvancedToggleTile(
