@@ -132,7 +132,7 @@ final class DashboardMenuView: NSView {
     private let onClearHistory: () -> Void
     private let version: String
 
-    let panelSize = NSSize(width: 430, height: 440)
+    let panelSize = NSSize(width: 409, height: 426)
 
     init(version: String,
          onReset: @escaping () -> Void,
@@ -190,8 +190,8 @@ final class DashboardMenuView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
 
-        contentPanel.frame = NSRect(x: 14, y: 14, width: 300, height: 412)
-        navigationPanel.frame = NSRect(x: 328, y: 14, width: 88, height: 412)
+        contentPanel.frame = NSRect(x: 7, y: 7, width: 300, height: 412)
+        navigationPanel.frame = NSRect(x: 314, y: 7, width: 88, height: 412)
         stylePanel(contentPanel, radius: 22)
         addSubview(contentPanel)
         addSubview(navigationPanel)
