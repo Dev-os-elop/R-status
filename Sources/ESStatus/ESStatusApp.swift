@@ -661,14 +661,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
         item.attributedTitle = NSAttributedString(
             string: title,
             attributes: [
-                .font: NSFont.systemFont(ofSize: 13, weight: .medium),
+                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
                 .foregroundColor: NSColor.controlAccentColor
             ]
         )
     }
 
     private func setProgressTitle(completed: Int, segmentCount: Int, details: String) {
-        let font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        let font = NSFont.systemFont(ofSize: 11, weight: .medium)
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: NSColor.controlAccentColor
