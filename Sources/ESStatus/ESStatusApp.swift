@@ -1192,6 +1192,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotifica
     }
 
     @objc private func openRStudio() {
+        NSApp.activate(ignoringOtherApps: true)
+        let confirmation = NSAlert()
+        confirmation.alertStyle = .informational
+        confirmation.messageText = "Open RStudio?"
+        confirmation.informativeText = L10n.text(
+            "RStudio를 실행하시겠습니까?",
+            "Would you like to open RStudio?"
+        )
+        confirmation.addButton(withTitle: "Open")
+        confirmation.addButton(withTitle: "No")
+        guard confirmation.runModal() == .alertFirstButtonReturn else { return }
+
         let candidates = ["/Applications/RStudio.app", NSHomeDirectory() + "/Applications/RStudio.app"]
         if let path = candidates.first(where: FileManager.default.fileExists(atPath:)) {
             NSWorkspace.shared.open(URL(fileURLWithPath: path))
