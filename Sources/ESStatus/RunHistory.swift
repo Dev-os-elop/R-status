@@ -175,6 +175,7 @@ final class RunHistoryViewController: NSViewController {
     private let onClear: () -> Void
     private let fixedPanelHeight: CGFloat?
     private let panelWidth: CGFloat = 280
+    private var retentionPopover: NSPopover?
 
     init(entries: [RunHistoryEntry], fixedPanelHeight: CGFloat? = nil,
          onClear: @escaping () -> Void) {
@@ -216,11 +217,7 @@ final class RunHistoryViewController: NSViewController {
         )
         helpButton.imageScaling = .scaleProportionallyDown
         helpButton.target = self
-        helpButton.action = #selector(showRetentionInfo)
-        helpButton.toolTip = L10n.text(
-            "최대 5개 실행 기록을 저장하며, 초과하면 가장 오래된 기록부터 삭제합니다.",
-            "Up to 5 runs are saved. The oldest run is removed first."
-        )
+        helpButton.action = #selector(showRetentionInfo(_:))
         view.addSubview(helpButton)
 
         let headerSeparator = NSBox(frame: NSRect(x: 4, y: panelHeight - 50,
@@ -256,18 +253,32 @@ final class RunHistoryViewController: NSViewController {
         preferredContentSize = NSSize(width: panelWidth, height: panelHeight)
     }
 
-    @objc private func showRetentionInfo() {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.window.appearance = NSApp.appearance
-        alert.alertStyle = .informational
-        alert.messageText = L10n.text("실행 기록 보관", "Run History Retention")
-        alert.informativeText = L10n.text(
+    @objc private func showRetentionInfo(_ sender: NSButton) {
+        if let retentionPopover, retentionPopover.isShown {
+            retentionPopover.close()
+            self.retentionPopover = nil
+            return
+        }
+
+        let contentController = NSViewController()
+        let contentView = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: 54))
+        contentView.appearance = NSApp.appearance
+        let message = NSTextField(wrappingLabelWithString: L10n.text(
             "최대 5개 실행 기록을 저장하며, 초과하면 가장 오래된 기록부터 삭제합니다.",
             "Up to 5 runs are saved. The oldest run is removed first."
-        )
-        alert.addButton(withTitle: L10n.text("확인", "OK"))
-        alert.runModal()
+        ))
+        message.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        message.frame = NSRect(x: 12, y: 8, width: 216, height: 38)
+        contentView.addSubview(message)
+        contentController.view = contentView
+
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.animates = true
+        popover.contentSize = contentView.frame.size
+        popover.contentViewController = contentController
+        retentionPopover = popover
+        popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
     }
 
     private func addEntry(_ entry: RunHistoryEntry, to root: NSView, frame: NSRect) {
